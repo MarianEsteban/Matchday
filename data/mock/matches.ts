@@ -34,7 +34,7 @@ export function createMockMatches(date: Date = new Date()): Match[] {
       kickoffTime: "18:30",
       venue: "La Bombonera",
       date: matchDate,
-      status: "scheduled",
+      status: "live",
     },
     {
       id: `river-independiente-${matchDate}`,
@@ -44,7 +44,7 @@ export function createMockMatches(date: Date = new Date()): Match[] {
       kickoffTime: "20:00",
       venue: "Mâs Monumental",
       date: matchDate,
-      status: "scheduled",
+      status: "finished",
     },
     {
       id: `san-lorenzo-huracan-${matchDate}`,
