@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Match, MatchStatus } from "@/types/match";
 import { MatchCard } from "@/components/matches/MatchCard";
+import { formatMatchDate } from "@/data/mock/matches";
 
 type MatchListProps = {
   matches: Match[];
@@ -33,6 +34,29 @@ function groupMatchesByCompetition(matches: Match[]) {
   }, {});
 }
 
+function createDateFromDateString(dateString: string) {
+  return new Date(`${dateString}T00:00:00`);
+}
+
+function shiftDate(dateString: string, daysToShift: number) {
+  const date = createDateFromDateString(dateString);
+  date.setDate(date.getDate() + daysToShift);
+
+  return formatMatchDate(date);
+}
+
+function formatSelectedDateLabel(dateString: string) {
+  return new Intl.DateTimeFormat("es-AR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(createDateFromDateString(dateString));
+}
+
+function filterMatchesByDate(matches: Match[], selectedDate: string) {
+  return matches.filter((match) => match.date === selectedDate);
+}
+
 function filterMatches(matches: Match[], activeFilter: MatchFilter) {
   if (activeFilter === "all") {
     return matches;
@@ -43,20 +67,17 @@ function filterMatches(matches: Match[], activeFilter: MatchFilter) {
 
 export function MatchList({ matches }: MatchListProps) {
   const [activeFilter, setActiveFilter] = useState<MatchFilter>("all");
+  const [selectedDate, setSelectedDate] = useState(() =>
+    matches[0]?.date ? matches[0].date : formatMatchDate(new Date()),
+  );
   const [collapsedCompetitions, setCollapsedCompetitions] = useState<Record<string, boolean>>(
     {},
   );
 
-  if (matches.length === 0) {
-    return (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 text-zinc-300">
-        No hay partidos programados para hoy.
-      </div>
-    );
-  }
-
-  const filteredMatches = filterMatches(matches, activeFilter);
+  const matchesForSelectedDate = filterMatchesByDate(matches, selectedDate);
+  const filteredMatches = filterMatches(matchesForSelectedDate, activeFilter);
   const groupedMatches = groupMatchesByCompetition(filteredMatches);
+  const todayDate = formatMatchDate(new Date());
 
   function toggleCompetition(competition: string) {
     setCollapsedCompetitions((currentCollapsedCompetitions) => ({
@@ -67,6 +88,38 @@ export function MatchList({ matches }: MatchListProps) {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-3 shadow-sm shadow-black/20">
+        <button
+          type="button"
+          onClick={() => setSelectedDate((currentDate) => shiftDate(currentDate, -1))}
+          className="rounded-full border border-zinc-700 px-3 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:bg-zinc-800"
+          aria-label="Ver partidos del día anterior"
+        >
+          ← Anterior
+        </button>
+
+        <p className="min-w-0 flex-1 text-center text-sm font-semibold capitalize text-zinc-100 sm:text-base">
+          {formatSelectedDateLabel(selectedDate)}
+        </p>
+
+        <button
+          type="button"
+          onClick={() => setSelectedDate((currentDate) => shiftDate(currentDate, 1))}
+          className="rounded-full border border-zinc-700 px-3 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:bg-zinc-800"
+          aria-label="Ver partidos del día siguiente"
+        >
+          Siguiente →
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedDate(todayDate)}
+          className="rounded-full bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-950 shadow-sm shadow-white/10 transition-colors hover:bg-white"
+        >
+          Hoy
+        </button>
+      </div>
+
       <div className="flex flex-wrap gap-2 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-2 shadow-sm shadow-black/20">
         {filterOptions.map(({ label, value }) => {
           const isActive = activeFilter === value;
@@ -88,7 +141,11 @@ export function MatchList({ matches }: MatchListProps) {
         })}
       </div>
 
-      {filteredMatches.length === 0 ? (
+      {matchesForSelectedDate.length === 0 ? (
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 text-zinc-300">
+          No hay partidos programados para hoy.
+        </div>
+      ) : filteredMatches.length === 0 ? (
         <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 text-zinc-300">
           No hay partidos para este filtro.
         </div>
