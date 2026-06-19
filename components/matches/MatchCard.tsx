@@ -12,9 +12,9 @@ const statusBadgeStyles: Record<MatchStatus, string> = {
 };
 
 const statusLabels: Record<MatchStatus, string> = {
-  scheduled: "Scheduled",
-  live: "Live",
-  finished: "Finished",
+  scheduled: "Próximo",
+  live: "En vivo",
+  finished: "Finalizado",
 };
 
 function getTeamInitials(teamName: string) {

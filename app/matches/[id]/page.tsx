@@ -10,9 +10,9 @@ type MatchDetailPageProps = {
 };
 
 const statusLabels: Record<MatchStatus, string> = {
-  scheduled: "Scheduled",
-  live: "Live",
-  finished: "Finished",
+  scheduled: "Próximo",
+  live: "En vivo",
+  finished: "Finalizado",
 };
 
 const statusBadgeStyles: Record<MatchStatus, string> = {
@@ -92,17 +92,17 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
 
             <dl className="grid gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6 text-sm">
               <div>
-                <dt className="text-zinc-500">Kickoff</dt>
+                <dt className="text-zinc-500">Fecha y hora</dt>
                 <dd className="mt-1 font-semibold capitalize text-zinc-100">
                   {formatKickoff(match.date, match.kickoffTime)}
                 </dd>
               </div>
               <div>
-                <dt className="text-zinc-500">Venue</dt>
+                <dt className="text-zinc-500">Estadio</dt>
                 <dd className="mt-1 font-semibold text-zinc-100">{match.venue}</dd>
               </div>
               <div>
-                <dt className="text-zinc-500">Status</dt>
+                <dt className="text-zinc-500">Estado</dt>
                 <dd className="mt-1 font-semibold text-zinc-100">{statusLabels[match.status]}</dd>
               </div>
             </dl>
