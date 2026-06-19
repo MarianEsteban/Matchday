@@ -16,6 +16,12 @@ type MatchFilterOption = {
   value: MatchFilter;
 };
 
+type EmptyState = {
+  icon: string;
+  title: string;
+  description: string;
+};
+
 const filterOptions: MatchFilterOption[] = [
   { label: "Todos", value: "all" },
   { label: "En vivo", value: "live" },
@@ -65,6 +71,58 @@ function filterMatches(matches: Match[], activeFilter: MatchFilter) {
   return matches.filter((match) => match.status === activeFilter);
 }
 
+function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boolean): EmptyState {
+  if (!hasMatchesForSelectedDate) {
+    return {
+      icon: "🗓️",
+      title: "No hay partidos programados para esta fecha.",
+      description: "Probá con otra fecha o volvé a la vista de hoy.",
+    };
+  }
+
+  if (activeFilter === "live") {
+    return {
+      icon: "🔕",
+      title: "No hay partidos en vivo ahora.",
+      description: "Cuando empiece un partido, aparecerá en este filtro.",
+    };
+  }
+
+  if (activeFilter === "scheduled") {
+    return {
+      icon: "⏳",
+      title: "No hay próximos partidos para esta fecha.",
+      description: "Revisá otra fecha para ver los partidos que vienen.",
+    };
+  }
+
+  if (activeFilter === "finished") {
+    return {
+      icon: "🏁",
+      title: "No hay partidos finalizados para esta fecha.",
+      description: "Los resultados aparecerán cuando terminen los encuentros.",
+    };
+  }
+
+  return {
+    icon: "⚽",
+    title: "No hay partidos para esta fecha.",
+    description: "Probá con otra fecha para encontrar partidos disponibles.",
+  };
+}
+
+function EmptyMatchState({ icon, title, description }: EmptyState) {
+  return (
+    <div className="rounded-2xl border border-dashed border-zinc-700/80 bg-zinc-900/70 p-8 text-center shadow-sm shadow-black/20">
+      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-zinc-700 bg-zinc-950 text-2xl shadow-inner shadow-black/30">
+        <span aria-hidden="true">{icon}</span>
+      </div>
+      <p className="text-base font-semibold text-zinc-100">{title}</p>
+      <p className="mt-2 text-sm text-zinc-400">{description}</p>
+    </div>
+  );
+}
+
 export function MatchList({ matches }: MatchListProps) {
   const [activeFilter, setActiveFilter] = useState<MatchFilter>("all");
   const [selectedDate, setSelectedDate] = useState(() =>
@@ -78,6 +136,7 @@ export function MatchList({ matches }: MatchListProps) {
   const filteredMatches = filterMatches(matchesForSelectedDate, activeFilter);
   const groupedMatches = groupMatchesByCompetition(filteredMatches);
   const todayDate = formatMatchDate(new Date());
+  const emptyState = getEmptyState(activeFilter, matchesForSelectedDate.length > 0);
 
   function toggleCompetition(competition: string) {
     setCollapsedCompetitions((currentCollapsedCompetitions) => ({
@@ -141,14 +200,8 @@ export function MatchList({ matches }: MatchListProps) {
         })}
       </div>
 
-      {matchesForSelectedDate.length === 0 ? (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 text-zinc-300">
-          No hay partidos programados para hoy.
-        </div>
-      ) : filteredMatches.length === 0 ? (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 text-zinc-300">
-          No hay partidos para este filtro.
-        </div>
+      {filteredMatches.length === 0 ? (
+        <EmptyMatchState {...emptyState} />
       ) : (
         <div className="space-y-8">
           {Object.entries(groupedMatches).map(([competition, competitionMatches]) => {
