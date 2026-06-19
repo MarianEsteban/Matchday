@@ -43,6 +43,9 @@ function filterMatches(matches: Match[], activeFilter: MatchFilter) {
 
 export function MatchList({ matches }: MatchListProps) {
   const [activeFilter, setActiveFilter] = useState<MatchFilter>("all");
+  const [collapsedCompetitions, setCollapsedCompetitions] = useState<Record<string, boolean>>(
+    {},
+  );
 
   if (matches.length === 0) {
     return (
@@ -54,6 +57,13 @@ export function MatchList({ matches }: MatchListProps) {
 
   const filteredMatches = filterMatches(matches, activeFilter);
   const groupedMatches = groupMatchesByCompetition(filteredMatches);
+
+  function toggleCompetition(competition: string) {
+    setCollapsedCompetitions((currentCollapsedCompetitions) => ({
+      ...currentCollapsedCompetitions,
+      [competition]: !currentCollapsedCompetitions[competition],
+    }));
+  }
 
   return (
     <div className="space-y-6">
@@ -84,20 +94,47 @@ export function MatchList({ matches }: MatchListProps) {
         </div>
       ) : (
         <div className="space-y-8">
-          {Object.entries(groupedMatches).map(([competition, competitionMatches]) => (
-            <section key={competition} className="space-y-4">
-              <div className="flex items-center gap-3">
-                <h3 className="text-lg font-semibold text-zinc-100">{competition}</h3>
-                <span className="h-px flex-1 bg-zinc-800" />
-              </div>
+          {Object.entries(groupedMatches).map(([competition, competitionMatches]) => {
+            const isCollapsed = collapsedCompetitions[competition] ?? false;
+            const sectionId = `competition-${competition
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")}`;
 
-              <div className="grid gap-4">
-                {competitionMatches.map((match) => (
-                  <MatchCard key={match.id} match={match} />
-                ))}
-              </div>
-            </section>
-          ))}
+            return (
+              <section key={competition} className="space-y-4">
+                <button
+                  type="button"
+                  onClick={() => toggleCompetition(competition)}
+                  aria-expanded={!isCollapsed}
+                  aria-controls={sectionId}
+                  className="group flex w-full items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/80 px-4 py-3 text-left shadow-sm shadow-black/20 transition-colors hover:border-zinc-700 hover:bg-zinc-900"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`text-zinc-400 transition-transform group-hover:text-zinc-100 ${
+                      isCollapsed ? "-rotate-90" : "rotate-0"
+                    }`}
+                  >
+                    ▾
+                  </span>
+                  <h3 className="text-lg font-semibold text-zinc-100">{competition}</h3>
+                  <span className="h-px flex-1 bg-zinc-800" />
+                  <span className="rounded-full border border-zinc-700 bg-zinc-950 px-3 py-1 text-sm font-semibold text-zinc-300">
+                    {competitionMatches.length}{" "}
+                    {competitionMatches.length === 1 ? "match" : "matches"}
+                  </span>
+                </button>
+
+                {!isCollapsed ? (
+                  <div id={sectionId} className="grid gap-4">
+                    {competitionMatches.map((match) => (
+                      <MatchCard key={match.id} match={match} />
+                    ))}
+                  </div>
+                ) : null}
+              </section>
+            );
+          })}
         </div>
       )}
     </div>
