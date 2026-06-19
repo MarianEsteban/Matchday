@@ -6,3 +6,7 @@ export function getMatchesByDate(date: Date = new Date()): Match[] {
 
   return createMockMatches(date).filter((match) => match.date === requestedDate);
 }
+
+export function getMatchById(id: string): Match | undefined {
+  return createMockMatches().find((match) => match.id === id);
+}

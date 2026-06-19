@@ -9,4 +9,8 @@ export type Match = {
   venue: string;
   date: string;
   status: MatchStatus;
+  score?: {
+    home: number;
+    away: number;
+  };
 };
