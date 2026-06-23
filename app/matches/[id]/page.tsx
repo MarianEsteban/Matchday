@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getMatchById } from "@/data/repositories/matches.repository";
@@ -62,9 +63,11 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
           <div className="border-b border-zinc-800 bg-zinc-950/60 p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-sm uppercase tracking-wide text-amber-200">{match.competition}</p>
+                <p className="text-sm uppercase tracking-wide text-amber-200">
+                  {match.competition}
+                </p>
                 <h1 className="mt-3 text-3xl font-bold text-zinc-50 sm:text-5xl">
-                  {match.homeTeam} vs {match.awayTeam}
+                  {match.homeTeam.name} vs {match.awayTeam.name}
                 </h1>
               </div>
 
@@ -82,11 +85,29 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
           <div className="grid gap-6 p-6 lg:grid-cols-[1.4fr_1fr]">
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6 text-center">
               <div className="grid items-center gap-4 sm:grid-cols-[1fr_auto_1fr]">
-                <p className="text-2xl font-bold text-zinc-50">{match.homeTeam}</p>
+                <div className="flex flex-col items-center gap-3">
+                  <Image
+                    src={match.homeTeam.crestUrl}
+                    alt={`${match.homeTeam.name} crest`}
+                    width={64}
+                    height={64}
+                    className="h-16 w-16"
+                  />
+                  <p className="text-2xl font-bold text-zinc-50">{match.homeTeam.name}</p>
+                </div>
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-900 px-5 py-4 text-3xl font-black text-zinc-50">
                   {match.score ? `${match.score.home} - ${match.score.away}` : "vs"}
                 </div>
-                <p className="text-2xl font-bold text-zinc-50">{match.awayTeam}</p>
+                <div className="flex flex-col items-center gap-3">
+                  <Image
+                    src={match.awayTeam.crestUrl}
+                    alt={`${match.awayTeam.name} crest`}
+                    width={64}
+                    height={64}
+                    className="h-16 w-16"
+                  />
+                  <p className="text-2xl font-bold text-zinc-50">{match.awayTeam.name}</p>
+                </div>
               </div>
             </div>
 

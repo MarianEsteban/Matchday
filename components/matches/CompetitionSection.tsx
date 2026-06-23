@@ -8,7 +8,7 @@ type CompetitionSectionProps = {
   onToggle: (competition: string) => void;
 };
 
-function createCompetitionSectionId(competition: string) {
+export function createCompetitionSectionId(competition: string) {
   return `competition-${competition.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 }
 
@@ -21,7 +21,7 @@ export function CompetitionSection({
   const sectionId = createCompetitionSectionId(competition);
 
   return (
-    <section className="space-y-4">
+    <section id={sectionId} className="scroll-mt-6 space-y-4">
       <button
         type="button"
         onClick={() => onToggle(competition)}
@@ -45,7 +45,7 @@ export function CompetitionSection({
       </button>
 
       {!isCollapsed ? (
-        <div id={sectionId} className="grid gap-4">
+        <div className="grid gap-4">
           {matches.map((match) => (
             <MatchCard key={match.id} match={match} />
           ))}

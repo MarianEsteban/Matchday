@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Match } from "@/types/match";
 import { CompetitionSection } from "@/components/matches/CompetitionSection";
+import { CompetitionSidebar } from "@/components/matches/CompetitionSidebar";
 import { DateSelector } from "@/components/matches/DateSelector";
 import { EmptyMatchState } from "@/components/matches/EmptyMatchState";
 import { MatchFilters, type MatchFilter } from "@/components/matches/MatchFilters";
@@ -112,6 +113,10 @@ export function MatchList({ matches }: MatchListProps) {
   const matchesForSelectedDate = filterMatchesByDate(matches, selectedDate);
   const filteredMatches = filterMatches(matchesForSelectedDate, activeFilter);
   const groupedMatches = groupMatchesByCompetition(filteredMatches);
+  const competitionGroups = Object.entries(groupedMatches).map(([name, competitionMatches]) => ({
+    name,
+    matches: competitionMatches,
+  }));
   const todayDate = formatMatchDate(new Date());
   const emptyState = getEmptyState(activeFilter, matchesForSelectedDate.length > 0);
 
@@ -136,16 +141,19 @@ export function MatchList({ matches }: MatchListProps) {
       {filteredMatches.length === 0 ? (
         <EmptyMatchState {...emptyState} />
       ) : (
-        <div className="space-y-8">
-          {Object.entries(groupedMatches).map(([competition, competitionMatches]) => (
-            <CompetitionSection
-              key={competition}
-              competition={competition}
-              matches={competitionMatches}
-              isCollapsed={collapsedCompetitions[competition] ?? false}
-              onToggle={toggleCompetition}
-            />
-          ))}
+        <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
+          <CompetitionSidebar competitions={competitionGroups} />
+          <div className="space-y-8">
+            {competitionGroups.map(({ name: competition, matches: competitionMatches }) => (
+              <CompetitionSection
+                key={competition}
+                competition={competition}
+                matches={competitionMatches}
+                isCollapsed={collapsedCompetitions[competition] ?? false}
+                onToggle={toggleCompetition}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
