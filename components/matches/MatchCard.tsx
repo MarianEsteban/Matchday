@@ -1,5 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
-import type { Match, MatchStatus } from "@/types/match";
+import type { Match, MatchStatus, Team } from "@/types/match";
 
 type MatchCardProps = {
   match: Match;
@@ -17,36 +18,26 @@ const statusLabels: Record<MatchStatus, string> = {
   finished: "Finalizado",
 };
 
-function getTeamInitials(teamName: string) {
-  return teamName
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
-}
-
 function TeamBlock({
   align = "left",
-  teamName,
+  team,
 }: {
   align?: "left" | "right";
-  teamName: string;
+  team: Team;
 }) {
   const isRightAligned = align === "right";
 
   return (
     <div className={`flex items-center gap-3 ${isRightAligned ? "sm:flex-row-reverse" : ""}`}>
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800 text-sm font-bold text-zinc-100 shadow-inner shadow-white/5">
-        {getTeamInitials(teamName)}
+        <Image src={team.crestUrl} alt="" width={32} height={32} className="h-8 w-8" />
       </div>
       <span
         className={`text-base font-semibold text-zinc-50 sm:text-lg ${
           isRightAligned ? "sm:text-right" : ""
         }`}
       >
-        {teamName}
+        {team.name}
       </span>
     </div>
   );
@@ -59,7 +50,7 @@ export function MatchCard({ match }: MatchCardProps) {
     <Link
       href={`/matches/${match.id}`}
       className="group block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
-      aria-label={`Ver detalle de ${match.homeTeam} contra ${match.awayTeam}`}
+      aria-label={`Ver detalle de ${match.homeTeam.name} contra ${match.awayTeam.name}`}
     >
       <article
         className={`relative overflow-hidden rounded-2xl border p-5 shadow-sm transition-colors group-hover:border-amber-300/40 group-hover:bg-zinc-900 group-hover:shadow-amber-950/20 ${
@@ -91,11 +82,11 @@ export function MatchCard({ match }: MatchCardProps) {
         </div>
 
         <div className="mt-6 grid gap-4 pl-1 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-          <TeamBlock teamName={match.homeTeam} />
+          <TeamBlock team={match.homeTeam} />
           <div className="flex items-center justify-center rounded-full border border-zinc-800 bg-zinc-950 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
             {match.score ? `${match.score.home}-${match.score.away}` : "vs"}
           </div>
-          <TeamBlock align="right" teamName={match.awayTeam} />
+          <TeamBlock align="right" team={match.awayTeam} />
         </div>
       </article>
     </Link>

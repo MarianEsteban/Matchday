@@ -1,9 +1,15 @@
 export type MatchStatus = "scheduled" | "live" | "finished";
 
+export type Team = {
+  id: string;
+  name: string;
+  crestUrl: string;
+};
+
 export type Match = {
   id: string;
-  homeTeam: string;
-  awayTeam: string;
+  homeTeam: Team;
+  awayTeam: Team;
   competition: string;
   kickoffTime: string;
   venue: string;
