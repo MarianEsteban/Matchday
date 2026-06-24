@@ -43,8 +43,8 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   const highlightedTeamIds = [match.homeTeam.id, match.awayTeam.id];
 
   return (
-    <main className="min-h-screen bg-[#fffaf0] text-zinc-950 dark:bg-zinc-950 dark:text-white">
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-10">
+    <main className="min-h-screen bg-[#fbf7ee] pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-zinc-950 dark:bg-zinc-950 dark:text-white">
+      <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:py-10">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4 lg:mb-8">
         <Link
           href="/"
@@ -55,14 +55,14 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
         <PreferenceControls />
         </div>
 
-        <section className="overflow-hidden rounded-[2rem] border border-stone-300 bg-white/90 shadow-2xl shadow-stone-300/30 dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/40">
-          <div className="border-b border-zinc-800 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.18),transparent_34%),linear-gradient(135deg,rgba(39,39,42,0.98),rgba(9,9,11,0.98))] p-6 sm:p-8">
+        <section className="overflow-hidden rounded-3xl sm:rounded-[2rem] border border-stone-300 bg-white/90 shadow-2xl shadow-stone-300/30 dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/40">
+          <div className="border-b border-zinc-800 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.18),transparent_34%),linear-gradient(135deg,rgba(39,39,42,0.98),rgba(9,9,11,0.98))] p-4 sm:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-sm uppercase tracking-wide text-amber-200">
                   <TranslatedCompetitionName competition={match.competition} />
                 </p>
-                <h1 className="mt-3 text-3xl font-bold text-white sm:text-5xl">
+                <h1 className="mt-2 text-2xl font-bold leading-tight text-white sm:mt-3 sm:text-5xl">
                   {match.homeTeam.name} vs {match.awayTeam.name}
                 </h1>
               </div>
@@ -78,44 +78,44 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
             </div>
           </div>
 
-          <div className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[1.6fr_0.9fr]">
-            <div className="relative overflow-hidden rounded-3xl border border-amber-600/25 bg-white dark:border-amber-300/20 dark:bg-zinc-950 p-6 text-center shadow-2xl shadow-amber-950/20 sm:p-8">
+          <div className="grid gap-4 p-3 sm:gap-6 sm:p-8 lg:grid-cols-[1.6fr_0.9fr]">
+            <div className="relative overflow-hidden rounded-3xl border border-amber-600/25 bg-white dark:border-amber-300/20 dark:bg-zinc-950 p-4 text-center shadow-2xl shadow-amber-950/20 sm:p-8">
               <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-amber-200/70 to-transparent" />
-              <p className="mb-6 text-xs font-bold uppercase tracking-[0.35em] text-stone-600 dark:text-zinc-500">
+              <p className="mb-3 text-xs sm:mb-6 font-bold uppercase tracking-[0.35em] text-stone-600 dark:text-zinc-500">
                 <Trans k="score" />
               </p>
-              <div className="grid items-center gap-5 sm:grid-cols-[1fr_auto_1fr]">
-                <div className="flex flex-col items-center gap-4">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-5">
+                <div className="flex min-w-0 flex-col items-center gap-2 sm:gap-4">
                   <Image
                     src={match.homeTeam.crestUrl}
                     alt={`${match.homeTeam.name} crest`}
                     width={88}
                     height={88}
-                    className="h-20 w-20 drop-shadow-lg sm:h-24 sm:w-24"
+                    className="h-12 w-12 drop-shadow-lg sm:h-24 sm:w-24"
                   />
-                  <p className="text-2xl font-black text-zinc-950 dark:text-zinc-50 sm:text-3xl">
+                  <p className="max-w-full truncate text-sm font-black text-zinc-950 dark:text-zinc-50 sm:text-3xl">
                     {match.homeTeam.name}
                   </p>
                 </div>
-                <div className="rounded-[1.75rem] border border-amber-300/30 bg-gradient-to-b from-white to-amber-50 dark:from-zinc-800 dark:to-zinc-950 px-7 py-5 text-5xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 shadow-inner shadow-black/60 sm:px-9 sm:py-6 sm:text-6xl">
+                <div className="rounded-[1.75rem] border border-amber-300/30 bg-gradient-to-b from-white to-amber-50 dark:from-zinc-800 dark:to-zinc-950 px-4 py-3 text-3xl font-black tracking-tight sm:px-9 sm:py-6 sm:text-6xl text-zinc-950 dark:text-zinc-50 shadow-inner shadow-black/60">
                   {match.score ? `${match.score.home} - ${match.score.away}` : "vs"}
                 </div>
-                <div className="flex flex-col items-center gap-4">
+                <div className="flex min-w-0 flex-col items-center gap-2 sm:gap-4">
                   <Image
                     src={match.awayTeam.crestUrl}
                     alt={`${match.awayTeam.name} crest`}
                     width={88}
                     height={88}
-                    className="h-20 w-20 drop-shadow-lg sm:h-24 sm:w-24"
+                    className="h-12 w-12 drop-shadow-lg sm:h-24 sm:w-24"
                   />
-                  <p className="text-2xl font-black text-zinc-950 dark:text-zinc-50 sm:text-3xl">
+                  <p className="max-w-full truncate text-sm font-black text-zinc-950 dark:text-zinc-50 sm:text-3xl">
                     {match.awayTeam.name}
                   </p>
                 </div>
               </div>
             </div>
 
-            <dl className="grid content-center gap-5 rounded-3xl border border-stone-300 bg-white/80 dark:border-zinc-800 dark:bg-zinc-950/70 p-6 text-sm">
+            <dl className="grid content-center gap-3 rounded-3xl border border-stone-300 bg-white/80 dark:border-zinc-800 dark:bg-zinc-950/70 p-4 text-sm sm:p-6">
               <div>
                 <dt className="text-stone-600 dark:text-zinc-500"><Trans k="dateTime" /></dt>
                 <dd className="mt-1 font-semibold capitalize text-zinc-900 dark:text-zinc-100">
@@ -156,7 +156,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
           </div>
         </nav>
 
-        <div className="mt-10 space-y-12 pb-12 lg:mt-12 lg:space-y-16">
+        <div className="mt-8 space-y-10 pb-12 lg:mt-12 lg:space-y-16">
           <div id="eventos" className="scroll-mt-24">
             <div className="mb-4">
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-700 dark:text-amber-200">

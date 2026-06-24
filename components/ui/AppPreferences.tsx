@@ -99,7 +99,7 @@ export function PreferenceControls() {
   const { language, theme, setLanguage, setTheme, t } = usePreferences();
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-stone-300 bg-white/85 p-2 shadow-sm shadow-stone-300/40 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/75 dark:shadow-black/20">
+    <div className="flex items-center gap-1.5 rounded-2xl border border-stone-300 bg-white/85 p-1.5 shadow-sm shadow-stone-300/40 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/75 dark:shadow-black/20 sm:gap-2 sm:p-2">
       <label className="sr-only" htmlFor="matchday-language">
         {t("language")}
       </label>
@@ -107,7 +107,7 @@ export function PreferenceControls() {
         id="matchday-language"
         value={language}
         onChange={(event) => setLanguage(event.target.value as Language)}
-        className="rounded-full border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 outline-none transition-colors hover:border-stone-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-zinc-500"
+        className="max-w-28 rounded-full border border-stone-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-zinc-900 outline-none transition-colors hover:border-stone-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-zinc-500 sm:max-w-none sm:px-3 sm:py-2 sm:text-sm"
       >
         {languages.map((option) => (
           <option key={option.code} value={option.code}>
@@ -118,10 +118,10 @@ export function PreferenceControls() {
       <button
         type="button"
         onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        className="rounded-full border border-amber-600/40 bg-amber-100 px-3 py-2 text-sm font-bold text-amber-950 transition-colors hover:bg-amber-200 dark:border-amber-300/30 dark:bg-amber-300/10 dark:text-amber-100 dark:hover:bg-amber-300/20"
+        className="rounded-full border border-amber-600/40 bg-amber-100 px-2.5 py-1.5 text-xs font-bold text-amber-950 transition-colors hover:bg-amber-200 dark:border-amber-300/30 dark:bg-amber-300/10 dark:text-amber-100 dark:hover:bg-amber-300/20 sm:px-3 sm:py-2 sm:text-sm"
         aria-label={t("theme")}
       >
-        {theme === "dark" ? "☾" : "☀"} {theme === "dark" ? t("dark") : t("light")}
+        <span aria-hidden="true">{theme === "dark" ? "☾" : "☀"}</span> <span className="hidden sm:inline">{theme === "dark" ? t("dark") : t("light")}</span>
       </button>
     </div>
   );

@@ -7,11 +7,11 @@ export default async function Home() {
   const todayMatches = await getMatchesByDate();
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-white">
+    <main className="min-h-screen bg-[#fbf7ee] pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-zinc-950 dark:bg-zinc-950 dark:text-white">
       <MatchTicker matches={todayMatches} />
-      <div className="mx-auto max-w-6xl p-6">
-        <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-4xl font-bold">⚽ MatchDay</h1>
+      <div className="mx-auto max-w-6xl px-4 py-5 sm:p-6">
+        <header className="mb-6 flex items-center justify-between gap-3 sm:mb-8 sm:flex-wrap sm:gap-4">
+          <h1 className="text-3xl font-bold sm:text-4xl">⚽ MatchDay</h1>
           <PreferenceControls />
         </header>
 
