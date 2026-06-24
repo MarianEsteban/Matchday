@@ -42,7 +42,7 @@ function formatKickoff(date: string, kickoffTime: string) {
 
 export default async function MatchDetailPage({ params }: MatchDetailPageProps) {
   const { id } = await params;
-  const match = getMatchById(id);
+  const match = await getMatchById(id);
 
   if (!match) {
     notFound();

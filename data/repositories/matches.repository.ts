@@ -1,12 +1,29 @@
-import { createMockMatches, formatMatchDate } from "@/data/mock/matches";
+import { formatMatchDate } from "@/data/mock/matches";
+import { createMatchDataSource } from "@/data/services/match-data-source";
 import type { Match } from "@/types/match";
 
-export function getMatchesByDate(date: Date = new Date()): Match[] {
+const matchDataSource = createMatchDataSource();
+
+export async function getMatchesByDate(date: Date = new Date()): Promise<Match[]> {
   const requestedDate = formatMatchDate(date);
 
-  return createMockMatches(date).filter((match) => match.date === requestedDate);
+  try {
+    const matches = await matchDataSource.getMatches({ date });
+
+    return matches.filter((match) => match.date === requestedDate);
+  } catch (error) {
+    console.error("Unable to load matches from configured data source.", error);
+
+    return [];
+  }
 }
 
-export function getMatchById(id: string): Match | undefined {
-  return createMockMatches().find((match) => match.id === id);
+export async function getMatchById(id: string): Promise<Match | undefined> {
+  try {
+    return matchDataSource.getMatchById(id);
+  } catch (error) {
+    console.error("Unable to load match from configured data source.", error);
+
+    return undefined;
+  }
 }
