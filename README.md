@@ -11,7 +11,7 @@
 MatchDay is a football match center web app designed to present match information in a clean, organized, and portfolio-ready interface. It brings together fixtures, competition groupings, match details, timelines, standings previews, lineups, and statistics to create a modern experience for following football matches.
 
 - **Live URL:** [https://matchday-beige-three.vercel.app](https://matchday-beige-three.vercel.app)
-- **GitHub repository:** `PASTE_GITHUB_REPOSITORY_URL_HERE`
+- **GitHub repository:** `https://github.com/MarianEsteban/Matchday`
 
 ### Features
 
@@ -39,7 +39,7 @@ MatchDay is a football match center web app designed to present match informatio
 1. Clone the repository:
 
    ```bash
-   git clone PASTE_GITHUB_REPOSITORY_URL_HERE
+   git clone https://github.com/MarianEsteban/Matchday
    cd Matchday
    ```
 
@@ -95,7 +95,7 @@ MatchDay is currently a portfolio project using demo/mock data. The interface an
 MatchDay es una aplicación web de centro de partidos de fútbol diseñada para presentar información de partidos en una interfaz limpia, organizada y adecuada para un portafolio profesional. Reúne calendarios, competiciones agrupadas, detalles de partidos, cronologías, vistas previas de clasificaciones, alineaciones y estadísticas para ofrecer una experiencia moderna al seguir partidos de fútbol.
 
 - **URL en vivo:** [https://matchday-beige-three.vercel.app](https://matchday-beige-three.vercel.app)
-- **Repositorio de GitHub:** `PASTE_GITHUB_REPOSITORY_URL_HERE`
+- **Repositorio de GitHub:** `https://github.com/MarianEsteban/Matchday`
 
 ### Funcionalidades
 
@@ -123,7 +123,7 @@ MatchDay es una aplicación web de centro de partidos de fútbol diseñada para 
 1. Clona el repositorio:
 
    ```bash
-   git clone PASTE_GITHUB_REPOSITORY_URL_HERE
+   git clone https://github.com/MarianEsteban/Matchday
    cd Matchday
    ```
 
