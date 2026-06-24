@@ -1,11 +1,13 @@
 import { MatchList } from "@/components/matches/MatchList";
+import { MatchTicker } from "@/components/ticker/MatchTicker";
 import { getMatchesByDate } from "@/data/repositories/matches.repository";
 
-export default function Home() {
-  const todayMatches = getMatchesByDate();
+export default async function Home() {
+  const todayMatches = await getMatchesByDate();
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
+      <MatchTicker matches={todayMatches} />
       <div className="mx-auto max-w-6xl p-6">
         <h1 className="mb-8 text-4xl font-bold">⚽ MatchDay</h1>
 
