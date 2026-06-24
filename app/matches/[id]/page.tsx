@@ -5,6 +5,8 @@ import { MatchEventsTimeline } from "@/components/matches/MatchEventsTimeline";
 import { MatchLineups } from "@/components/matches/MatchLineups";
 import { PreferenceControls, Trans } from "@/components/ui/AppPreferences";
 import { TranslatedStatus } from "@/components/ui/TranslatedStatus";
+import { LocalizedKickoff } from "@/components/ui/LocalizedKickoff";
+import { TranslatedCompetitionName } from "@/components/ui/TranslatedCompetitionName";
 import { MatchStats } from "@/components/matches/MatchStats";
 import { StandingsTable } from "@/components/standings/StandingsTable";
 import { getLineupsByMatchId } from "@/data/mock/lineups";
@@ -25,16 +27,6 @@ const statusBadgeStyles: Record<MatchStatus, string> = {
   live: "border-emerald-400/30 bg-emerald-400/15 text-emerald-200",
   finished: "border-zinc-600/40 bg-zinc-800 text-zinc-300",
 };
-
-function formatKickoff(date: string, kickoffTime: string) {
-  return new Intl.DateTimeFormat("es-AR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(`${date}T${kickoffTime}:00`));
-}
 
 export default async function MatchDetailPage({ params }: MatchDetailPageProps) {
   const { id } = await params;
@@ -68,7 +60,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-sm uppercase tracking-wide text-amber-200">
-                  {match.competition}
+                  <TranslatedCompetitionName competition={match.competition} />
                 </p>
                 <h1 className="mt-3 text-3xl font-bold text-zinc-50 sm:text-5xl">
                   {match.homeTeam.name} vs {match.awayTeam.name}
@@ -127,7 +119,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
               <div>
                 <dt className="text-zinc-500"><Trans k="dateTime" /></dt>
                 <dd className="mt-1 font-semibold capitalize text-zinc-100">
-                  {formatKickoff(match.date, match.kickoffTime)}
+                  <LocalizedKickoff date={match.date} kickoffTime={match.kickoffTime} />
                 </dd>
               </div>
               <div>
@@ -144,7 +136,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
 
         <nav
           className="z-20 mt-8 overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950/90 p-2 shadow-lg shadow-black/30 backdrop-blur lg:sticky lg:top-4"
-          aria-label="Match sections"
+          aria-label="match sections"
         >
           <div className="flex min-w-max gap-2">
             {[

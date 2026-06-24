@@ -4,7 +4,7 @@ import type { MatchStatus } from "@/types/match";
 export type MatchFilter = "all" | MatchStatus;
 
 type MatchFilterOption = {
-  labelKey: "all" | "live" | "upcoming" | "finished";
+  labelKey: "all" | "live" | "upcomingFilter" | "finishedFilter";
   value: MatchFilter;
 };
 
@@ -16,8 +16,8 @@ type MatchFiltersProps = {
 const filterOptions: MatchFilterOption[] = [
   { labelKey: "all", value: "all" },
   { labelKey: "live", value: "live" },
-  { labelKey: "upcoming", value: "scheduled" },
-  { labelKey: "finished", value: "finished" },
+  { labelKey: "upcomingFilter", value: "scheduled" },
+  { labelKey: "finishedFilter", value: "finished" },
 ];
 
 export function MatchFilters({ activeFilter, onSelectFilter }: MatchFiltersProps) {

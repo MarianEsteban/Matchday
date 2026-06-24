@@ -2,15 +2,10 @@
 
 import Image from "next/image";
 import { usePreferences } from "@/components/ui/AppPreferences";
-import type { Match, MatchStatus } from "@/types/match";
+import type { Match } from "@/types/match";
 
 type MatchTickerProps = {
   matches: Match[];
-};
-
-const tickerStatusLabelKeys: Record<Exclude<MatchStatus, "scheduled">, "live" | "fullTime"> = {
-  live: "live",
-  finished: "fullTime",
 };
 
 function getMatchCenterText(match: Match) {
@@ -23,7 +18,7 @@ function getMatchCenterText(match: Match) {
 
 function TickerItem({ match }: { match: Match }) {
   const { t } = usePreferences();
-  const matchStatusText = match.status === "scheduled" ? match.kickoffTime : t(tickerStatusLabelKeys[match.status]);
+  const matchStatusText = match.status === "scheduled" ? match.kickoffTime : t("live");
   return (
     <li className="mx-3 inline-flex min-w-max items-center gap-3 rounded-full border border-zinc-800 bg-zinc-900/95 px-4 py-2 text-sm text-zinc-100 shadow-lg shadow-black/20 sm:mx-4 sm:px-5">
       <Image
@@ -54,14 +49,16 @@ function TickerItem({ match }: { match: Match }) {
 
 export function MatchTicker({ matches }: MatchTickerProps) {
   const { t } = usePreferences();
-  if (matches.length === 0) {
+  const displayMatches = matches.filter((match) => match.status === "live" || match.status === "scheduled");
+
+  if (displayMatches.length === 0) {
     return null;
   }
 
-  const tickerItems = [...matches, ...matches];
+  const tickerItems = [...displayMatches, ...displayMatches];
 
   return (
-    <section className="border-b border-zinc-800 bg-zinc-950/95 py-3 text-white" aria-label="Top match ticker">
+    <section className="border-b border-zinc-800 bg-zinc-950/95 py-3 text-white" aria-label={t("matchTicker")}>
       <div className="mb-2 flex items-center gap-2 px-4 text-xs font-bold uppercase tracking-[0.2em] text-amber-300 sm:px-6">
         <span className="h-2 w-2 rounded-full bg-emerald-400" />
         {t("matchTicker")}

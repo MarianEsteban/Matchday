@@ -1,4 +1,5 @@
-import { Trans } from "@/components/ui/AppPreferences";
+import { Trans, usePreferences } from "@/components/ui/AppPreferences";
+import { translateCompetitionName } from "@/lib/i18n";
 import type { CompetitionStandings } from "@/types/standing";
 
 type StandingsTableProps = {
@@ -12,13 +13,14 @@ export function StandingsTable({
   highlightedTeamIds = [],
   previewRows = standings.rows.length,
 }: StandingsTableProps) {
+  const { language, t } = usePreferences();
   const rows = standings.rows.slice(0, previewRows);
 
   return (
     <section className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/80 shadow-sm shadow-black/20">
       <div className="border-b border-zinc-800 px-5 py-4">
         <p className="text-xs uppercase tracking-wide text-amber-200"><Trans k="tablePositions" /></p>
-        <h2 className="mt-1 text-xl font-semibold text-zinc-100">{standings.competition}</h2>
+        <h2 className="mt-1 text-xl font-semibold text-zinc-100">{translateCompetitionName(standings.competition, language)}</h2>
       </div>
 
       <div className="overflow-x-auto">
@@ -27,12 +29,12 @@ export function StandingsTable({
             <tr>
               <th className="px-4 py-3 font-semibold">#</th>
               <th className="px-4 py-3 font-semibold"><Trans k="team" /></th>
-              <th className="px-3 py-3 text-center font-semibold">PJ</th>
-              <th className="px-3 py-3 text-center font-semibold">G</th>
-              <th className="px-3 py-3 text-center font-semibold">E</th>
-              <th className="px-3 py-3 text-center font-semibold">P</th>
-              <th className="px-3 py-3 text-center font-semibold">DG</th>
-              <th className="px-4 py-3 text-center font-semibold">Pts</th>
+              <th className="px-3 py-3 text-center font-semibold">{t("played")}</th>
+              <th className="px-3 py-3 text-center font-semibold">{t("won")}</th>
+              <th className="px-3 py-3 text-center font-semibold">{t("drawn")}</th>
+              <th className="px-3 py-3 text-center font-semibold">{t("lost")}</th>
+              <th className="px-3 py-3 text-center font-semibold">{t("goalDifference")}</th>
+              <th className="px-4 py-3 text-center font-semibold">{t("points")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800">
