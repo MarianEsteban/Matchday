@@ -1,4 +1,5 @@
 import { usePreferences } from "@/components/ui/AppPreferences";
+import { translateCompetitionName } from "@/lib/i18n";
 import type { Match } from "@/types/match";
 import { MatchCard } from "@/components/matches/MatchCard";
 
@@ -19,7 +20,7 @@ export function CompetitionSection({
   isCollapsed,
   onToggle,
 }: CompetitionSectionProps) {
-  const { t } = usePreferences();
+  const { language, t } = usePreferences();
   const sectionId = createCompetitionSectionId(competition);
 
   return (
@@ -39,7 +40,7 @@ export function CompetitionSection({
         >
           ▾
         </span>
-        <h3 className="text-lg font-semibold text-zinc-100">{competition}</h3>
+        <h3 className="text-lg font-semibold text-zinc-100">{translateCompetitionName(competition, language)}</h3>
         <span className="h-px flex-1 bg-zinc-800" />
         <span className="rounded-full border border-zinc-700 bg-zinc-950 px-3 py-1 text-sm font-semibold text-zinc-300">
           {matches.length} {matches.length === 1 ? t("match") : t("matches")}

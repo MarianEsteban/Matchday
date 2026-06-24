@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePreferences } from "@/components/ui/AppPreferences";
 import type { Match } from "@/types/match";
 import { CompetitionSection } from "@/components/matches/CompetitionSection";
 import { CompetitionSidebar } from "@/components/matches/CompetitionSidebar";
@@ -8,6 +9,7 @@ import { DateSelector } from "@/components/matches/DateSelector";
 import { EmptyMatchState } from "@/components/matches/EmptyMatchState";
 import { MatchFilters, type MatchFilter } from "@/components/matches/MatchFilters";
 import { formatMatchDate } from "@/data/mock/matches";
+import { formatVisibleDate, type TranslationKey } from "@/lib/i18n";
 
 type MatchListProps = {
   matches: Match[];
@@ -15,8 +17,8 @@ type MatchListProps = {
 
 type EmptyState = {
   icon: string;
-  title: string;
-  description: string;
+  titleKey: TranslationKey;
+  descriptionKey: TranslationKey;
 };
 
 function groupMatchesByCompetition(matches: Match[]) {
@@ -41,12 +43,8 @@ function shiftDate(dateString: string, daysToShift: number) {
   return formatMatchDate(date);
 }
 
-function formatSelectedDateLabel(dateString: string) {
-  return new Intl.DateTimeFormat("es-AR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(createDateFromDateString(dateString));
+function formatSelectedDateLabel(dateString: string, language: Parameters<typeof formatVisibleDate>[1]) {
+  return formatVisibleDate(createDateFromDateString(dateString), language);
 }
 
 function filterMatchesByDate(matches: Match[], selectedDate: string) {
@@ -65,43 +63,44 @@ function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boo
   if (!hasMatchesForSelectedDate) {
     return {
       icon: "🗓️",
-      title: "No hay partidos programados para esta fecha.",
-      description: "Probá con otra fecha o volvé a la vista de hoy.",
+      titleKey: "noMatchesDateTitle",
+      descriptionKey: "noMatchesDateDescription",
     };
   }
 
   if (activeFilter === "live") {
     return {
       icon: "🔕",
-      title: "No hay partidos en vivo ahora.",
-      description: "Cuando empiece un partido, aparecerá en este filtro.",
+      titleKey: "noLiveTitle",
+      descriptionKey: "noLiveDescription",
     };
   }
 
   if (activeFilter === "scheduled") {
     return {
       icon: "⏳",
-      title: "No hay próximos partidos para esta fecha.",
-      description: "Revisá otra fecha para ver los partidos que vienen.",
+      titleKey: "noUpcomingTitle",
+      descriptionKey: "noUpcomingDescription",
     };
   }
 
   if (activeFilter === "finished") {
     return {
       icon: "🏁",
-      title: "No hay partidos finalizados para esta fecha.",
-      description: "Los resultados aparecerán cuando terminen los encuentros.",
+      titleKey: "noFinishedTitle",
+      descriptionKey: "noFinishedDescription",
     };
   }
 
   return {
     icon: "⚽",
-    title: "No hay partidos para esta fecha.",
-    description: "Probá con otra fecha para encontrar partidos disponibles.",
+    titleKey: "noMatchesTitle",
+    descriptionKey: "noMatchesDescription",
   };
 }
 
 export function MatchList({ matches }: MatchListProps) {
+  const { language, t } = usePreferences();
   const [activeFilter, setActiveFilter] = useState<MatchFilter>("all");
   const [selectedDate, setSelectedDate] = useState(() =>
     matches[0]?.date ? matches[0].date : formatMatchDate(new Date()),
@@ -130,7 +129,7 @@ export function MatchList({ matches }: MatchListProps) {
   return (
     <div className="space-y-6">
       <DateSelector
-        selectedDateLabel={formatSelectedDateLabel(selectedDate)}
+        selectedDateLabel={formatSelectedDateLabel(selectedDate, language)}
         onSelectPreviousDate={() => setSelectedDate((currentDate) => shiftDate(currentDate, -1))}
         onSelectNextDate={() => setSelectedDate((currentDate) => shiftDate(currentDate, 1))}
         onSelectToday={() => setSelectedDate(todayDate)}
@@ -139,7 +138,7 @@ export function MatchList({ matches }: MatchListProps) {
       <MatchFilters activeFilter={activeFilter} onSelectFilter={setActiveFilter} />
 
       {filteredMatches.length === 0 ? (
-        <EmptyMatchState {...emptyState} />
+        <EmptyMatchState icon={emptyState.icon} title={t(emptyState.titleKey)} description={t(emptyState.descriptionKey)} />
       ) : (
         <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
           <CompetitionSidebar competitions={competitionGroups} />

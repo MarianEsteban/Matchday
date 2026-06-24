@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePreferences } from "@/components/ui/AppPreferences";
+import { translateCompetitionName } from "@/lib/i18n";
 import type { Match, MatchStatus, Team } from "@/types/match";
 
 type MatchCardProps = {
@@ -45,14 +46,14 @@ function TeamBlock({
 }
 
 export function MatchCard({ match }: MatchCardProps) {
-  const { t } = usePreferences();
+  const { language, t } = usePreferences();
   const isLive = match.status === "live";
 
   return (
     <Link
       href={`/matches/${match.id}`}
       className="group block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
-      aria-label={`Ver detalle de ${match.homeTeam.name} contra ${match.awayTeam.name}`}
+      aria-label={`${t("viewMatchDetail")} ${match.homeTeam.name} ${t("against")} ${match.awayTeam.name}`}
     >
       <article
         className={`relative overflow-hidden rounded-2xl border p-5 shadow-sm transition-colors group-hover:border-amber-300/40 group-hover:bg-zinc-900 group-hover:shadow-amber-950/20 ${
@@ -66,7 +67,7 @@ export function MatchCard({ match }: MatchCardProps) {
         <div className="flex flex-wrap items-start justify-between gap-3 pl-1">
           <div className="space-y-2">
             <span className="inline-flex items-center rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs font-medium uppercase tracking-wide text-amber-200">
-              {match.competition}
+              {translateCompetitionName(match.competition, language)}
             </span>
             <div className="text-sm text-zinc-400">
               <time dateTime={`${match.date}T${match.kickoffTime}`}>{match.kickoffTime}</time>

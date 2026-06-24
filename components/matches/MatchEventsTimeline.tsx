@@ -1,4 +1,4 @@
-import { Trans } from "@/components/ui/AppPreferences";
+import { Trans, usePreferences } from "@/components/ui/AppPreferences";
 import type { MatchEvent, MatchEventTeam, MatchEventType } from "@/types/match-event";
 import type { Match } from "@/types/match";
 
@@ -7,11 +7,11 @@ type MatchEventsTimelineProps = {
   match: Match;
 };
 
-const eventLabels: Record<MatchEventType, string> = {
-  goal: "Gol",
-  "yellow-card": "Tarjeta amarilla",
-  "red-card": "Tarjeta roja",
-  substitution: "Cambio",
+const eventLabelKeys: Record<MatchEventType, "goal" | "yellowCard" | "redCard" | "substitution"> = {
+  goal: "goal",
+  "yellow-card": "yellowCard",
+  "red-card": "redCard",
+  substitution: "substitution",
 };
 
 const eventIcons: Record<MatchEventType, string> = {
@@ -33,26 +33,28 @@ function getTeamName(match: Match, team: MatchEventTeam) {
 }
 
 function EventDetail({ event }: { event: MatchEvent }) {
+  const { t } = usePreferences();
   if (event.type === "goal") {
     return event.assistName ? (
-      <span>Asistencia: {event.assistName}</span>
+      <span>{t("assist")}: {event.assistName}</span>
     ) : (
-      <span>Gol sin asistencia</span>
+      <span>{t("unassistedGoal")}</span>
     );
   }
 
   if (event.type === "substitution") {
     return (
       <span>
-        Entra {event.playerInName} · Sale {event.playerOutName}
+        {t("playerIn")} {event.playerInName} · {t("playerOut")} {event.playerOutName}
       </span>
     );
   }
 
-  return <span>{event.reason ?? eventLabels[event.type]}</span>;
+  return <span>{event.reason ?? t(eventLabelKeys[event.type])}</span>;
 }
 
 export function MatchEventsTimeline({ events, match }: MatchEventsTimelineProps) {
+  const { t } = usePreferences();
   const sortedEvents = [...events].sort(
     (firstEvent, secondEvent) => firstEvent.minute - secondEvent.minute,
   );
@@ -80,7 +82,7 @@ export function MatchEventsTimeline({ events, match }: MatchEventsTimelineProps)
                   </span>
                   <div>
                     <p className="text-sm font-bold text-zinc-50">
-                      {eventLabels[event.type]} · {event.playerName}
+                      {t(eventLabelKeys[event.type])} · {event.playerName}
                     </p>
                     <p className="mt-1 text-xs font-medium text-zinc-300">
                       {getTeamName(match, event.team)}

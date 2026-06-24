@@ -1,4 +1,4 @@
-import { Trans } from "@/components/ui/AppPreferences";
+import { Trans, usePreferences } from "@/components/ui/AppPreferences";
 import type { MatchStatistic } from "@/types/match-statistic";
 import type { Match } from "@/types/match";
 
@@ -11,7 +11,19 @@ function formatValue(statistic: MatchStatistic, value: number) {
   return `${value}${statistic.unit ?? ""}`;
 }
 
+const statisticLabels = {
+  es: { Posesión: "Posesión", Remates: "Remates", "Remates al arco": "Remates al arco", "Córners": "Córners", Faltas: "Faltas" },
+  en: { Posesión: "Possession", Remates: "Shots", "Remates al arco": "Shots on target", "Córners": "Corners", Faltas: "Fouls" },
+  pt: { Posesión: "Posse", Remates: "Finalizações", "Remates al arco": "Finalizações no alvo", "Córners": "Escanteios", Faltas: "Faltas" },
+} as const;
+
+function translateStatisticLabel(label: string, language: keyof typeof statisticLabels) {
+  return statisticLabels[language][label as keyof typeof statisticLabels.es] ?? label;
+}
+
 export function MatchStats({ match, statistics }: MatchStatsProps) {
+  const { language } = usePreferences();
+
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-sm shadow-black/20">
       <div className="flex items-center justify-between gap-3">
@@ -44,7 +56,7 @@ export function MatchStats({ match, statistics }: MatchStatsProps) {
                     {formatValue(statistic, statistic.values.home)}
                   </span>
                   <span className="text-center text-sm font-semibold text-zinc-300">
-                    {statistic.label}
+                    {translateStatisticLabel(statistic.label, language)}
                   </span>
                   <span className="text-right text-lg font-black tabular-nums text-zinc-50">
                     {formatValue(statistic, statistic.values.away)}

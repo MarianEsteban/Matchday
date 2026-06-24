@@ -1,6 +1,7 @@
 import { usePreferences } from "@/components/ui/AppPreferences";
 import { createCompetitionSectionId } from "@/components/matches/CompetitionSection";
 import { sidebarSections } from "@/data/mock/competitions";
+import { translateCompetitionName } from "@/lib/i18n";
 import type { Match } from "@/types/match";
 
 type CompetitionGroup = {
@@ -13,7 +14,7 @@ type CompetitionSidebarProps = {
 };
 
 export function CompetitionSidebar({ competitions }: CompetitionSidebarProps) {
-  const { t } = usePreferences();
+  const { language, t } = usePreferences();
   const competitionMatchCounts = new Map(
     competitions.map((competition) => [competition.name, competition.matches.length]),
   );
@@ -32,14 +33,14 @@ export function CompetitionSidebar({ competitions }: CompetitionSidebarProps) {
         className="max-h-[calc(100vh-9rem)] space-y-5 overflow-y-auto px-3 py-4"
       >
         {sidebarSections.map((section) => (
-          <section key={section.title} aria-labelledby={`sidebar-${section.title}`}>
+          <section key={translateCompetitionName(section.title, language)} aria-labelledby={`sidebar-${translateCompetitionName(section.title, language)}`}>
             <div className="mb-2 flex items-center gap-2 px-2">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
               <h3
-                id={`sidebar-${section.title}`}
+                id={`sidebar-${translateCompetitionName(section.title, language)}`}
                 className="text-xs font-bold uppercase tracking-[0.18em] text-zinc-500"
               >
-                {section.title}
+                {translateCompetitionName(section.title, language)}
               </h3>
             </div>
 
@@ -57,7 +58,7 @@ export function CompetitionSidebar({ competitions }: CompetitionSidebarProps) {
                 if (!hasCurrentSection) {
                   return (
                     <div key={competition.name} className={className} aria-disabled="true">
-                      <span className="truncate">{competition.name}</span>
+                      <span className="truncate">{translateCompetitionName(competition.name, language)}</span>
                       <span className="rounded-full border border-zinc-800 bg-zinc-900 px-2 py-0.5 text-xs font-semibold text-zinc-500">
                         {matchCount}
                       </span>
@@ -71,7 +72,7 @@ export function CompetitionSidebar({ competitions }: CompetitionSidebarProps) {
                     href={`#${createCompetitionSectionId(competition.name)}`}
                     className={className}
                   >
-                    <span className="truncate">{competition.name}</span>
+                    <span className="truncate">{translateCompetitionName(competition.name, language)}</span>
                     <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-200">
                       {matchCount}
                     </span>
