@@ -1,6 +1,7 @@
 import "server-only";
 
-import { createMockMatches, formatMatchDate } from "@/data/mock/matches";
+import { createMockMatches } from "@/data/mock/matches";
+import { FootballApiService } from "@/data/services/football-api.service";
 import type { Match } from "@/types/match";
 
 export type MatchQuery = {
@@ -22,44 +23,23 @@ export class DemoMatchDataSource implements MatchDataSource {
   }
 }
 
-export class ApiMatchDataSource implements MatchDataSource {
-  constructor(private readonly baseUrl: string) {}
+export class FootballApiMatchDataSource implements MatchDataSource {
+  constructor(private readonly footballApi = new FootballApiService()) {}
 
-  async getMatches(query: MatchQuery = {}): Promise<Match[]> {
-    const requestedDate = query.date ? formatMatchDate(query.date) : formatMatchDate(new Date());
-    const response = await fetch(`${this.baseUrl}/matches?date=${requestedDate}`, {
-      next: { revalidate: 60 },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Match API returned ${response.status}`);
-    }
-
-    return response.json() as Promise<Match[]>;
+  getMatches(query: MatchQuery = {}): Promise<Match[]> {
+    return this.footballApi.getFixtures(query);
   }
 
-  async getMatchById(id: string): Promise<Match | undefined> {
-    const response = await fetch(`${this.baseUrl}/matches/${id}`, {
-      next: { revalidate: 60 },
-    });
-
-    if (response.status === 404) {
-      return undefined;
-    }
-
-    if (!response.ok) {
-      throw new Error(`Match API returned ${response.status}`);
-    }
-
-    return response.json() as Promise<Match>;
+  getMatchById(id: string): Promise<Match | undefined> {
+    return this.footballApi.getFixtureById(id);
   }
 }
 
 export function createMatchDataSource(): MatchDataSource {
-  const apiBaseUrl = process.env.MATCHDAY_FOOTBALL_API_BASE_URL;
-
-  if (apiBaseUrl) {
-    return new ApiMatchDataSource(apiBaseUrl);
+  if (process.env.FOOTBALL_API_KEY) {
+    // The real football provider selection lives here so API keys stay server-side.
+    // Add future providers by swapping or composing MatchDataSource implementations.
+    return new FootballApiMatchDataSource();
   }
 
   return new DemoMatchDataSource();
