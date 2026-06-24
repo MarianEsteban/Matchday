@@ -1,3 +1,5 @@
+"use client";
+
 import { Trans, usePreferences } from "@/components/ui/AppPreferences";
 import { translateCompetitionName } from "@/lib/i18n";
 import type { CompetitionStandings } from "@/types/standing";
