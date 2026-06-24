@@ -8,31 +8,36 @@ export type SidebarSection = {
   competitions: SidebarCompetition[];
 };
 
+const groupCompetitions: SidebarCompetition[] = Array.from({ length: 12 }, (_, index) => ({
+  name: `Group ${String.fromCharCode(65 + index)}`,
+  fallbackMatchCount: index === 9 ? 3 : 1,
+}));
+
 export const sidebarSections: SidebarSection[] = [
   {
-    title: "Destacadas",
+    title: "Today",
     competitions: [
-      { name: "Liga Profesional Argentina", fallbackMatchCount: 6 },
-      { name: "Copa Libertadores", fallbackMatchCount: 4 },
-      { name: "UEFA Champions League", fallbackMatchCount: 8 },
+      { name: "Group J", fallbackMatchCount: 3 },
+      { name: "Group C", fallbackMatchCount: 1 },
+      { name: "Group K", fallbackMatchCount: 1 },
     ],
   },
   {
     title: "Argentina",
-    competitions: [
-      { name: "Clásico Porteño", fallbackMatchCount: 1 },
-      { name: "Clásico Platense", fallbackMatchCount: 1 },
-      { name: "Primera Nacional", fallbackMatchCount: 7 },
-      { name: "Copa Argentina", fallbackMatchCount: 3 },
-    ],
+    competitions: [{ name: "Group J", fallbackMatchCount: 3 }],
   },
   {
-    title: "Internacional",
+    title: "Groups",
+    competitions: groupCompetitions,
+  },
+  {
+    title: "Knockout Stage",
     competitions: [
-      { name: "Premier League", fallbackMatchCount: 5 },
-      { name: "LaLiga", fallbackMatchCount: 4 },
-      { name: "Serie A", fallbackMatchCount: 6 },
-      { name: "Copa Sudamericana", fallbackMatchCount: 2 },
+      { name: "Round of 32", fallbackMatchCount: 16 },
+      { name: "Round of 16", fallbackMatchCount: 8 },
+      { name: "Quarterfinals", fallbackMatchCount: 4 },
+      { name: "Semifinals", fallbackMatchCount: 2 },
+      { name: "Final", fallbackMatchCount: 1 },
     ],
   },
 ];
