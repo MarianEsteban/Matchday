@@ -32,13 +32,13 @@ function TeamBlock({
   const isRightAligned = align === "right";
 
   return (
-    <div className={`flex items-center gap-3 ${isRightAligned ? "sm:flex-row-reverse" : ""}`}>
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-stone-300 bg-stone-100 dark:border-zinc-700 dark:bg-zinc-800 text-sm font-bold text-zinc-900 dark:text-zinc-100 shadow-inner shadow-white/5">
-        <Image src={team.crestUrl} alt="" width={32} height={32} className="h-8 w-8" />
+    <div className={`flex min-w-0 items-center gap-2 ${isRightAligned ? "flex-row-reverse text-right" : ""} sm:gap-3`}>
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-stone-300 bg-stone-100 text-sm font-bold text-zinc-900 shadow-inner shadow-white/5 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 sm:h-11 sm:w-11">
+        <Image src={team.crestUrl} alt="" width={32} height={32} className="h-6 w-6 sm:h-8 sm:w-8" />
       </div>
       <span
-        className={`text-base font-semibold text-zinc-950 dark:text-zinc-50 sm:text-lg ${
-          isRightAligned ? "sm:text-right" : ""
+        className={`min-w-0 truncate text-sm font-semibold leading-tight text-zinc-950 dark:text-zinc-50 sm:text-lg ${
+          isRightAligned ? "text-right" : ""
         }`}
       >
         {team.name}
@@ -58,7 +58,7 @@ export function MatchCard({ match }: MatchCardProps) {
       aria-label={`${t("viewMatchDetail")} ${match.homeTeam.name} ${t("against")} ${match.awayTeam.name}`}
     >
       <article
-        className={`relative overflow-hidden rounded-2xl border p-5 shadow-sm transition-colors group-hover:border-amber-300/40 group-hover:bg-white group-hover:shadow-amber-200/30 dark:group-hover:bg-zinc-900 dark:group-hover:shadow-amber-950/20 ${
+        className={`relative overflow-hidden rounded-2xl border p-3 shadow-sm sm:p-5 transition-colors group-hover:border-amber-300/40 group-hover:bg-white group-hover:shadow-amber-200/30 dark:group-hover:bg-zinc-900 dark:group-hover:shadow-amber-950/20 ${
           isLive
             ? "border-emerald-500/40 bg-emerald-50 shadow-emerald-200/40 dark:border-emerald-400/30 dark:bg-emerald-950/20 dark:shadow-emerald-950/30"
             : "border-stone-300 bg-white/90 shadow-stone-300/30 dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/20"
@@ -66,12 +66,12 @@ export function MatchCard({ match }: MatchCardProps) {
       >
         {isLive ? <div className="absolute inset-y-0 left-0 w-1 bg-emerald-400" /> : null}
 
-        <div className="flex flex-wrap items-start justify-between gap-3 pl-1">
-          <div className="space-y-2">
-            <span className="inline-flex items-center rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs font-medium uppercase tracking-wide text-amber-700 dark:text-amber-200">
+        <div className="flex items-start justify-between gap-2 pl-1">
+          <div className="min-w-0 space-y-1.5 sm:space-y-2">
+            <span className="inline-flex items-center rounded-full border border-amber-400/20 bg-amber-400/10 px-2.5 py-1 text-[0.68rem] sm:px-3 sm:text-xs font-medium uppercase tracking-wide text-amber-700 dark:text-amber-200">
               {translateCompetitionName(match.competition, language)}
             </span>
-            <div className="text-sm text-stone-600 dark:text-zinc-400">
+            <div className="truncate text-xs text-stone-600 dark:text-zinc-400 sm:text-sm">
               <time dateTime={`${match.date}T${match.kickoffTime}`}>{match.kickoffTime}</time>
               <span className="mx-2 text-zinc-600">•</span>
               <span>{match.venue}</span>
@@ -79,16 +79,16 @@ export function MatchCard({ match }: MatchCardProps) {
           </div>
 
           <span
-            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide shadow-sm ${statusBadgeStyles[match.status]}`}
+            className={`inline-flex shrink-0 items-center rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-wide shadow-sm sm:px-3 sm:text-xs ${statusBadgeStyles[match.status]}`}
           >
             {isLive ? <span className="mr-2 h-2 w-2 rounded-full bg-emerald-300" /> : null}
             {t(statusLabelKeys[match.status])}
           </span>
         </div>
 
-        <div className="mt-6 grid gap-4 pl-1 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+        <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 pl-1 sm:mt-6 sm:gap-4">
           <TeamBlock team={match.homeTeam} />
-          <div className="flex items-center justify-center rounded-full border border-stone-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-700 dark:text-zinc-500">
+          <div className="flex items-center justify-center rounded-full border border-stone-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.12em] sm:px-3 sm:tracking-[0.2em] text-zinc-700 dark:text-zinc-500">
             {match.score ? `${match.score.home}-${match.score.away}` : "vs"}
           </div>
           <TeamBlock align="right" team={match.awayTeam} />

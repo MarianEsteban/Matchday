@@ -9,7 +9,7 @@ import { DateSelector } from "@/components/matches/DateSelector";
 import { EmptyMatchState } from "@/components/matches/EmptyMatchState";
 import { MatchFilters, type MatchFilter } from "@/components/matches/MatchFilters";
 import { formatMatchDate } from "@/data/mock/matches";
-import { formatVisibleDate, type TranslationKey } from "@/lib/i18n";
+import { formatCompactVisibleDate, formatVisibleDate, type TranslationKey } from "@/lib/i18n";
 
 type MatchListProps = {
   matches: Match[];
@@ -45,6 +45,10 @@ function shiftDate(dateString: string, daysToShift: number) {
 
 function formatSelectedDateLabel(dateString: string, language: Parameters<typeof formatVisibleDate>[1]) {
   return formatVisibleDate(createDateFromDateString(dateString), language);
+}
+
+function formatCompactSelectedDateLabel(dateString: string, language: Parameters<typeof formatCompactVisibleDate>[1]) {
+  return formatCompactVisibleDate(createDateFromDateString(dateString), language);
 }
 
 function filterMatchesByDate(matches: Match[], selectedDate: string) {
@@ -130,6 +134,7 @@ export function MatchList({ matches }: MatchListProps) {
     <div className="space-y-6">
       <DateSelector
         selectedDateLabel={formatSelectedDateLabel(selectedDate, language)}
+        compactSelectedDateLabel={formatCompactSelectedDateLabel(selectedDate, language)}
         onSelectPreviousDate={() => setSelectedDate((currentDate) => shiftDate(currentDate, -1))}
         onSelectNextDate={() => setSelectedDate((currentDate) => shiftDate(currentDate, 1))}
         onSelectToday={() => setSelectedDate(todayDate)}
@@ -142,7 +147,7 @@ export function MatchList({ matches }: MatchListProps) {
       ) : (
         <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
           <CompetitionSidebar competitions={competitionGroups} />
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {competitionGroups.map(({ name: competition, matches: competitionMatches }) => (
               <CompetitionSection
                 key={competition}

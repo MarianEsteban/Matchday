@@ -248,6 +248,29 @@ export function formatVisibleDate(date: Date, language: Language, options?: Intl
   }).format(date);
 }
 
+function formatCompactDatePart(value: string, language: Language) {
+  return value
+    .replace(/\./gu, "")
+    .replace(/^\p{L}/u, (letter) => letter.toLocaleUpperCase(languageLocales[language]));
+}
+
+export function formatCompactVisibleDate(date: Date, language: Language) {
+  const dateParts = new Intl.DateTimeFormat(languageLocales[language], {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).formatToParts(date);
+  const weekday = formatCompactDatePart(dateParts.find((part) => part.type === "weekday")?.value ?? "", language);
+  const month = formatCompactDatePart(dateParts.find((part) => part.type === "month")?.value ?? "", language);
+  const day = dateParts.find((part) => part.type === "day")?.value ?? "";
+
+  if (language === "en") {
+    return `${weekday}, ${month} ${day}`;
+  }
+
+  return `${weekday}, ${day} ${month}`;
+}
+
 export function translateCompetitionName(name: string, language: Language) {
   const groupMatch = /^Group ([A-Z])$/.exec(name);
   if (groupMatch) {
