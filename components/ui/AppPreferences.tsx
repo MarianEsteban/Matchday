@@ -35,6 +35,7 @@ function applyDocumentPreferences(language: Language, theme: Theme) {
   document.documentElement.lang = language;
   document.documentElement.dataset.theme = theme;
   document.documentElement.classList.toggle("light", theme === "light");
+  document.documentElement.classList.toggle("dark", theme === "dark");
 }
 
 export function AppPreferencesProvider({ children }: { children: React.ReactNode }) {
@@ -98,7 +99,7 @@ export function PreferenceControls() {
   const { language, theme, setLanguage, setTheme, t } = usePreferences();
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-900/75 p-2 shadow-sm shadow-black/20 backdrop-blur">
+    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-stone-300 bg-white/85 p-2 shadow-sm shadow-stone-300/40 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/75 dark:shadow-black/20">
       <label className="sr-only" htmlFor="matchday-language">
         {t("language")}
       </label>
@@ -106,7 +107,7 @@ export function PreferenceControls() {
         id="matchday-language"
         value={language}
         onChange={(event) => setLanguage(event.target.value as Language)}
-        className="rounded-full border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm font-semibold text-zinc-100 outline-none transition-colors hover:border-zinc-500"
+        className="rounded-full border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 outline-none transition-colors hover:border-stone-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-zinc-500"
       >
         {languages.map((option) => (
           <option key={option.code} value={option.code}>
@@ -117,7 +118,7 @@ export function PreferenceControls() {
       <button
         type="button"
         onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        className="rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-sm font-bold text-amber-100 transition-colors hover:bg-amber-300/20"
+        className="rounded-full border border-amber-600/40 bg-amber-100 px-3 py-2 text-sm font-bold text-amber-950 transition-colors hover:bg-amber-200 dark:border-amber-300/30 dark:bg-amber-300/10 dark:text-amber-100 dark:hover:bg-amber-300/20"
         aria-label={t("theme")}
       >
         {theme === "dark" ? "☾" : "☀"} {theme === "dark" ? t("dark") : t("light")}

@@ -32,19 +32,19 @@ export function CompetitionSection({
         onClick={() => onToggle(competition)}
         aria-expanded={!isCollapsed}
         aria-controls={sectionId}
-        className="group flex w-full items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/80 px-4 py-3 text-left shadow-sm shadow-black/20 transition-colors hover:border-zinc-700 hover:bg-zinc-900"
+        className="group flex w-full items-center gap-3 rounded-2xl border border-stone-300 bg-white/80 px-4 py-3 text-left shadow-sm shadow-stone-300/30 transition-colors hover:border-stone-400 hover:bg-white dark:border-zinc-800 dark:bg-zinc-900/80 dark:shadow-black/20 dark:hover:border-zinc-700 dark:hover:bg-zinc-900"
       >
         <span
           aria-hidden="true"
-          className={`text-zinc-400 transition-transform group-hover:text-zinc-100 ${
+          className={`text-stone-600 transition-transform group-hover:text-zinc-900 dark:text-zinc-400 dark:group-hover:text-zinc-100 ${
             isCollapsed ? "-rotate-90" : "rotate-0"
           }`}
         >
           ▾
         </span>
-        <h3 className="text-lg font-semibold text-zinc-100">{translateCompetitionName(competition, language)}</h3>
-        <span className="h-px flex-1 bg-zinc-800" />
-        <span className="rounded-full border border-zinc-700 bg-zinc-950 px-3 py-1 text-sm font-semibold text-zinc-300">
+        <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{translateCompetitionName(competition, language)}</h3>
+        <span className="h-px flex-1 bg-stone-300 dark:bg-zinc-800" />
+        <span className="rounded-full border border-stone-300 bg-white px-3 py-1 text-sm font-semibold text-zinc-700 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
           {matches.length} {matches.length === 1 ? t("match") : t("matches")}
         </span>
       </button>

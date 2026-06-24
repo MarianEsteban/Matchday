@@ -23,9 +23,9 @@ type MatchDetailPageProps = {
 };
 
 const statusBadgeStyles: Record<MatchStatus, string> = {
-  scheduled: "border-sky-500/20 bg-sky-500/10 text-sky-200",
-  live: "border-emerald-400/30 bg-emerald-400/15 text-emerald-200",
-  finished: "border-zinc-600/40 bg-zinc-800 text-zinc-300",
+  scheduled: "border-sky-600/30 bg-sky-100 text-sky-800 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-200",
+  live: "border-emerald-600/30 bg-emerald-100 text-emerald-800 dark:border-emerald-400/30 dark:bg-emerald-400/15 dark:text-emerald-200",
+  finished: "border-zinc-300 bg-zinc-100 text-zinc-700 dark:border-zinc-600/40 dark:bg-zinc-800 dark:text-zinc-300",
 };
 
 export default async function MatchDetailPage({ params }: MatchDetailPageProps) {
@@ -43,26 +43,26 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   const highlightedTeamIds = [match.homeTeam.id, match.awayTeam.id];
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-white">
+    <main className="min-h-screen bg-[#fffaf0] text-zinc-950 dark:bg-zinc-950 dark:text-white">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-10">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4 lg:mb-8">
         <Link
           href="/"
-          className="inline-flex rounded-full border border-zinc-800 px-4 py-2 text-sm font-semibold text-zinc-300 transition-colors hover:border-zinc-600 hover:bg-zinc-900 hover:text-white"
+          className="inline-flex rounded-full border border-stone-300 bg-white/80 px-4 py-2 text-sm font-semibold text-zinc-800 shadow-sm transition-colors hover:border-stone-500 hover:bg-white hover:text-zinc-950 dark:border-zinc-800 dark:bg-transparent dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-900 dark:hover:text-white"
         >
           ← <Trans k="backToMatches" />
         </Link>
         <PreferenceControls />
         </div>
 
-        <section className="overflow-hidden rounded-[2rem] border border-zinc-800 bg-zinc-900/90 shadow-2xl shadow-black/40">
-          <div className="border-b border-zinc-800 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.14),transparent_34%),linear-gradient(135deg,rgba(39,39,42,0.96),rgba(9,9,11,0.96))] p-6 sm:p-8">
+        <section className="overflow-hidden rounded-[2rem] border border-stone-300 bg-white/90 shadow-2xl shadow-stone-300/30 dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/40">
+          <div className="border-b border-zinc-800 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.18),transparent_34%),linear-gradient(135deg,rgba(39,39,42,0.98),rgba(9,9,11,0.98))] p-6 sm:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-sm uppercase tracking-wide text-amber-200">
                   <TranslatedCompetitionName competition={match.competition} />
                 </p>
-                <h1 className="mt-3 text-3xl font-bold text-zinc-50 sm:text-5xl">
+                <h1 className="mt-3 text-3xl font-bold text-white sm:text-5xl">
                   {match.homeTeam.name} vs {match.awayTeam.name}
                 </h1>
               </div>
@@ -79,9 +79,9 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
           </div>
 
           <div className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[1.6fr_0.9fr]">
-            <div className="relative overflow-hidden rounded-3xl border border-amber-300/20 bg-zinc-950 p-6 text-center shadow-2xl shadow-amber-950/20 sm:p-8">
+            <div className="relative overflow-hidden rounded-3xl border border-amber-600/25 bg-white dark:border-amber-300/20 dark:bg-zinc-950 p-6 text-center shadow-2xl shadow-amber-950/20 sm:p-8">
               <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-amber-200/70 to-transparent" />
-              <p className="mb-6 text-xs font-bold uppercase tracking-[0.35em] text-zinc-500">
+              <p className="mb-6 text-xs font-bold uppercase tracking-[0.35em] text-stone-600 dark:text-zinc-500">
                 <Trans k="score" />
               </p>
               <div className="grid items-center gap-5 sm:grid-cols-[1fr_auto_1fr]">
@@ -93,11 +93,11 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                     height={88}
                     className="h-20 w-20 drop-shadow-lg sm:h-24 sm:w-24"
                   />
-                  <p className="text-2xl font-black text-zinc-50 sm:text-3xl">
+                  <p className="text-2xl font-black text-zinc-950 dark:text-zinc-50 sm:text-3xl">
                     {match.homeTeam.name}
                   </p>
                 </div>
-                <div className="rounded-[1.75rem] border border-amber-300/30 bg-gradient-to-b from-zinc-800 to-zinc-950 px-7 py-5 text-5xl font-black tracking-tight text-zinc-50 shadow-inner shadow-black/60 sm:px-9 sm:py-6 sm:text-6xl">
+                <div className="rounded-[1.75rem] border border-amber-300/30 bg-gradient-to-b from-white to-amber-50 dark:from-zinc-800 dark:to-zinc-950 px-7 py-5 text-5xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 shadow-inner shadow-black/60 sm:px-9 sm:py-6 sm:text-6xl">
                   {match.score ? `${match.score.home} - ${match.score.away}` : "vs"}
                 </div>
                 <div className="flex flex-col items-center gap-4">
@@ -108,34 +108,34 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                     height={88}
                     className="h-20 w-20 drop-shadow-lg sm:h-24 sm:w-24"
                   />
-                  <p className="text-2xl font-black text-zinc-50 sm:text-3xl">
+                  <p className="text-2xl font-black text-zinc-950 dark:text-zinc-50 sm:text-3xl">
                     {match.awayTeam.name}
                   </p>
                 </div>
               </div>
             </div>
 
-            <dl className="grid content-center gap-5 rounded-3xl border border-zinc-800 bg-zinc-950/70 p-6 text-sm">
+            <dl className="grid content-center gap-5 rounded-3xl border border-stone-300 bg-white/80 dark:border-zinc-800 dark:bg-zinc-950/70 p-6 text-sm">
               <div>
-                <dt className="text-zinc-500"><Trans k="dateTime" /></dt>
-                <dd className="mt-1 font-semibold capitalize text-zinc-100">
+                <dt className="text-stone-600 dark:text-zinc-500"><Trans k="dateTime" /></dt>
+                <dd className="mt-1 font-semibold capitalize text-zinc-900 dark:text-zinc-100">
                   <LocalizedKickoff date={match.date} kickoffTime={match.kickoffTime} />
                 </dd>
               </div>
               <div>
-                <dt className="text-zinc-500"><Trans k="stadium" /></dt>
-                <dd className="mt-1 font-semibold text-zinc-100">{match.venue}</dd>
+                <dt className="text-stone-600 dark:text-zinc-500"><Trans k="stadium" /></dt>
+                <dd className="mt-1 font-semibold text-zinc-900 dark:text-zinc-100">{match.venue}</dd>
               </div>
               <div>
-                <dt className="text-zinc-500"><Trans k="status" /></dt>
-                <dd className="mt-1 font-semibold text-zinc-100"><TranslatedStatus status={match.status} /></dd>
+                <dt className="text-stone-600 dark:text-zinc-500"><Trans k="status" /></dt>
+                <dd className="mt-1 font-semibold text-zinc-900 dark:text-zinc-100"><TranslatedStatus status={match.status} /></dd>
               </div>
             </dl>
           </div>
         </section>
 
         <nav
-          className="z-20 mt-8 overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950/90 p-2 shadow-lg shadow-black/30 backdrop-blur lg:sticky lg:top-4"
+          className="z-20 mt-8 overflow-x-auto rounded-2xl border border-stone-300 bg-white/90 dark:border-zinc-800 dark:bg-zinc-950/90 p-2 shadow-lg shadow-stone-300/30 dark:shadow-black/30 backdrop-blur lg:sticky lg:top-4"
           aria-label="match sections"
         >
           <div className="flex min-w-max gap-2">
@@ -148,7 +148,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
               <a
                 key={href}
                 href={href}
-                className="rounded-full px-4 py-2 text-sm font-semibold text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
+                className="rounded-full px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:bg-stone-100 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white"
               >
                 <Trans k={labelKey} />
               </a>
@@ -159,30 +159,30 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
         <div className="mt-10 space-y-12 pb-12 lg:mt-12 lg:space-y-16">
           <div id="eventos" className="scroll-mt-24">
             <div className="mb-4">
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-200">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-700 dark:text-amber-200">
                 <Trans k="minuteByMinute" />
               </p>
-              <h2 className="mt-2 text-2xl font-black text-zinc-50"><Trans k="matchEvents" /></h2>
+              <h2 className="mt-2 text-2xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="matchEvents" /></h2>
             </div>
             <MatchEventsTimeline events={events} match={match} />
           </div>
 
           <div id="estadisticas" className="scroll-mt-24">
             <div className="mb-4">
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-200">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-700 dark:text-amber-200">
                 <Trans k="performance" />
               </p>
-              <h2 className="mt-2 text-2xl font-black text-zinc-50"><Trans k="mainStats" /></h2>
+              <h2 className="mt-2 text-2xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="mainStats" /></h2>
             </div>
             <MatchStats statistics={statistics} match={match} />
           </div>
 
           <div id="alineaciones" className="scroll-mt-24">
             <div className="mb-4">
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-200">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-700 dark:text-amber-200">
                 <Trans k="squads" />
               </p>
-              <h2 className="mt-2 text-2xl font-black text-zinc-50"><Trans k="confirmedLineups" /></h2>
+              <h2 className="mt-2 text-2xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="confirmedLineups" /></h2>
             </div>
             <MatchLineups lineup={lineup} match={match} />
           </div>
@@ -190,10 +190,10 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
           {standings ? (
             <div id="tabla" className="scroll-mt-24">
               <div className="mb-4">
-                <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-200">
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-700 dark:text-amber-200">
                   <Trans k="context" />
                 </p>
-                <h2 className="mt-2 text-2xl font-black text-zinc-50"><Trans k="tablePositions" /></h2>
+                <h2 className="mt-2 text-2xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="tablePositions" /></h2>
               </div>
               <StandingsTable
                 standings={standings}
