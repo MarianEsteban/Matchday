@@ -1,3 +1,5 @@
+"use client";
+
 import { Trans, usePreferences } from "@/components/ui/AppPreferences";
 import type { MatchEvent, MatchEventTeam, MatchEventType } from "@/types/match-event";
 import type { Match } from "@/types/match";
