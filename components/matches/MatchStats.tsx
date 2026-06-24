@@ -27,20 +27,20 @@ export function MatchStats({ match, statistics }: MatchStatsProps) {
   const { language } = usePreferences();
 
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-sm shadow-black/20">
+    <section className="rounded-2xl border border-stone-300 bg-white/90 p-5 shadow-sm shadow-stone-300/30 dark:border-zinc-800 dark:bg-zinc-900/80 dark:shadow-black/20">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-wide text-amber-200"><Trans k="statistics" /></p>
-          <h2 className="mt-1 text-xl font-semibold text-zinc-100"><Trans k="matchComparison" /></h2>
+          <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-200"><Trans k="statistics" /></p>
+          <h2 className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-100"><Trans k="matchComparison" /></h2>
         </div>
-        <span className="rounded-full border border-zinc-800 bg-zinc-950 px-3 py-1 text-xs font-semibold text-zinc-400">
+        <span className="rounded-full border border-stone-300 bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
           <Trans k="demoData" />
         </span>
       </div>
 
       {statistics.length > 0 ? (
         <div className="mt-6 space-y-5">
-          <div className="grid grid-cols-[1fr_auto_1fr] gap-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          <div className="grid grid-cols-[1fr_auto_1fr] gap-3 text-xs font-semibold uppercase tracking-wide text-stone-600 dark:text-zinc-500">
             <span className="truncate text-left">{match.homeTeam.name}</span>
             <span><Trans k="detail" /></span>
             <span className="truncate text-right">{match.awayTeam.name}</span>
@@ -54,24 +54,24 @@ export function MatchStats({ match, statistics }: MatchStatsProps) {
             return (
               <div key={statistic.id} className="space-y-2">
                 <div className="grid grid-cols-[3.5rem_1fr_3.5rem] items-center gap-3">
-                  <span className="text-lg font-black tabular-nums text-zinc-50">
+                  <span className="text-lg font-black tabular-nums text-zinc-950 dark:text-zinc-50">
                     {formatValue(statistic, statistic.values.home)}
                   </span>
-                  <span className="text-center text-sm font-semibold text-zinc-300">
+                  <span className="text-center text-sm font-semibold text-zinc-700 dark:text-zinc-300">
                     {translateStatisticLabel(statistic.label, language)}
                   </span>
-                  <span className="text-right text-lg font-black tabular-nums text-zinc-50">
+                  <span className="text-right text-lg font-black tabular-nums text-zinc-950 dark:text-zinc-50">
                     {formatValue(statistic, statistic.values.away)}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="h-2 overflow-hidden rounded-full bg-zinc-800">
+                  <div className="h-2 overflow-hidden rounded-full bg-stone-200 dark:bg-zinc-800">
                     <div
                       className="ml-auto h-full rounded-full bg-amber-300"
                       style={{ width: `${homePercentage}%` }}
                     />
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-zinc-800">
+                  <div className="h-2 overflow-hidden rounded-full bg-stone-200 dark:bg-zinc-800">
                     <div
                       className="h-full rounded-full bg-sky-300"
                       style={{ width: `${awayPercentage}%` }}
@@ -83,7 +83,7 @@ export function MatchStats({ match, statistics }: MatchStatsProps) {
           })}
         </div>
       ) : (
-        <p className="mt-3 text-sm text-zinc-400"><Trans k="noMockStats" /></p>
+        <p className="mt-3 text-sm text-stone-600 dark:text-zinc-400"><Trans k="noMockStats" /></p>
       )}
     </section>
   );

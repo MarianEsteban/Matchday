@@ -26,7 +26,7 @@ export function MatchFilters({ activeFilter, onSelectFilter }: MatchFiltersProps
   const { t } = usePreferences();
 
   return (
-    <div className="flex flex-wrap gap-2 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-2 shadow-sm shadow-black/20">
+    <div className="flex flex-wrap gap-2 rounded-2xl border border-stone-300 bg-white/80 p-2 shadow-sm shadow-stone-300/30 dark:border-zinc-800 dark:bg-zinc-900/70 dark:shadow-black/20">
       {filterOptions.map(({ labelKey, value }) => {
         const isActive = activeFilter === value;
 
@@ -37,8 +37,8 @@ export function MatchFilters({ activeFilter, onSelectFilter }: MatchFiltersProps
             onClick={() => onSelectFilter(value)}
             className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
               isActive
-                ? "bg-zinc-100 text-zinc-950 shadow-sm shadow-white/10"
-                : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+                ? "bg-zinc-900 text-white shadow-sm shadow-stone-300/30 dark:bg-zinc-100 dark:text-zinc-950 dark:shadow-white/10"
+                : "text-stone-600 hover:bg-stone-100 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
             }`}
           >
             {t(labelKey)}

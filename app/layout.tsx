@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="h-full antialiased" data-theme="dark">
+    <html lang="es" className="h-full antialiased dark" data-theme="dark">
       <body className="min-h-full flex flex-col">
         <AppPreferencesProvider>{children}</AppPreferencesProvider>
       </body>

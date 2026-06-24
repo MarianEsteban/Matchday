@@ -19,15 +19,15 @@ export function StandingsTable({
   const rows = standings.rows.slice(0, previewRows);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/80 shadow-sm shadow-black/20">
-      <div className="border-b border-zinc-800 px-5 py-4">
-        <p className="text-xs uppercase tracking-wide text-amber-200"><Trans k="tablePositions" /></p>
-        <h2 className="mt-1 text-xl font-semibold text-zinc-100">{translateCompetitionName(standings.competition, language)}</h2>
+    <section className="overflow-hidden rounded-2xl border border-stone-300 dark:border-zinc-800 bg-stone-50 dark:bg-zinc-900/80 shadow-sm shadow-stone-300/30 dark:shadow-black/20">
+      <div className="border-b border-stone-300 dark:border-zinc-800 px-5 py-4">
+        <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-200"><Trans k="tablePositions" /></p>
+        <h2 className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-100">{translateCompetitionName(standings.competition, language)}</h2>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[520px] text-left text-sm">
-          <thead className="bg-zinc-950/60 text-xs uppercase tracking-wide text-zinc-500">
+          <thead className="bg-white dark:bg-zinc-950/60 text-xs uppercase tracking-wide text-stone-600 dark:text-zinc-500">
             <tr>
               <th className="px-4 py-3 font-semibold">#</th>
               <th className="px-4 py-3 font-semibold"><Trans k="team" /></th>
@@ -39,23 +39,23 @@ export function StandingsTable({
               <th className="px-4 py-3 text-center font-semibold">{t("points")}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-800">
+          <tbody className="divide-y divide-stone-200 dark:divide-zinc-800">
             {rows.map((row) => {
               const isHighlighted = highlightedTeamIds.includes(row.teamId);
 
               return (
                 <tr
                   key={row.teamId}
-                  className={isHighlighted ? "bg-amber-400/10 text-amber-50" : "text-zinc-300"}
+                  className={isHighlighted ? "bg-amber-100 text-amber-950 dark:bg-amber-400/10 dark:text-amber-50" : "text-zinc-700 dark:text-zinc-300"}
                 >
-                  <td className="px-4 py-3 font-semibold text-zinc-500">{row.position}</td>
+                  <td className="px-4 py-3 font-semibold text-stone-600 dark:text-zinc-500">{row.position}</td>
                   <td className="px-4 py-3 font-semibold">{row.teamName}</td>
                   <td className="px-3 py-3 text-center">{row.played}</td>
                   <td className="px-3 py-3 text-center">{row.won}</td>
                   <td className="px-3 py-3 text-center">{row.drawn}</td>
                   <td className="px-3 py-3 text-center">{row.lost}</td>
                   <td className="px-3 py-3 text-center">{row.goalDifference}</td>
-                  <td className="px-4 py-3 text-center font-bold text-zinc-100">{row.points}</td>
+                  <td className="px-4 py-3 text-center font-bold text-zinc-900 dark:text-zinc-100">{row.points}</td>
                 </tr>
               );
             })}
