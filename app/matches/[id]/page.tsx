@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { MatchEventsTimeline } from "@/components/matches/MatchEventsTimeline";
 import { StandingsTable } from "@/components/standings/StandingsTable";
+import { getMatchEventsByMatchId } from "@/data/mock/match-events";
 import { getStandingsByCompetition } from "@/data/mock/standings";
 import { getMatchById } from "@/data/repositories/matches.repository";
 import type { MatchStatus } from "@/types/match";
@@ -52,6 +54,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   }
 
   const standings = getStandingsByCompetition(match.competition);
+  const events = getMatchEventsByMatchId(match.id);
   const highlightedTeamIds = [match.homeTeam.id, match.awayTeam.id];
 
   return (
@@ -146,7 +149,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
         ) : null}
 
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
-          <PlaceholderSection title="Eventos" />
+          <MatchEventsTimeline events={events} match={match} />
           <PlaceholderSection title="Estadísticas" />
           <PlaceholderSection title="Alineaciones" />
         </div>

@@ -1,0 +1,101 @@
+import type { MatchEvent, MatchEventTeam, MatchEventType } from "@/types/match-event";
+import type { Match } from "@/types/match";
+
+type MatchEventsTimelineProps = {
+  events: MatchEvent[];
+  match: Match;
+};
+
+const eventLabels: Record<MatchEventType, string> = {
+  goal: "Gol",
+  "yellow-card": "Tarjeta amarilla",
+  "red-card": "Tarjeta roja",
+  substitution: "Cambio",
+};
+
+const eventIcons: Record<MatchEventType, string> = {
+  goal: "⚽",
+  "yellow-card": "🟨",
+  "red-card": "🟥",
+  substitution: "↔",
+};
+
+const eventAccentStyles: Record<MatchEventType, string> = {
+  goal: "border-emerald-400/30 bg-emerald-400/10 text-emerald-100",
+  "yellow-card": "border-yellow-300/30 bg-yellow-300/10 text-yellow-100",
+  "red-card": "border-red-400/30 bg-red-400/10 text-red-100",
+  substitution: "border-sky-400/30 bg-sky-400/10 text-sky-100",
+};
+
+function getTeamName(match: Match, team: MatchEventTeam) {
+  return team === "home" ? match.homeTeam.name : match.awayTeam.name;
+}
+
+function EventDetail({ event }: { event: MatchEvent }) {
+  if (event.type === "goal") {
+    return event.assistName ? (
+      <span>Asistencia: {event.assistName}</span>
+    ) : (
+      <span>Gol sin asistencia</span>
+    );
+  }
+
+  if (event.type === "substitution") {
+    return (
+      <span>
+        Entra {event.playerInName} · Sale {event.playerOutName}
+      </span>
+    );
+  }
+
+  return <span>{event.reason ?? eventLabels[event.type]}</span>;
+}
+
+export function MatchEventsTimeline({ events, match }: MatchEventsTimelineProps) {
+  const sortedEvents = [...events].sort(
+    (firstEvent, secondEvent) => firstEvent.minute - secondEvent.minute,
+  );
+
+  return (
+    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-sm shadow-black/20">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold text-zinc-100">Eventos</h2>
+        <span className="rounded-full border border-zinc-800 bg-zinc-950 px-3 py-1 text-xs font-semibold text-zinc-400">
+          Datos mock
+        </span>
+      </div>
+
+      {sortedEvents.length > 0 ? (
+        <ol className="mt-5 space-y-3">
+          {sortedEvents.map((event) => (
+            <li key={event.id} className="relative grid grid-cols-[3rem_1fr] gap-3">
+              <time className="pt-3 text-right text-sm font-black tabular-nums text-amber-200">
+                {event.minute}&apos;
+              </time>
+              <div className={`rounded-2xl border p-3 ${eventAccentStyles[event.type]}`}>
+                <div className="flex items-start gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-950/70 text-base">
+                    {eventIcons[event.type]}
+                  </span>
+                  <div>
+                    <p className="text-sm font-bold text-zinc-50">
+                      {eventLabels[event.type]} · {event.playerName}
+                    </p>
+                    <p className="mt-1 text-xs font-medium text-zinc-300">
+                      {getTeamName(match, event.team)}
+                    </p>
+                    <p className="mt-2 text-xs text-zinc-400">
+                      <EventDetail event={event} />
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="mt-3 text-sm text-zinc-400">Sin eventos mock para este partido.</p>
+      )}
+    </section>
+  );
+}
