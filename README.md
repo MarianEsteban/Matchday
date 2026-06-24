@@ -49,13 +49,19 @@ MatchDay is a football match center web app designed to present match informatio
    npm install
    ```
 
-3. Start the development server:
+3. Optional: configure a real fixtures provider. MatchDay reads `FOOTBALL_API_KEY` on the server for API-Football fixtures and falls back to demo data when it is omitted or unavailable. Do not prefix this variable with `NEXT_PUBLIC_` or commit real keys.
+
+   ```bash
+   FOOTBALL_API_KEY=your_api_key_here
+   ```
+
+4. Start the development server:
 
    ```bash
    npm run dev
    ```
 
-4. Open the app in your browser:
+5. Open the app in your browser:
 
    ```text
    http://localhost:3000
@@ -73,11 +79,11 @@ https://matchday-beige-three.vercel.app
 
 ### Current status
 
-MatchDay is currently a portfolio project using demo/mock data. The interface and core match center flows are in place, while live data integrations and production-ready data handling are planned for future iterations.
+MatchDay is currently a portfolio project with demo/mock data as its safe fallback. If `FOOTBALL_API_KEY` is configured in the server environment, the fixtures list first tries to load live API-Football data before falling back to the demo data.
 
 ### Roadmap
 
-- Integrate a live football data API
+- Expand the live football data API integration beyond fixtures
 - Add richer match detail views
 - Improve responsive layouts and mobile navigation
 - Add team and competition profile pages
@@ -133,13 +139,19 @@ MatchDay es una aplicación web de centro de partidos de fútbol diseñada para 
    npm install
    ```
 
-3. Inicia el servidor de desarrollo:
+3. Opcional: configura un proveedor real de calendarios. MatchDay lee `FOOTBALL_API_KEY` en el servidor para obtener partidos de API-Football y vuelve a los datos demo cuando falta la variable o el proveedor no está disponible. No uses el prefijo `NEXT_PUBLIC_` ni subas claves reales al repositorio.
+
+   ```bash
+   FOOTBALL_API_KEY=tu_api_key_aqui
+   ```
+
+4. Inicia el servidor de desarrollo:
 
    ```bash
    npm run dev
    ```
 
-4. Abre la aplicación en tu navegador:
+5. Abre la aplicación en tu navegador:
 
    ```text
    http://localhost:3000
@@ -157,11 +169,11 @@ https://matchday-beige-three.vercel.app
 
 ### Estado actual
 
-MatchDay es actualmente un proyecto de portafolio que usa datos demo/mock. La interfaz y los flujos principales del centro de partidos ya están implementados, mientras que las integraciones con datos en vivo y el manejo de datos listo para producción están planificados para futuras iteraciones.
+MatchDay es actualmente un proyecto de portafolio con datos demo/mock como respaldo seguro. Si `FOOTBALL_API_KEY` está configurada en el entorno del servidor, la lista de partidos primero intenta cargar datos reales de API-Football antes de volver a los datos demo.
 
 ### Roadmap
 
-- Integrar una API de datos de fútbol en vivo
+- Ampliar la integración de la API de datos de fútbol más allá de los calendarios
 - Añadir vistas de detalle de partido más completas
 - Mejorar los diseños responsive y la navegación móvil
 - Añadir páginas de perfiles de equipos y competiciones
