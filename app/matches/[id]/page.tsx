@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { StandingsTable } from "@/components/standings/StandingsTable";
+import { getStandingsByCompetition } from "@/data/mock/standings";
 import { getMatchById } from "@/data/repositories/matches.repository";
 import type { MatchStatus } from "@/types/match";
 
@@ -48,6 +50,9 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   if (!match) {
     notFound();
   }
+
+  const standings = getStandingsByCompetition(match.competition);
+  const highlightedTeamIds = [match.homeTeam.id, match.awayTeam.id];
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
@@ -129,6 +134,16 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
             </dl>
           </div>
         </section>
+
+        {standings ? (
+          <div className="mt-8">
+            <StandingsTable
+              standings={standings}
+              highlightedTeamIds={highlightedTeamIds}
+              previewRows={4}
+            />
+          </div>
+        ) : null}
 
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
           <PlaceholderSection title="Eventos" />
