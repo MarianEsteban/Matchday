@@ -1,3 +1,5 @@
+"use client";
+
 import { usePreferences } from "@/components/ui/AppPreferences";
 import { createCompetitionSectionId } from "@/components/matches/CompetitionSection";
 import { sidebarSections } from "@/data/mock/competitions";

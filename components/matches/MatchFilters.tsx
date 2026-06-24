@@ -1,3 +1,5 @@
+"use client";
+
 import { usePreferences } from "@/components/ui/AppPreferences";
 import type { MatchStatus } from "@/types/match";
 
