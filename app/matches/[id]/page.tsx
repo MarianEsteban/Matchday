@@ -2,8 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MatchEventsTimeline } from "@/components/matches/MatchEventsTimeline";
+import { MatchLineups } from "@/components/matches/MatchLineups";
+import { MatchStats } from "@/components/matches/MatchStats";
 import { StandingsTable } from "@/components/standings/StandingsTable";
+import { getLineupsByMatchId } from "@/data/mock/lineups";
 import { getMatchEventsByMatchId } from "@/data/mock/match-events";
+import { getMatchStatisticsByMatchId } from "@/data/mock/match-statistics";
 import { getStandingsByCompetition } from "@/data/mock/standings";
 import { getMatchById } from "@/data/repositories/matches.repository";
 import type { MatchStatus } from "@/types/match";
@@ -36,15 +40,6 @@ function formatKickoff(date: string, kickoffTime: string) {
   }).format(new Date(`${date}T${kickoffTime}:00`));
 }
 
-function PlaceholderSection({ title }: { title: string }) {
-  return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-sm shadow-black/20">
-      <h2 className="text-xl font-semibold text-zinc-100">{title}</h2>
-      <p className="mt-3 text-sm text-zinc-400">Contenido próximamente con datos mock.</p>
-    </section>
-  );
-}
-
 export default async function MatchDetailPage({ params }: MatchDetailPageProps) {
   const { id } = await params;
   const match = getMatchById(id);
@@ -55,6 +50,8 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
 
   const standings = getStandingsByCompetition(match.competition);
   const events = getMatchEventsByMatchId(match.id);
+  const statistics = getMatchStatisticsByMatchId(match.id);
+  const lineup = getLineupsByMatchId(match.id);
   const highlightedTeamIds = [match.homeTeam.id, match.awayTeam.id];
 
   return (
@@ -138,20 +135,50 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
           </div>
         </section>
 
-        {standings ? (
-          <div className="mt-8">
-            <StandingsTable
-              standings={standings}
-              highlightedTeamIds={highlightedTeamIds}
-              previewRows={4}
-            />
+        <nav
+          className="mt-8 overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900/80 p-2 shadow-sm shadow-black/20"
+          aria-label="Secciones del partido"
+        >
+          <div className="flex min-w-max gap-2">
+            {[
+              ["#eventos", "Eventos"],
+              ["#estadisticas", "Estadísticas"],
+              ["#alineaciones", "Alineaciones"],
+              ["#tabla", "Tabla"],
+            ].map(([href, label]) => (
+              <a
+                key={href}
+                href={href}
+                className="rounded-full px-4 py-2 text-sm font-semibold text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
+              >
+                {label}
+              </a>
+            ))}
           </div>
-        ) : null}
+        </nav>
 
-        <div className="mt-8 grid gap-4 lg:grid-cols-3">
-          <MatchEventsTimeline events={events} match={match} />
-          <PlaceholderSection title="Estadísticas" />
-          <PlaceholderSection title="Alineaciones" />
+        <div className="mt-8 space-y-8">
+          <div id="eventos" className="scroll-mt-6">
+            <MatchEventsTimeline events={events} match={match} />
+          </div>
+
+          <div id="estadisticas" className="scroll-mt-6">
+            <MatchStats statistics={statistics} match={match} />
+          </div>
+
+          <div id="alineaciones" className="scroll-mt-6">
+            <MatchLineups lineup={lineup} match={match} />
+          </div>
+
+          {standings ? (
+            <div id="tabla" className="scroll-mt-6">
+              <StandingsTable
+                standings={standings}
+                highlightedTeamIds={highlightedTeamIds}
+                previewRows={4}
+              />
+            </div>
+          ) : null}
         </div>
       </div>
     </main>
