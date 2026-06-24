@@ -1,9 +1,10 @@
+import { usePreferences } from "@/components/ui/AppPreferences";
 import type { MatchStatus } from "@/types/match";
 
 export type MatchFilter = "all" | MatchStatus;
 
 type MatchFilterOption = {
-  label: string;
+  labelKey: "all" | "live" | "upcoming" | "finished";
   value: MatchFilter;
 };
 
@@ -13,16 +14,18 @@ type MatchFiltersProps = {
 };
 
 const filterOptions: MatchFilterOption[] = [
-  { label: "Todos", value: "all" },
-  { label: "En vivo", value: "live" },
-  { label: "Próximo", value: "scheduled" },
-  { label: "Finalizado", value: "finished" },
+  { labelKey: "all", value: "all" },
+  { labelKey: "live", value: "live" },
+  { labelKey: "upcoming", value: "scheduled" },
+  { labelKey: "finished", value: "finished" },
 ];
 
 export function MatchFilters({ activeFilter, onSelectFilter }: MatchFiltersProps) {
+  const { t } = usePreferences();
+
   return (
     <div className="flex flex-wrap gap-2 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-2 shadow-sm shadow-black/20">
-      {filterOptions.map(({ label, value }) => {
+      {filterOptions.map(({ labelKey, value }) => {
         const isActive = activeFilter === value;
 
         return (
@@ -36,7 +39,7 @@ export function MatchFilters({ activeFilter, onSelectFilter }: MatchFiltersProps
                 : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
             }`}
           >
-            {label}
+            {t(labelKey)}
           </button>
         );
       })}

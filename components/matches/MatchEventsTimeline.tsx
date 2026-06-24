@@ -1,3 +1,4 @@
+import { Trans } from "@/components/ui/AppPreferences";
 import type { MatchEvent, MatchEventTeam, MatchEventType } from "@/types/match-event";
 import type { Match } from "@/types/match";
 
@@ -59,9 +60,9 @@ export function MatchEventsTimeline({ events, match }: MatchEventsTimelineProps)
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-sm shadow-black/20">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold text-zinc-100">Eventos</h2>
+        <h2 className="text-xl font-semibold text-zinc-100"><Trans k="events" /></h2>
         <span className="rounded-full border border-zinc-800 bg-zinc-950 px-3 py-1 text-xs font-semibold text-zinc-400">
-          Datos mock
+          <Trans k="demoData" />
         </span>
       </div>
 
@@ -94,7 +95,7 @@ export function MatchEventsTimeline({ events, match }: MatchEventsTimelineProps)
           ))}
         </ol>
       ) : (
-        <p className="mt-3 text-sm text-zinc-400">Sin eventos mock para este partido.</p>
+        <p className="mt-3 text-sm text-zinc-400"><Trans k="noMockEvents" /></p>
       )}
     </section>
   );

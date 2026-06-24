@@ -1,3 +1,4 @@
+import { Trans } from "@/components/ui/AppPreferences";
 import type { MatchLineup, TeamLineup } from "@/types/lineup";
 import type { Match } from "@/types/match";
 
@@ -40,11 +41,11 @@ export function MatchLineups({ lineup, match }: MatchLineupsProps) {
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-sm shadow-black/20">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-wide text-amber-200">Alineaciones</p>
-          <h2 className="mt-1 text-xl font-semibold text-zinc-100">Once inicial</h2>
+          <p className="text-xs uppercase tracking-wide text-amber-200"><Trans k="lineups" /></p>
+          <h2 className="mt-1 text-xl font-semibold text-zinc-100"><Trans k="startingEleven" /></h2>
         </div>
         <span className="rounded-full border border-zinc-800 bg-zinc-950 px-3 py-1 text-xs font-semibold text-zinc-400">
-          Datos mock
+          <Trans k="demoData" />
         </span>
       </div>
 
@@ -54,7 +55,7 @@ export function MatchLineups({ lineup, match }: MatchLineupsProps) {
           <TeamLineupCard lineup={lineup.away} teamName={match.awayTeam.name} />
         </div>
       ) : (
-        <p className="mt-3 text-sm text-zinc-400">Sin alineaciones mock para este partido.</p>
+        <p className="mt-3 text-sm text-zinc-400"><Trans k="noMockLineups" /></p>
       )}
     </section>
   );

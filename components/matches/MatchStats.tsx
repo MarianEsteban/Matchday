@@ -1,3 +1,4 @@
+import { Trans } from "@/components/ui/AppPreferences";
 import type { MatchStatistic } from "@/types/match-statistic";
 import type { Match } from "@/types/match";
 
@@ -15,11 +16,11 @@ export function MatchStats({ match, statistics }: MatchStatsProps) {
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-sm shadow-black/20">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-wide text-amber-200">Estadísticas</p>
-          <h2 className="mt-1 text-xl font-semibold text-zinc-100">Comparativa del partido</h2>
+          <p className="text-xs uppercase tracking-wide text-amber-200"><Trans k="statistics" /></p>
+          <h2 className="mt-1 text-xl font-semibold text-zinc-100"><Trans k="matchComparison" /></h2>
         </div>
         <span className="rounded-full border border-zinc-800 bg-zinc-950 px-3 py-1 text-xs font-semibold text-zinc-400">
-          Datos mock
+          <Trans k="demoData" />
         </span>
       </div>
 
@@ -27,7 +28,7 @@ export function MatchStats({ match, statistics }: MatchStatsProps) {
         <div className="mt-6 space-y-5">
           <div className="grid grid-cols-[1fr_auto_1fr] gap-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
             <span className="truncate text-left">{match.homeTeam.name}</span>
-            <span>Detalle</span>
+            <span><Trans k="detail" /></span>
             <span className="truncate text-right">{match.awayTeam.name}</span>
           </div>
 
@@ -68,7 +69,7 @@ export function MatchStats({ match, statistics }: MatchStatsProps) {
           })}
         </div>
       ) : (
-        <p className="mt-3 text-sm text-zinc-400">Sin estadísticas mock para este partido.</p>
+        <p className="mt-3 text-sm text-zinc-400"><Trans k="noMockStats" /></p>
       )}
     </section>
   );
