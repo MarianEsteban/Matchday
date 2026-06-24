@@ -4,6 +4,7 @@ export type Team = {
   id: string;
   name: string;
   crestUrl: string;
+  countryCode: string;
 };
 
 export type Match = {

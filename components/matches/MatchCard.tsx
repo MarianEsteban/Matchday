@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { usePreferences } from "@/components/ui/AppPreferences";
 import type { Match, MatchStatus, Team } from "@/types/match";
 
 type MatchCardProps = {
@@ -12,10 +13,10 @@ const statusBadgeStyles: Record<MatchStatus, string> = {
   finished: "border-zinc-600/40 bg-zinc-800 text-zinc-300",
 };
 
-const statusLabels: Record<MatchStatus, string> = {
-  scheduled: "Próximo",
-  live: "En vivo",
-  finished: "Finalizado",
+const statusLabelKeys: Record<MatchStatus, "upcoming" | "live" | "finished"> = {
+  scheduled: "upcoming",
+  live: "live",
+  finished: "finished",
 };
 
 function TeamBlock({
@@ -44,6 +45,7 @@ function TeamBlock({
 }
 
 export function MatchCard({ match }: MatchCardProps) {
+  const { t } = usePreferences();
   const isLive = match.status === "live";
 
   return (
@@ -77,7 +79,7 @@ export function MatchCard({ match }: MatchCardProps) {
             className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide shadow-sm ${statusBadgeStyles[match.status]}`}
           >
             {isLive ? <span className="mr-2 h-2 w-2 rounded-full bg-emerald-300" /> : null}
-            {statusLabels[match.status]}
+            {t(statusLabelKeys[match.status])}
           </span>
         </div>
 

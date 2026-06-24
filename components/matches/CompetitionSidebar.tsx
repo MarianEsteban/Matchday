@@ -1,3 +1,4 @@
+import { usePreferences } from "@/components/ui/AppPreferences";
 import { createCompetitionSectionId } from "@/components/matches/CompetitionSection";
 import { sidebarSections } from "@/data/mock/competitions";
 import type { Match } from "@/types/match";
@@ -12,6 +13,7 @@ type CompetitionSidebarProps = {
 };
 
 export function CompetitionSidebar({ competitions }: CompetitionSidebarProps) {
+  const { t } = usePreferences();
   const competitionMatchCounts = new Map(
     competitions.map((competition) => [competition.name, competition.matches.length]),
   );
@@ -22,11 +24,11 @@ export function CompetitionSidebar({ competitions }: CompetitionSidebarProps) {
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300">
           MatchDay
         </p>
-        <h2 className="mt-1 text-lg font-bold text-white">Competiciones</h2>
+        <h2 className="mt-1 text-lg font-bold text-white">{t("competitions")}</h2>
       </div>
 
       <nav
-        aria-label="Competiciones"
+        aria-label={t("competitions")}
         className="max-h-[calc(100vh-9rem)] space-y-5 overflow-y-auto px-3 py-4"
       >
         {sidebarSections.map((section) => (

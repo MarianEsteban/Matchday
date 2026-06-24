@@ -1,3 +1,4 @@
+import { Trans } from "@/components/ui/AppPreferences";
 import type { CompetitionStandings } from "@/types/standing";
 
 type StandingsTableProps = {
@@ -16,7 +17,7 @@ export function StandingsTable({
   return (
     <section className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/80 shadow-sm shadow-black/20">
       <div className="border-b border-zinc-800 px-5 py-4">
-        <p className="text-xs uppercase tracking-wide text-amber-200">Tabla de posiciones</p>
+        <p className="text-xs uppercase tracking-wide text-amber-200"><Trans k="tablePositions" /></p>
         <h2 className="mt-1 text-xl font-semibold text-zinc-100">{standings.competition}</h2>
       </div>
 
@@ -25,7 +26,7 @@ export function StandingsTable({
           <thead className="bg-zinc-950/60 text-xs uppercase tracking-wide text-zinc-500">
             <tr>
               <th className="px-4 py-3 font-semibold">#</th>
-              <th className="px-4 py-3 font-semibold">Equipo</th>
+              <th className="px-4 py-3 font-semibold"><Trans k="team" /></th>
               <th className="px-3 py-3 text-center font-semibold">PJ</th>
               <th className="px-3 py-3 text-center font-semibold">G</th>
               <th className="px-3 py-3 text-center font-semibold">E</th>
