@@ -15,6 +15,7 @@ import { createLocalDateFromKey, formatDateKey, getMatchesForSelectedLocalDate, 
 type MatchListProps = {
   matches: Match[];
   dataSource: MatchListDataSource;
+  selectedDateKey: string;
 };
 
 type EmptyState = {
@@ -110,10 +111,10 @@ function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boo
   };
 }
 
-export function MatchList({ matches, dataSource }: MatchListProps) {
+export function MatchList({ matches, dataSource, selectedDateKey }: MatchListProps) {
   const { language, t } = usePreferences();
   const [activeFilter, setActiveFilter] = useState<MatchFilter>("all");
-  const [selectedDate, setSelectedDate] = useState(() => formatDateKey(new Date()));
+  const [selectedDate, setSelectedDate] = useState(selectedDateKey);
   const [visibleMatches, setVisibleMatches] = useState(matches);
   const [visibleDataSource, setVisibleDataSource] = useState(dataSource);
   const [isLoading, setIsLoading] = useState(false);
@@ -158,7 +159,11 @@ export function MatchList({ matches, dataSource }: MatchListProps) {
   const viewerTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   // Re-check each kickoff instant in the browser timezone so cards, sections, and detail links
   // all use the same local-date boundary as the selected day.
-  const matchesForSelectedDate = getMatchesForSelectedLocalDate(visibleMatches, selectedDate, viewerTimeZone);
+  const browserDateMatches = getMatchesForSelectedLocalDate(visibleMatches, selectedDate, viewerTimeZone);
+  const serverDateMatches = visibleMatches.filter((match) => match.date === selectedDate);
+  const matchesForSelectedDate = browserDateMatches.length > 0 || serverDateMatches.length === 0
+    ? browserDateMatches
+    : serverDateMatches;
   const filteredMatches = filterMatches(matchesForSelectedDate, activeFilter);
   const groupedMatches = groupMatchesByCompetition(filteredMatches);
   const competitionGroups = Object.entries(groupedMatches)

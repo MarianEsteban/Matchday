@@ -16,6 +16,11 @@ type SupportedApiCompetition = {
   name: string;
 };
 
+type FixtureSelectionOptions = {
+  selectedDateKey: string;
+  timezone?: string;
+};
+
 export const supportedApiFootballCompetitions = [
   { id: 1, name: "FIFA World Cup" },
   { id: 2, name: "UEFA Champions League" },
@@ -27,6 +32,9 @@ export const supportedApiFootballCompetitions = [
   { id: 78, name: "Bundesliga" },
   { id: 61, name: "Ligue 1" },
   { id: 253, name: "MLS" },
+  { id: 848, name: "UEFA Conference League" },
+  { id: 3, name: "UEFA Europa League" },
+  { id: 15, name: "FIFA Club World Cup" },
   { id: 128, name: "Liga Profesional Argentina" },
   { id: 71, name: "Brasileirão Série A" },
 ] as const satisfies readonly SupportedApiCompetition[];
@@ -38,7 +46,17 @@ const supportedCompetitionById = new Map<number, SupportedApiCompetition>(
 const supportedCompetitionNameAliases = new Map<string, string>([
   ["world cup", "FIFA World Cup"],
   ["fifa world cup", "FIFA World Cup"],
+  ["copa mundial", "FIFA World Cup"],
+  ["world cup qualification", "FIFA World Cup"],
+  ["world cup qualifiers", "FIFA World Cup"],
   ["uefa champions league", "UEFA Champions League"],
+  ["champions league", "UEFA Champions League"],
+  ["uefa europa league", "UEFA Europa League"],
+  ["europa league", "UEFA Europa League"],
+  ["uefa conference league", "UEFA Conference League"],
+  ["conference league", "UEFA Conference League"],
+  ["fifa club world cup", "FIFA Club World Cup"],
+  ["club world cup", "FIFA Club World Cup"],
   ["conmebol libertadores", "Copa Libertadores"],
   ["copa libertadores", "Copa Libertadores"],
   ["conmebol sudamericana", "Copa Sudamericana"],
@@ -109,8 +127,27 @@ export class FootballApiService {
   async getFixtures(query: FootballApiFixturesQuery = {}): Promise<Match[]> {
     const date = formatMatchDate(query.date ?? new Date());
     const timezone = query.timezone ? `&timezone=${encodeURIComponent(query.timezone)}` : "";
-    const matches = await this.fetchAndNormalizeFixtures(`/fixtures?date=${date}${timezone}`, { onlySupportedCompetitions: true, timezone: query.timezone });
-    return this.withStandingsContexts(matches);
+    const path = `/fixtures?date=${date}${timezone}`;
+    const payload = await this.fetchApi<ApiFootballFixturesResponse>(path, 60);
+    const rawFixtures = payload.response ?? [];
+    const rawMatches = rawFixtures
+      .map((fixture) => normalizeApiFootballFixture(fixture, { onlySupportedCompetitions: false, timezone: query.timezone }))
+      .filter((match): match is Match => Boolean(match));
+    const curatedMatches = rawFixtures
+      .map((fixture) => normalizeApiFootballFixture(fixture, { onlySupportedCompetitions: true, timezone: query.timezone }))
+      .filter((match): match is Match => Boolean(match));
+
+    logFixtureDiagnostics({
+      selectedDateKey: date,
+      timezone: query.timezone ?? "UTC",
+      rawFixtures,
+      rawCount: rawFixtures.length,
+      supportedCount: curatedMatches.length,
+      localDateCount: selectApiMatchesForDate(curatedMatches, rawMatches, { selectedDateKey: date, timezone: query.timezone }).length,
+    });
+
+    const selectedMatches = selectApiMatchesForDate(curatedMatches, rawMatches, { selectedDateKey: date, timezone: query.timezone });
+    return this.withStandingsContexts(selectedMatches);
   }
 
   async getFixtureById(id: string): Promise<Match | undefined> {
@@ -241,6 +278,7 @@ function normalizeApiFootballFixture(
   const homeTeam = normalizeTeam(fixture.teams?.home);
   const awayTeam = normalizeTeam(fixture.teams?.away);
   const competition = normalizeCompetition(fixture.league);
+  const fallbackCompetition = fixture.league?.name?.trim() || "Football";
 
   if (
     !fixtureId ||
@@ -263,7 +301,7 @@ function normalizeApiFootballFixture(
     id: `api-football-${fixtureId}`,
     homeTeam,
     awayTeam,
-    competition: competition ?? "Football",
+    competition: competition ?? fallbackCompetition,
     kickoffTime: startsAt.toLocaleTimeString("en-GB", {
       hour: "2-digit",
       minute: "2-digit",
@@ -287,9 +325,83 @@ function normalizeCompetition(league: ApiFootballFixture["league"]): string | un
     }
   }
 
-  const leagueName = league?.name?.trim().toLowerCase();
+  const leagueName = normalizeCompetitionKey(league?.name);
+  const roundName = normalizeCompetitionKey(league?.round);
 
-  return leagueName ? supportedCompetitionNameAliases.get(leagueName) : undefined;
+  return (leagueName ? supportedCompetitionNameAliases.get(leagueName) : undefined)
+    ?? (roundName ? supportedCompetitionNameAliases.get(roundName) : undefined)
+    ?? inferSupportedCompetitionName(leagueName, roundName);
+}
+
+function normalizeCompetitionKey(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function inferSupportedCompetitionName(...values: Array<string | undefined>): string | undefined {
+  const text = values.filter(Boolean).join(" ");
+  if (!text) return undefined;
+  if (/fifa.*world cup|world cup|copa mundial/.test(text)) return "FIFA World Cup";
+  if (/champions league/.test(text)) return "UEFA Champions League";
+  if (/libertadores/.test(text)) return "Copa Libertadores";
+  if (/sudamericana/.test(text)) return "Copa Sudamericana";
+  if (/major league soccer|\bmls\b/.test(text)) return "MLS";
+  if (/brasileir|brazil.*serie a/.test(text)) return "Brasileirão Série A";
+  return undefined;
+}
+
+function getApiMatchPriority(match: Match): number {
+  const competitionPriority: Record<string, number> = {
+    "FIFA World Cup": 0,
+    "FIFA Club World Cup": 1,
+    "UEFA Champions League": 2,
+    "Copa Libertadores": 3,
+    "Copa Sudamericana": 4,
+    "Premier League": 5,
+    LaLiga: 6,
+    "Serie A": 7,
+    Bundesliga: 8,
+    "Ligue 1": 9,
+    "Liga Profesional Argentina": 10,
+    "Brasileirão Série A": 11,
+    MLS: 12,
+  };
+  return competitionPriority[match.competition] ?? 100;
+}
+
+function selectApiMatchesForDate(curatedMatches: Match[], rawMatches: Match[], options: FixtureSelectionOptions): Match[] {
+  const matchesForDate = (matches: Match[]) => matches.filter((match) => match.date === options.selectedDateKey);
+  const curatedForDate = matchesForDate(curatedMatches);
+  if (curatedForDate.length > 0) return curatedForDate.sort(compareApiMatches);
+
+  const rawForDate = matchesForDate(rawMatches);
+  if (rawForDate.length === 0) return [];
+
+  return rawForDate.sort(compareApiMatches).slice(0, 16);
+}
+
+function compareApiMatches(firstMatch: Match, secondMatch: Match): number {
+  const priorityDifference = getApiMatchPriority(firstMatch) - getApiMatchPriority(secondMatch);
+  if (priorityDifference !== 0) return priorityDifference;
+  return getMatchTime(firstMatch) - getMatchTime(secondMatch);
+}
+
+function getMatchTime(match: Match): number {
+  const time = match.kickoffAt ? new Date(match.kickoffAt).getTime() : Number.NaN;
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function logFixtureDiagnostics(details: { selectedDateKey: string; timezone: string; rawFixtures: ApiFootballFixture[]; rawCount: number; supportedCount: number; localDateCount: number }) {
+  if (process.env.NODE_ENV === "production") return;
+  const leagues = details.rawFixtures.slice(0, 6).map((fixture) => ({ id: fixture.league?.id, name: fixture.league?.name }));
+  console.info("[api-football fixtures diagnostics]", {
+    selectedDateKey: details.selectedDateKey,
+    timezone: details.timezone,
+    rawFixtures: details.rawCount,
+    afterSupportedCompetitionFiltering: details.supportedCount,
+    afterLocalDateFiltering: details.localDateCount,
+    sampleLeagues: leagues,
+  });
 }
 
 function normalizeTeam(team: ApiFootballTeam | undefined): Team | undefined {
