@@ -3,9 +3,11 @@ import { MatchTicker } from "@/components/ticker/MatchTicker";
 import { PreferenceControls, Trans } from "@/components/ui/AppPreferences";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import { getMatchesByDateWithSource } from "@/data/repositories/matches.repository";
+import { formatDateKey } from "@/lib/match-date";
 
 export default async function Home() {
-  const { matches: todayMatches, source: matchDataSource } = await getMatchesByDateWithSource();
+  const selectedDateKey = formatDateKey(new Date());
+  const { matches: todayMatches, source: matchDataSource } = await getMatchesByDateWithSource(new Date());
 
   return (
     <main className="min-h-screen bg-[#fbf7ee] pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-zinc-950 dark:bg-zinc-950 dark:text-white">
@@ -21,7 +23,7 @@ export default async function Home() {
             <h2 className="text-2xl font-semibold"><Trans k="todaysMatches" /></h2>
           </div>
 
-          <MatchList matches={todayMatches} dataSource={matchDataSource} />
+          <MatchList matches={todayMatches} dataSource={matchDataSource} selectedDateKey={selectedDateKey} />
         </section>
       </div>
     </main>
