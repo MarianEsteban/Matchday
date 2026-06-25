@@ -1,6 +1,7 @@
 import "server-only";
 
 import { formatMatchDate } from "@/data/mock/matches";
+import { formatDateKey } from "@/lib/match-date";
 import type { Match, MatchDetails, MatchStatus, Team } from "@/types/match";
 import type { MatchEvent } from "@/types/match-event";
 import type { MatchStatistic } from "@/types/match-statistic";
@@ -108,7 +109,7 @@ export class FootballApiService {
   async getFixtures(query: FootballApiFixturesQuery = {}): Promise<Match[]> {
     const date = formatMatchDate(query.date ?? new Date());
     const timezone = query.timezone ? `&timezone=${encodeURIComponent(query.timezone)}` : "";
-    const matches = await this.fetchAndNormalizeFixtures(`/fixtures?date=${date}${timezone}`, { onlySupportedCompetitions: true });
+    const matches = await this.fetchAndNormalizeFixtures(`/fixtures?date=${date}${timezone}`, { onlySupportedCompetitions: true, timezone: query.timezone });
     return this.withStandingsContexts(matches);
   }
 
@@ -207,7 +208,7 @@ export class FootballApiService {
 
   private async fetchAndNormalizeFixtures(
     path: string,
-    options: { onlySupportedCompetitions: boolean },
+    options: { onlySupportedCompetitions: boolean; timezone?: string },
   ): Promise<Match[]> {
     if (!this.apiKey) {
       return [];
@@ -233,7 +234,7 @@ export class FootballApiService {
 
 function normalizeApiFootballFixture(
   fixture: ApiFootballFixture,
-  options: { onlySupportedCompetitions: boolean },
+  options: { onlySupportedCompetitions: boolean; timezone?: string },
 ): Match | undefined {
   const fixtureId = fixture.fixture?.id;
   const startsAt = fixture.fixture?.date ? new Date(fixture.fixture.date) : undefined;
@@ -266,11 +267,11 @@ function normalizeApiFootballFixture(
     kickoffTime: startsAt.toLocaleTimeString("en-GB", {
       hour: "2-digit",
       minute: "2-digit",
-      timeZone: "UTC",
+      timeZone: options.timezone ?? "UTC",
     }),
     kickoffAt: startsAt.toISOString(),
     venue: venueParts.join(", ") || "TBD",
-    date: formatMatchDate(startsAt),
+    date: formatDateKey(startsAt, options.timezone),
     status,
     apiFootball: { fixtureId, leagueId: fixture.league?.id, season: fixture.league?.season, round: fixture.league?.round },
     ...(hasScore ? { score: { home: homeGoals, away: awayGoals } } : {}),
