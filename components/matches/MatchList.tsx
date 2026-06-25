@@ -180,7 +180,7 @@ export function MatchList({ matches, dataSource }: MatchListProps) {
         <EmptyMatchState icon={emptyState.icon} title={t(emptyState.titleKey)} description={t(emptyState.descriptionKey)} />
       ) : (
         <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
-          <CompetitionSidebar competitions={competitionGroups} />
+          <CompetitionSidebar competitions={competitionGroups} dataSource={dataSource} />
           <div className="space-y-6 sm:space-y-8">
             {competitionGroups.map(({ name: competition, matches: competitionMatches }) => (
               <CompetitionSection

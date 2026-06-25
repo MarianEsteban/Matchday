@@ -6,6 +6,53 @@ import type { Match, MatchStatus, Team } from "@/types/match";
 const API_FOOTBALL_BASE_URL = "https://v3.football.api-sports.io";
 const API_FOOTBALL_LOGO_HOST = "https://media.api-sports.io/football/teams";
 
+type SupportedApiCompetition = {
+  id: number;
+  name: string;
+};
+
+export const supportedApiFootballCompetitions = [
+  { id: 1, name: "FIFA World Cup" },
+  { id: 2, name: "UEFA Champions League" },
+  { id: 13, name: "Copa Libertadores" },
+  { id: 11, name: "Copa Sudamericana" },
+  { id: 39, name: "Premier League" },
+  { id: 140, name: "LaLiga" },
+  { id: 135, name: "Serie A" },
+  { id: 78, name: "Bundesliga" },
+  { id: 61, name: "Ligue 1" },
+  { id: 253, name: "MLS" },
+  { id: 128, name: "Liga Profesional Argentina" },
+  { id: 71, name: "Brasileirão Série A" },
+] as const satisfies readonly SupportedApiCompetition[];
+
+const supportedCompetitionById = new Map<number, SupportedApiCompetition>(
+  supportedApiFootballCompetitions.map((competition) => [competition.id, competition]),
+);
+
+const supportedCompetitionNameAliases = new Map<string, string>([
+  ["world cup", "FIFA World Cup"],
+  ["fifa world cup", "FIFA World Cup"],
+  ["uefa champions league", "UEFA Champions League"],
+  ["conmebol libertadores", "Copa Libertadores"],
+  ["copa libertadores", "Copa Libertadores"],
+  ["conmebol sudamericana", "Copa Sudamericana"],
+  ["copa sudamericana", "Copa Sudamericana"],
+  ["premier league", "Premier League"],
+  ["la liga", "LaLiga"],
+  ["laliga", "LaLiga"],
+  ["serie a", "Serie A"],
+  ["bundesliga", "Bundesliga"],
+  ["ligue 1", "Ligue 1"],
+  ["major league soccer", "MLS"],
+  ["mls", "MLS"],
+  ["liga profesional argentina", "Liga Profesional Argentina"],
+  ["primera division", "Liga Profesional Argentina"],
+  ["serie a brazil", "Brasileirão Série A"],
+  ["brasileiro serie a", "Brasileirão Série A"],
+  ["brasileirão série a", "Brasileirão Série A"],
+]);
+
 type ApiFootballFixturesResponse = {
   response?: ApiFootballFixture[];
 };
@@ -23,6 +70,7 @@ type ApiFootballFixture = {
     };
   };
   league?: {
+    id?: number;
     name?: string;
     round?: string;
   };
@@ -51,7 +99,7 @@ export class FootballApiService {
 
   async getFixtures(query: FootballApiFixturesQuery = {}): Promise<Match[]> {
     const date = formatMatchDate(query.date ?? new Date());
-    return this.fetchAndNormalizeFixtures(`/fixtures?date=${date}`);
+    return this.fetchAndNormalizeFixtures(`/fixtures?date=${date}`, { onlySupportedCompetitions: true });
   }
 
   async getFixtureById(id: string): Promise<Match | undefined> {
@@ -60,12 +108,15 @@ export class FootballApiService {
     }
 
     const fixtureId = id.replace("api-football-", "");
-    const matches = await this.fetchAndNormalizeFixtures(`/fixtures?id=${fixtureId}`);
+    const matches = await this.fetchAndNormalizeFixtures(`/fixtures?id=${fixtureId}`, { onlySupportedCompetitions: true });
 
     return matches[0];
   }
 
-  private async fetchAndNormalizeFixtures(path: string): Promise<Match[]> {
+  private async fetchAndNormalizeFixtures(
+    path: string,
+    options: { onlySupportedCompetitions: boolean },
+  ): Promise<Match[]> {
     if (!this.apiKey) {
       return [];
     }
@@ -84,18 +135,29 @@ export class FootballApiService {
     const payload = (await response.json()) as ApiFootballFixturesResponse;
 
     return (payload.response ?? [])
-      .map(normalizeApiFootballFixture)
+      .map((fixture) => normalizeApiFootballFixture(fixture, options))
       .filter((match): match is Match => Boolean(match));
   }
 }
 
-function normalizeApiFootballFixture(fixture: ApiFootballFixture): Match | undefined {
+function normalizeApiFootballFixture(
+  fixture: ApiFootballFixture,
+  options: { onlySupportedCompetitions: boolean },
+): Match | undefined {
   const fixtureId = fixture.fixture?.id;
   const startsAt = fixture.fixture?.date ? new Date(fixture.fixture.date) : undefined;
   const homeTeam = normalizeTeam(fixture.teams?.home);
   const awayTeam = normalizeTeam(fixture.teams?.away);
+  const competition = normalizeCompetition(fixture.league);
 
-  if (!fixtureId || !startsAt || Number.isNaN(startsAt.getTime()) || !homeTeam || !awayTeam) {
+  if (
+    !fixtureId ||
+    !startsAt ||
+    Number.isNaN(startsAt.getTime()) ||
+    !homeTeam ||
+    !awayTeam ||
+    (options.onlySupportedCompetitions && !competition)
+  ) {
     return undefined;
   }
 
@@ -109,7 +171,7 @@ function normalizeApiFootballFixture(fixture: ApiFootballFixture): Match | undef
     id: `api-football-${fixtureId}`,
     homeTeam,
     awayTeam,
-    competition: fixture.league?.round ?? fixture.league?.name ?? "Football",
+    competition: competition ?? "Football",
     kickoffTime: startsAt.toLocaleTimeString("en-GB", {
       hour: "2-digit",
       minute: "2-digit",
@@ -120,6 +182,20 @@ function normalizeApiFootballFixture(fixture: ApiFootballFixture): Match | undef
     status,
     ...(hasScore ? { score: { home: homeGoals, away: awayGoals } } : {}),
   };
+}
+
+function normalizeCompetition(league: ApiFootballFixture["league"]): string | undefined {
+  if (typeof league?.id === "number") {
+    const supportedCompetition = supportedCompetitionById.get(league.id);
+
+    if (supportedCompetition) {
+      return supportedCompetition.name;
+    }
+  }
+
+  const leagueName = league?.name?.trim().toLowerCase();
+
+  return leagueName ? supportedCompetitionNameAliases.get(leagueName) : undefined;
 }
 
 function normalizeTeam(team: ApiFootballTeam | undefined): Team | undefined {

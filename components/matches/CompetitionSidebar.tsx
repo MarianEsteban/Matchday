@@ -4,7 +4,7 @@ import { usePreferences } from "@/components/ui/AppPreferences";
 import { createCompetitionSectionId } from "@/components/matches/CompetitionSection";
 import { sidebarSections } from "@/data/mock/competitions";
 import { translateCompetitionName } from "@/lib/i18n";
-import type { Match } from "@/types/match";
+import type { Match, MatchListDataSource } from "@/types/match";
 
 type CompetitionGroup = {
   name: string;
@@ -13,9 +13,22 @@ type CompetitionGroup = {
 
 type CompetitionSidebarProps = {
   competitions: CompetitionGroup[];
+  dataSource: MatchListDataSource;
 };
 
-export function CompetitionSidebar({ competitions }: CompetitionSidebarProps) {
+function createApiFootballSidebarSections(competitions: CompetitionGroup[]) {
+  return [
+    {
+      title: "Today",
+      competitions: competitions.map((competition) => ({
+        name: competition.name,
+        fallbackMatchCount: 0,
+      })),
+    },
+  ];
+}
+
+export function CompetitionSidebar({ competitions, dataSource }: CompetitionSidebarProps) {
   const { language, t } = usePreferences();
   const competitionMatchCounts = new Map(
     competitions.map((competition) => [competition.name, competition.matches.length]),
@@ -34,7 +47,7 @@ export function CompetitionSidebar({ competitions }: CompetitionSidebarProps) {
         aria-label={t("competitions")}
         className="max-h-[calc(100vh-9rem)] space-y-5 overflow-y-auto px-3 py-4"
       >
-        {sidebarSections.map((section) => (
+        {(dataSource === "api-football" ? createApiFootballSidebarSections(competitions) : sidebarSections).map((section) => (
           <section key={translateCompetitionName(section.title, language)} aria-labelledby={`sidebar-${translateCompetitionName(section.title, language)}`}>
             <div className="mb-2 flex items-center gap-2 px-2">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
