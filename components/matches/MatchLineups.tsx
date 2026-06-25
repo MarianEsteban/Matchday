@@ -67,8 +67,21 @@ function PitchView({ lineup }: { lineup: TeamLineup }) {
   );
 }
 
+function CompactPlayerList({ players }: { players: LineupPlayer[] }) {
+  return (
+    <ol className="grid gap-1.5 sm:grid-cols-2">
+      {groupedPlayers(players).map((player) => (
+        <li key={player.id} className="grid grid-cols-[1.75rem_1fr_auto] items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-2 py-1.5 dark:border-zinc-800/80 dark:bg-zinc-900/70">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-900 text-[0.65rem] font-black text-white dark:bg-zinc-800">{player.number}</span>
+          <span className="min-w-0 truncate text-xs font-semibold text-zinc-800 dark:text-zinc-200">{player.name}</span>
+          <span className="rounded-full bg-stone-200 px-1.5 py-0.5 text-[0.56rem] font-black text-stone-600 dark:bg-zinc-800 dark:text-zinc-400">{player.position}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 function TeamLineupCard({ lineup, teamName }: { lineup: TeamLineup; teamName: string }) {
-  const players = groupedPlayers(lineup.startingEleven);
 
   return (
     <article className="overflow-hidden rounded-3xl border border-stone-300 bg-white shadow-sm shadow-stone-300/25 dark:border-zinc-800 dark:bg-zinc-950/70 dark:shadow-black/20">
@@ -80,15 +93,19 @@ function TeamLineupCard({ lineup, teamName }: { lineup: TeamLineup; teamName: st
       </div>
       <div className="p-3 sm:p-4">
         <PitchView lineup={lineup} />
-        <ol className="mt-3 grid gap-2 sm:grid-cols-2">
-          {players.map((player) => (
-            <li key={player.id} className="grid grid-cols-[2rem_1fr_auto] items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 px-2.5 py-2 dark:border-zinc-800/80 dark:bg-zinc-900/70">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-xs font-black text-white dark:bg-zinc-800">{player.number}</span>
-              <span className="min-w-0 truncate text-sm font-semibold text-zinc-800 dark:text-zinc-200">{player.name}</span>
-              <span className="rounded-full bg-stone-200 px-2 py-1 text-[0.62rem] font-black text-stone-600 dark:bg-zinc-800 dark:text-zinc-400">{player.position}</span>
-            </li>
-          ))}
-        </ol>
+        {lineup.coach ? (
+          <p className="mt-3 rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">Coach · {lineup.coach}</p>
+        ) : null}
+        <div className="mt-3">
+          <p className="mb-2 text-[0.65rem] font-black uppercase tracking-[0.18em] text-stone-500 dark:text-zinc-500">XI</p>
+          <CompactPlayerList players={lineup.startingEleven} />
+        </div>
+        {lineup.substitutes?.length ? (
+          <div className="mt-3">
+            <p className="mb-2 text-[0.65rem] font-black uppercase tracking-[0.18em] text-stone-500 dark:text-zinc-500">Subs</p>
+            <CompactPlayerList players={lineup.substitutes} />
+          </div>
+        ) : null}
       </div>
     </article>
   );

@@ -63,7 +63,7 @@ const statisticLabels = {
   },
 } as const;
 
-const statPriority = ["shots on goal", "shots on target", "remates al arco", "total shots", "remates", "ball possession", "posesión", "corner kicks", "córners", "fouls", "faltas", "yellow cards", "passes %"];
+const statPriority = ["ball possession", "posesión", "shots on goal", "shots on target", "remates al arco", "total shots", "remates", "corner kicks", "córners", "fouls", "faltas", "yellow cards", "passes %", "expected goals", "xg"];
 
 function translateStatisticLabel(label: string, language: keyof typeof statisticLabels) {
   return statisticLabels[language][label as keyof typeof statisticLabels.es] ?? label;
@@ -101,26 +101,26 @@ export function MatchStats({ match, statistics, dataSource = "demo" }: MatchStat
             <span className="truncate text-right">{translateTeamName(match.awayTeam.name, language)}</span>
           </div>
 
-          <div className="grid gap-2 lg:grid-cols-2">
+          <div className="grid gap-2">
             {sortedStatistics.map((statistic) => {
               const total = statistic.values.home + statistic.values.away;
               const homePercentage = total > 0 ? (statistic.values.home / total) * 100 : 50;
               const awayPercentage = total > 0 ? (statistic.values.away / total) * 100 : 50;
 
               return (
-                <article key={statistic.id} className="rounded-2xl border border-stone-200 bg-stone-50/70 p-3 dark:border-zinc-800 dark:bg-zinc-950/55">
-                  <div className="grid grid-cols-[3.75rem_minmax(0,1fr)_3.75rem] items-center gap-2 sm:grid-cols-[4.5rem_minmax(0,1fr)_4.5rem]">
-                    <span className="text-lg font-black tabular-nums text-zinc-950 dark:text-zinc-50">
+                <article key={statistic.id} className="rounded-xl border border-stone-200 bg-stone-50/70 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950/55">
+                  <div className="grid grid-cols-[3.25rem_minmax(0,1fr)_3.25rem] items-center gap-2">
+                    <span className="text-sm font-black tabular-nums text-zinc-950 dark:text-zinc-50">
                       {formatValue(statistic, statistic.values.home)}
                     </span>
-                    <span className="text-center text-xs font-bold uppercase tracking-wide text-zinc-700 dark:text-zinc-300">
+                    <span className="text-center text-[0.72rem] font-bold uppercase tracking-wide text-zinc-700 dark:text-zinc-300">
                       {translateStatisticLabel(statistic.label, language)}
                     </span>
-                    <span className="text-right text-lg font-black tabular-nums text-zinc-950 dark:text-zinc-50">
+                    <span className="text-right text-sm font-black tabular-nums text-zinc-950 dark:text-zinc-50">
                       {formatValue(statistic, statistic.values.away)}
                     </span>
                   </div>
-                  <div className="mt-2 grid grid-cols-2 gap-1.5">
+                  <div className="mt-1.5 grid grid-cols-2 gap-1.5">
                     <div className="h-1.5 overflow-hidden rounded-full bg-stone-200 dark:bg-zinc-800">
                       <div className="ml-auto h-full rounded-full bg-amber-400" style={{ width: `${homePercentage}%` }} />
                     </div>

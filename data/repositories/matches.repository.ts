@@ -15,7 +15,10 @@ export type MatchesByDateResult = {
 
 export async function getMatchesByDateWithSource(date: Date = new Date(), timezone?: string): Promise<MatchesByDateResult> {
   const requestedDate = formatMatchDate(date);
-  const demoMatches = createMockMatches(date).filter((match) => match.date === requestedDate);
+  const todayDate = formatMatchDate(new Date());
+  const demoMatches = requestedDate === todayDate
+    ? createMockMatches(date).filter((match) => match.date === requestedDate)
+    : [];
 
   try {
     const matches = await matchDataSource.getMatches({ date, timezone });

@@ -11,6 +11,8 @@ export type TeamLineup = {
   team: LineupTeam;
   formation: string;
   startingEleven: LineupPlayer[];
+  substitutes?: LineupPlayer[];
+  coach?: string;
 };
 
 export type MatchLineup = {
