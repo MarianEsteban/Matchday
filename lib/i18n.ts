@@ -313,3 +313,21 @@ export function translateCompetitionName(name: string, language: Language) {
 
   return translationsByName[name]?.[language] ?? name;
 }
+
+const nationalTeamNames: Record<string, Partial<Record<Language, string>>> = {
+  "South Korea": { es: "Corea del Sur", en: "South Korea", pt: "Coreia do Sul" },
+  "Korea Republic": { es: "Corea del Sur", en: "South Korea", pt: "Coreia do Sul" },
+  "South Africa": { es: "Sudáfrica", en: "South Africa", pt: "África do Sul" },
+  Germany: { es: "Alemania", en: "Germany", pt: "Alemanha" },
+  "Ivory Coast": { es: "Costa de Marfil", en: "Ivory Coast", pt: "Costa do Marfim" },
+  "Côte d'Ivoire": { es: "Costa de Marfil", en: "Ivory Coast", pt: "Costa do Marfim" },
+  "United States": { es: "Estados Unidos", en: "United States", pt: "Estados Unidos" },
+  USA: { es: "Estados Unidos", en: "United States", pt: "Estados Unidos" },
+  Netherlands: { es: "Países Bajos", en: "Netherlands", pt: "Países Baixos" },
+  "DR Congo": { es: "RD Congo", en: "DR Congo", pt: "RD Congo" },
+  Czechia: { es: "Chequia", en: "Czechia", pt: "Tchéquia" },
+};
+
+export function translateTeamName(name: string, language: Language) {
+  return nationalTeamNames[name]?.[language] ?? name;
+}

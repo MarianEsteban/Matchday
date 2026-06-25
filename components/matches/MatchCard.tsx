@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePreferences } from "@/components/ui/AppPreferences";
-import { translateCompetitionName } from "@/lib/i18n";
+import { translateCompetitionName, translateTeamName } from "@/lib/i18n";
 import type { Match, MatchStatus, Team } from "@/types/match";
 
 type MatchCardProps = {
@@ -49,13 +49,15 @@ function TeamBlock({
 
 export function MatchCard({ match }: MatchCardProps) {
   const { language, t } = usePreferences();
+  const homeName = translateTeamName(match.homeTeam.name, language);
+  const awayName = translateTeamName(match.awayTeam.name, language);
   const isLive = match.status === "live";
 
   return (
     <Link
       href={`/matches/${match.id}`}
       className="group block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
-      aria-label={`${t("viewMatchDetail")} ${match.homeTeam.name} ${t("against")} ${match.awayTeam.name}`}
+      aria-label={`${t("viewMatchDetail")} ${homeName} ${t("against")} ${awayName}`}
     >
       <article
         className={`relative overflow-hidden rounded-2xl border p-3 shadow-sm sm:p-5 transition-colors group-hover:border-amber-300/40 group-hover:bg-white group-hover:shadow-amber-200/30 dark:group-hover:bg-zinc-900 dark:group-hover:shadow-amber-950/20 ${
@@ -86,12 +88,18 @@ export function MatchCard({ match }: MatchCardProps) {
           </span>
         </div>
 
+        {match.standingsContext ? (
+          <p className="mt-3 pl-1 text-xs font-semibold text-stone-500 dark:text-zinc-400">
+            {translateCompetitionName(match.standingsContext.label, language)} · {match.standingsContext.homePosition}° vs {match.standingsContext.awayPosition}°
+          </p>
+        ) : null}
+
         <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 pl-1 sm:mt-6 sm:gap-4">
-          <TeamBlock team={match.homeTeam} />
+          <TeamBlock team={{ ...match.homeTeam, name: homeName }} />
           <div className="flex items-center justify-center rounded-full border border-stone-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.12em] sm:px-3 sm:tracking-[0.2em] text-zinc-700 dark:text-zinc-500">
             {match.score ? `${match.score.home}-${match.score.away}` : "vs"}
           </div>
-          <TeamBlock align="right" team={match.awayTeam} />
+          <TeamBlock align="right" team={{ ...match.awayTeam, name: awayName }} />
         </div>
       </article>
     </Link>

@@ -2,7 +2,7 @@ import "server-only";
 
 import { createMockMatches } from "@/data/mock/matches";
 import { FootballApiService } from "@/data/services/football-api.service";
-import type { Match, MatchListDataSource } from "@/types/match";
+import type { Match, MatchDetails, MatchListDataSource } from "@/types/match";
 
 export type MatchQuery = {
   date?: Date;
@@ -12,6 +12,7 @@ export type MatchDataSource = {
   source: MatchListDataSource;
   getMatches(query?: MatchQuery): Promise<Match[]> | Match[];
   getMatchById(id: string): Promise<Match | undefined> | Match | undefined;
+  getMatchDetailsById?(id: string): Promise<MatchDetails | undefined> | MatchDetails | undefined;
 };
 
 export class DemoMatchDataSource implements MatchDataSource {
@@ -37,6 +38,10 @@ export class FootballApiMatchDataSource implements MatchDataSource {
 
   getMatchById(id: string): Promise<Match | undefined> {
     return this.footballApi.getFixtureById(id);
+  }
+
+  getMatchDetailsById(id: string): Promise<MatchDetails | undefined> {
+    return this.footballApi.getFixtureDetails(id);
   }
 }
 

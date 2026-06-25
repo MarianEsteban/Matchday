@@ -7,6 +7,7 @@ export type Team = {
   name: string;
   crestUrl: string;
   countryCode: string;
+  apiFootballId?: number;
 };
 
 export type Match = {
@@ -22,4 +23,24 @@ export type Match = {
     home: number;
     away: number;
   };
+  apiFootball?: {
+    fixtureId: number;
+    leagueId?: number;
+    season?: number;
+    round?: string;
+  };
+  standingsContext?: {
+    label: string;
+    homePosition: number;
+    awayPosition: number;
+  };
+};
+
+export type MatchDetails = {
+  match: Match;
+  events: import("@/types/match-event").MatchEvent[];
+  statistics: import("@/types/match-statistic").MatchStatistic[];
+  lineup?: import("@/types/lineup").MatchLineup;
+  standings?: import("@/types/standing").CompetitionStandings;
+  source: MatchListDataSource;
 };
