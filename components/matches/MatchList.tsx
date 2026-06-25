@@ -9,6 +9,7 @@ import { DateSelector } from "@/components/matches/DateSelector";
 import { EmptyMatchState } from "@/components/matches/EmptyMatchState";
 import { MatchFilters, type MatchFilter } from "@/components/matches/MatchFilters";
 import { formatMatchDate } from "@/data/mock/matches";
+import { getCompetitionSortPriority } from "@/data/mock/competitions";
 import { formatCompactVisibleDate, formatVisibleDate, type TranslationKey } from "@/lib/i18n";
 
 type MatchListProps = {
@@ -76,7 +77,9 @@ function DataSourceIndicator({ source }: { source: MatchListDataSource }) {
         title={`${t("dataSource")}: ${label}`}
       >
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/70" aria-hidden="true" />
-        {label}
+        <span>{t("dataSource")}</span>
+        <span className="text-zinc-300 dark:text-zinc-700" aria-hidden="true">·</span>
+        <span className="text-zinc-600 dark:text-zinc-400">{label}</span>
       </span>
     </div>
   );
@@ -135,10 +138,20 @@ export function MatchList({ matches, dataSource }: MatchListProps) {
   const matchesForSelectedDate = filterMatchesByDate(matches, selectedDate);
   const filteredMatches = filterMatches(matchesForSelectedDate, activeFilter);
   const groupedMatches = groupMatchesByCompetition(filteredMatches);
-  const competitionGroups = Object.entries(groupedMatches).map(([name, competitionMatches]) => ({
-    name,
-    matches: competitionMatches,
-  }));
+  const competitionGroups = Object.entries(groupedMatches)
+    .map(([name, competitionMatches]) => ({
+      name,
+      matches: competitionMatches,
+    }))
+    .sort((firstCompetition, secondCompetition) => {
+      const priorityDifference = getCompetitionSortPriority(firstCompetition.name) - getCompetitionSortPriority(secondCompetition.name);
+
+      if (priorityDifference !== 0) {
+        return priorityDifference;
+      }
+
+      return firstCompetition.name.localeCompare(secondCompetition.name);
+    });
   const todayDate = formatMatchDate(new Date());
   const emptyState = getEmptyState(activeFilter, matchesForSelectedDate.length > 0);
 

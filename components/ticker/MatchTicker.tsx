@@ -20,7 +20,7 @@ function TickerItem({ match }: { match: Match }) {
   const { t } = usePreferences();
   const matchStatusText = match.status === "scheduled" ? match.kickoffTime : t("live");
   return (
-    <li className="mx-2 inline-flex min-w-max items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/95 px-3 py-1.5 text-xs text-zinc-100 shadow-lg shadow-black/20 sm:mx-4 sm:gap-3 sm:px-5 sm:py-2 sm:text-sm">
+    <li className="mx-5 inline-flex min-w-max items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/95 px-3 py-1.5 text-xs text-zinc-100 shadow-lg shadow-black/20 sm:mx-8 sm:gap-3 sm:px-5 sm:py-2 sm:text-sm">
       <Image
         src={match.homeTeam.crestUrl}
         alt={`${match.homeTeam.name} flag`}
