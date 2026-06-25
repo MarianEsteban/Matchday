@@ -71,7 +71,7 @@ export const sidebarSections: SidebarSection[] = [
       { name: "Copa Libertadores", fallbackMatchCount: 0 },
       { name: "Copa Sudamericana", fallbackMatchCount: 0 },
       { name: "MLS", fallbackMatchCount: 0 },
-      { name: "Brasileirao", fallbackMatchCount: 0 },
+      { name: "Brasileirão Série A", fallbackMatchCount: 0 },
       { name: "Liga Profesional Argentina", fallbackMatchCount: 0 },
     ],
   },

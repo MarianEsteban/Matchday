@@ -302,7 +302,7 @@ export function translateCompetitionName(name: string, language: Language) {
     "Ligue 1": { es: "Ligue 1", en: "Ligue 1", pt: "Ligue 1" },
     MLS: { es: "MLS", en: "MLS", pt: "MLS" },
     "Liga Profesional Argentina": { es: "Liga Profesional Argentina", en: "Argentine Primera División", pt: "Liga Profissional Argentina" },
-    Brasileirao: { es: "Brasileirão", en: "Brasileirao", pt: "Brasileirão" },
+    "Brasileirão Série A": { es: "Brasileirão Série A", en: "Brasileirão Série A", pt: "Brasileirão Série A" },
     "Knockout Stage": { es: "Eliminatorias", en: "Knockout Stage", pt: "Mata-mata" },
     "Round of 32": { es: "Dieciseisavos", en: "Round of 32", pt: "Fase de 32" },
     "Round of 16": { es: "Octavos de final", en: "Round of 16", pt: "Oitavas de final" },
