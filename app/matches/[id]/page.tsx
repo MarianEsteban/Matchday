@@ -163,7 +163,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
         </nav>
 
         <div className="mt-6 space-y-6 pb-12 lg:mt-8">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.75fr)] lg:items-start">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(23rem,0.88fr)] lg:items-start">
             <div id="alineaciones" className="scroll-mt-24">
               <div className="mb-3">
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-700 dark:text-amber-200">
