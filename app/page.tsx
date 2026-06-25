@@ -1,6 +1,7 @@
 import { MatchList } from "@/components/matches/MatchList";
 import { MatchTicker } from "@/components/ticker/MatchTicker";
 import { PreferenceControls, Trans } from "@/components/ui/AppPreferences";
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import { getMatchesByDateWithSource } from "@/data/repositories/matches.repository";
 
 export default async function Home() {
@@ -11,7 +12,7 @@ export default async function Home() {
       <MatchTicker matches={todayMatches} />
       <div className="mx-auto max-w-6xl px-4 py-5 sm:p-6">
         <header className="mb-6 flex items-center justify-between gap-3 sm:mb-8 sm:flex-wrap sm:gap-4">
-          <h1 className="text-3xl font-bold sm:text-4xl">⚽ MatchDay</h1>
+          <BrandLockup />
           <PreferenceControls />
         </header>
 

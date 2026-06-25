@@ -1,6 +1,6 @@
 import { Trans } from "@/components/ui/AppPreferences";
 import { TeamName } from "@/components/ui/TeamName";
-import type { MatchLineup, TeamLineup } from "@/types/lineup";
+import type { LineupPlayer, MatchLineup, TeamLineup } from "@/types/lineup";
 import type { Match, MatchListDataSource } from "@/types/match";
 
 type MatchLineupsProps = {
@@ -9,55 +9,113 @@ type MatchLineupsProps = {
   dataSource?: MatchListDataSource;
 };
 
-function TeamLineupCard({ lineup, teamName }: { lineup: TeamLineup; teamName: string }) {
+const positionOrder = ["G", "GK", "ARQ", "DEF", "D", "M", "MID", "MED", "F", "FW", "DEL"];
+
+function splitFormation(formation: string) {
+  return formation.split("-").map((part) => Number(part)).filter((part) => Number.isFinite(part) && part > 0);
+}
+
+function chunkOutfieldPlayers(players: LineupPlayer[], formation: string) {
+  const goalkeeper = players[0];
+  const outfield = players.slice(1);
+  const lines = splitFormation(formation);
+  if (lines.reduce((sum, line) => sum + line, 0) !== outfield.length) {
+    return [goalkeeper ? [goalkeeper] : [], ...["DEF", "MED", "DEL"].map((position) => outfield.filter((player) => player.position.toUpperCase().includes(position)))].filter((line) => line.length > 0);
+  }
+
+  const rows = goalkeeper ? [[goalkeeper]] : [];
+  let cursor = 0;
+  for (const line of lines) {
+    rows.push(outfield.slice(cursor, cursor + line));
+    cursor += line;
+  }
+  return rows;
+}
+
+function groupedPlayers(players: LineupPlayer[]) {
+  return [...players].sort((a, b) => {
+    const aIndex = positionOrder.findIndex((position) => a.position.toUpperCase().includes(position));
+    const bIndex = positionOrder.findIndex((position) => b.position.toUpperCase().includes(position));
+    return (aIndex === -1 ? 99 : aIndex) - (bIndex === -1 ? 99 : bIndex);
+  });
+}
+
+function PlayerChip({ player }: { player: LineupPlayer }) {
   return (
-    <div className="rounded-2xl border border-stone-300 dark:border-zinc-800 bg-white dark:bg-zinc-950/60 p-4">
-      <div className="flex items-center justify-between gap-3 border-b border-stone-300 dark:border-zinc-800 pb-3">
-        <h3 className="font-semibold text-zinc-900 dark:text-zinc-100"><TeamName name={teamName} /></h3>
-        <span className="rounded-full border border-amber-600/30 bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100">
+    <span className="flex min-w-0 items-center gap-1.5 rounded-full border border-white/15 bg-zinc-950/70 px-2 py-1 text-[0.62rem] font-bold text-white shadow-sm backdrop-blur dark:bg-black/45 sm:text-[0.68rem]">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-300 text-[0.62rem] font-black text-zinc-950">{player.number}</span>
+      <span className="truncate">{player.name}</span>
+    </span>
+  );
+}
+
+function PitchView({ lineup }: { lineup: TeamLineup }) {
+  const rows = chunkOutfieldPlayers(lineup.startingEleven, lineup.formation);
+
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-emerald-700/20 bg-[linear-gradient(90deg,rgba(255,255,255,0.05)_50%,transparent_50%),linear-gradient(180deg,#166534,#14532d)] bg-[length:40px_40px,auto] p-3 shadow-inner shadow-black/30">
+      <div className="pointer-events-none absolute inset-3 rounded-[1.25rem] border border-white/25" />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20" />
+      <div className="relative grid min-h-64 content-between gap-2 py-2">
+        {rows.map((row, index) => (
+          <div key={`${lineup.team}-${index}`} className="flex justify-center gap-1.5 sm:gap-2">
+            {row.map((player) => <PlayerChip key={player.id} player={player} />)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TeamLineupCard({ lineup, teamName }: { lineup: TeamLineup; teamName: string }) {
+  const players = groupedPlayers(lineup.startingEleven);
+
+  return (
+    <article className="overflow-hidden rounded-3xl border border-stone-300 bg-white shadow-sm shadow-stone-300/25 dark:border-zinc-800 dark:bg-zinc-950/70 dark:shadow-black/20">
+      <div className="flex items-center justify-between gap-3 border-b border-stone-200 bg-stone-50/80 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/70">
+        <h3 className="min-w-0 truncate font-black text-zinc-900 dark:text-zinc-100"><TeamName name={teamName} /></h3>
+        <span className="rounded-full border border-amber-600/30 bg-amber-100 px-3 py-1 text-xs font-black text-amber-900 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100">
           {lineup.formation}
         </span>
       </div>
-      <ol className="mt-4 grid gap-2">
-        {lineup.startingEleven.map((player) => (
-          <li
-            key={player.id}
-            className="grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 rounded-xl border border-stone-300 dark:border-zinc-800/80 bg-stone-50 dark:bg-zinc-900/80 px-3 py-2"
-          >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-200 dark:bg-zinc-800 text-xs font-black text-zinc-900 dark:text-zinc-100">
-              {player.number}
-            </span>
-            <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{player.name}</span>
-            <span className="rounded-full bg-stone-200 dark:bg-zinc-800 px-2 py-1 text-[0.65rem] font-bold text-stone-600 dark:text-zinc-400">
-              {player.position}
-            </span>
-          </li>
-        ))}
-      </ol>
-    </div>
+      <div className="p-3 sm:p-4">
+        <PitchView lineup={lineup} />
+        <ol className="mt-3 grid gap-2 sm:grid-cols-2">
+          {players.map((player) => (
+            <li key={player.id} className="grid grid-cols-[2rem_1fr_auto] items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 px-2.5 py-2 dark:border-zinc-800/80 dark:bg-zinc-900/70">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-xs font-black text-white dark:bg-zinc-800">{player.number}</span>
+              <span className="min-w-0 truncate text-sm font-semibold text-zinc-800 dark:text-zinc-200">{player.name}</span>
+              <span className="rounded-full bg-stone-200 px-2 py-1 text-[0.62rem] font-black text-stone-600 dark:bg-zinc-800 dark:text-zinc-400">{player.position}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </article>
   );
 }
 
 export function MatchLineups({ lineup, match, dataSource = "demo" }: MatchLineupsProps) {
   return (
-    <section className="rounded-2xl border border-stone-300 bg-white/90 p-5 shadow-sm shadow-stone-300/30 dark:border-zinc-800 dark:bg-zinc-900/80 dark:shadow-black/20">
-      <div className="flex items-center justify-between gap-3">
+    <section className="overflow-hidden rounded-3xl border border-stone-300 bg-white/90 shadow-lg shadow-stone-300/25 dark:border-zinc-800 dark:bg-zinc-900/80 dark:shadow-black/20">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 bg-stone-50/80 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950/50 sm:px-5">
         <div>
-          <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-200"><Trans k="lineups" /></p>
-          <h2 className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-100"><Trans k="startingEleven" /></h2>
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-700 dark:text-amber-200"><Trans k="lineups" /></p>
+          <h2 className="mt-1 text-lg font-black text-zinc-900 dark:text-zinc-100"><Trans k="startingEleven" /></h2>
         </div>
-        <span className="rounded-full border border-stone-300 bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
+        <span className="rounded-full border border-stone-300 bg-white px-3 py-1 text-xs font-semibold text-stone-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
           {dataSource === "api-football" ? <Trans k="apiFootballData" /> : <Trans k="demoData" />}
         </span>
       </div>
 
       {lineup ? (
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 p-4 lg:grid-cols-2 lg:gap-5 sm:p-5">
           <TeamLineupCard lineup={lineup.home} teamName={match.homeTeam.name} />
           <TeamLineupCard lineup={lineup.away} teamName={match.awayTeam.name} />
         </div>
       ) : (
-        <p className="mt-3 text-sm text-stone-600 dark:text-zinc-400"><Trans k="noMockLineups" /></p>
+        <div className="m-4 rounded-2xl border border-dashed border-stone-300 bg-stone-50 p-6 text-center dark:border-zinc-700 dark:bg-zinc-950/50">
+          <p className="text-sm font-semibold text-stone-600 dark:text-zinc-400"><Trans k="noMockLineups" /></p>
+        </div>
       )}
     </section>
   );
