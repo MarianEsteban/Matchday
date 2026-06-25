@@ -2,18 +2,21 @@ import "server-only";
 
 import { createMockMatches } from "@/data/mock/matches";
 import { FootballApiService } from "@/data/services/football-api.service";
-import type { Match } from "@/types/match";
+import type { Match, MatchListDataSource } from "@/types/match";
 
 export type MatchQuery = {
   date?: Date;
 };
 
 export type MatchDataSource = {
+  source: MatchListDataSource;
   getMatches(query?: MatchQuery): Promise<Match[]> | Match[];
   getMatchById(id: string): Promise<Match | undefined> | Match | undefined;
 };
 
 export class DemoMatchDataSource implements MatchDataSource {
+  readonly source = "demo" satisfies MatchListDataSource;
+
   getMatches(query: MatchQuery = {}): Match[] {
     return createMockMatches(query.date);
   }
@@ -24,6 +27,8 @@ export class DemoMatchDataSource implements MatchDataSource {
 }
 
 export class FootballApiMatchDataSource implements MatchDataSource {
+  readonly source = "api-football" satisfies MatchListDataSource;
+
   constructor(private readonly footballApi = new FootballApiService()) {}
 
   getMatches(query: MatchQuery = {}): Promise<Match[]> {

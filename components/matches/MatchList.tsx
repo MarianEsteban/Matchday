@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePreferences } from "@/components/ui/AppPreferences";
-import type { Match } from "@/types/match";
+import type { Match, MatchListDataSource } from "@/types/match";
 import { CompetitionSection } from "@/components/matches/CompetitionSection";
 import { CompetitionSidebar } from "@/components/matches/CompetitionSidebar";
 import { DateSelector } from "@/components/matches/DateSelector";
@@ -13,6 +13,7 @@ import { formatCompactVisibleDate, formatVisibleDate, type TranslationKey } from
 
 type MatchListProps = {
   matches: Match[];
+  dataSource: MatchListDataSource;
 };
 
 type EmptyState = {
@@ -63,6 +64,24 @@ function filterMatches(matches: Match[], activeFilter: MatchFilter) {
   return matches.filter((match) => match.status === activeFilter);
 }
 
+function DataSourceIndicator({ source }: { source: MatchListDataSource }) {
+  const { t } = usePreferences();
+  const label = source === "api-football" ? t("apiFootballData") : t("demoData");
+
+  return (
+    <div className="flex justify-end">
+      <span
+        className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/55 px-2.5 py-1 text-[0.68rem] font-medium uppercase tracking-[0.16em] text-zinc-500 shadow-sm shadow-zinc-200/40 dark:border-zinc-800 dark:bg-zinc-900/45 dark:text-zinc-500 dark:shadow-black/10"
+        aria-label={`${t("dataSource")}: ${label}`}
+        title={`${t("dataSource")}: ${label}`}
+      >
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/70" aria-hidden="true" />
+        {label}
+      </span>
+    </div>
+  );
+}
+
 function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boolean): EmptyState {
   if (!hasMatchesForSelectedDate) {
     return {
@@ -103,7 +122,7 @@ function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boo
   };
 }
 
-export function MatchList({ matches }: MatchListProps) {
+export function MatchList({ matches, dataSource }: MatchListProps) {
   const { language, t } = usePreferences();
   const [activeFilter, setActiveFilter] = useState<MatchFilter>("all");
   const [selectedDate, setSelectedDate] = useState(() =>
@@ -141,6 +160,8 @@ export function MatchList({ matches }: MatchListProps) {
       />
 
       <MatchFilters activeFilter={activeFilter} onSelectFilter={setActiveFilter} />
+
+      <DataSourceIndicator source={dataSource} />
 
       {filteredMatches.length === 0 ? (
         <EmptyMatchState icon={emptyState.icon} title={t(emptyState.titleKey)} description={t(emptyState.descriptionKey)} />
