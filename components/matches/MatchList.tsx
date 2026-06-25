@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePreferences } from "@/components/ui/AppPreferences";
 import type { Match, MatchListDataSource } from "@/types/match";
 import { CompetitionSection } from "@/components/matches/CompetitionSection";
@@ -128,14 +128,49 @@ function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boo
 export function MatchList({ matches, dataSource }: MatchListProps) {
   const { language, t } = usePreferences();
   const [activeFilter, setActiveFilter] = useState<MatchFilter>("all");
-  const [selectedDate, setSelectedDate] = useState(() =>
-    matches[0]?.date ? matches[0].date : formatMatchDate(new Date()),
-  );
+  const [selectedDate, setSelectedDate] = useState(() => formatMatchDate(new Date()));
+  const [visibleMatches, setVisibleMatches] = useState(matches);
+  const [visibleDataSource, setVisibleDataSource] = useState(dataSource);
+  const [isLoading, setIsLoading] = useState(false);
   const [collapsedCompetitions, setCollapsedCompetitions] = useState<Record<string, boolean>>(
     {},
   );
 
-  const matchesForSelectedDate = filterMatchesByDate(matches, selectedDate);
+  useEffect(() => {
+    let isCurrentRequest = true;
+
+    async function loadMatchesForSelectedDate() {
+      setIsLoading(true);
+
+      try {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const response = await fetch(`/api/matches?date=${selectedDate}&timezone=${encodeURIComponent(timezone)}`);
+        if (!response.ok) throw new Error(`Match request failed: ${response.status}`);
+        const result = await response.json() as { matches: Match[]; source: MatchListDataSource };
+
+        if (isCurrentRequest) {
+          setVisibleMatches(result.matches);
+          setVisibleDataSource(result.source);
+        }
+      } catch (error) {
+        console.error("Unable to load matches for selected date.", error);
+        if (isCurrentRequest) {
+          setVisibleMatches([]);
+          setVisibleDataSource(dataSource);
+        }
+      } finally {
+        if (isCurrentRequest) setIsLoading(false);
+      }
+    }
+
+    void loadMatchesForSelectedDate();
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [dataSource, selectedDate]);
+
+  const matchesForSelectedDate = filterMatchesByDate(visibleMatches, selectedDate);
   const filteredMatches = filterMatches(matchesForSelectedDate, activeFilter);
   const groupedMatches = groupMatchesByCompetition(filteredMatches);
   const competitionGroups = Object.entries(groupedMatches)
@@ -174,13 +209,17 @@ export function MatchList({ matches, dataSource }: MatchListProps) {
 
       <MatchFilters activeFilter={activeFilter} onSelectFilter={setActiveFilter} />
 
-      <DataSourceIndicator source={dataSource} />
+      <DataSourceIndicator source={visibleDataSource} />
+
+      {isLoading ? (
+        <p className="text-sm font-medium text-stone-600 dark:text-zinc-400" role="status">{t("loadingMatches")}</p>
+      ) : null}
 
       {filteredMatches.length === 0 ? (
         <EmptyMatchState icon={emptyState.icon} title={t(emptyState.titleKey)} description={t(emptyState.descriptionKey)} />
       ) : (
         <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
-          <CompetitionSidebar competitions={competitionGroups} dataSource={dataSource} />
+          <CompetitionSidebar competitions={competitionGroups} dataSource={visibleDataSource} />
           <div className="space-y-6 sm:space-y-8">
             {competitionGroups.map(({ name: competition, matches: competitionMatches }) => (
               <CompetitionSection
