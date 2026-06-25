@@ -146,9 +146,9 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
         >
           <div className="flex min-w-max gap-2">
             {[
-              { href: "#eventos", labelKey: "events" as const },
-              { href: "#estadisticas", labelKey: "statistics" as const },
               { href: "#alineaciones", labelKey: "lineups" as const },
+              { href: "#estadisticas", labelKey: "statistics" as const },
+              { href: "#eventos", labelKey: "events" as const },
               { href: "#tabla", labelKey: "standings" as const },
             ].map(({ href, labelKey }) => (
               <a
@@ -162,52 +162,56 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
           </div>
         </nav>
 
-        <div className="mt-8 space-y-8 pb-12 lg:mt-10 lg:space-y-12">
-          <div id="eventos" className="scroll-mt-24">
-            <div className="mb-4">
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-700 dark:text-amber-200">
-                <Trans k="minuteByMinute" />
-              </p>
-              <h2 className="mt-2 text-2xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="matchEvents" /></h2>
-            </div>
-            <MatchEventsTimeline events={events} match={match} dataSource={source} />
-          </div>
-
-          <div id="estadisticas" className="scroll-mt-24">
-            <div className="mb-4">
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-700 dark:text-amber-200">
-                <Trans k="performance" />
-              </p>
-              <h2 className="mt-2 text-2xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="mainStats" /></h2>
-            </div>
-            <MatchStats statistics={statistics} match={match} dataSource={source} />
-          </div>
-
-          <div id="alineaciones" className="scroll-mt-24">
-            <div className="mb-4">
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-700 dark:text-amber-200">
-                <Trans k="squads" />
-              </p>
-              <h2 className="mt-2 text-2xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="confirmedLineups" /></h2>
-            </div>
-            <MatchLineups lineup={lineup} match={match} dataSource={source} />
-          </div>
-
-          {standings ? (
-            <div id="tabla" className="scroll-mt-24">
-              <div className="mb-4">
+        <div className="mt-6 space-y-6 pb-12 lg:mt-8">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.75fr)] lg:items-start">
+            <div id="alineaciones" className="scroll-mt-24">
+              <div className="mb-3">
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-700 dark:text-amber-200">
-                  <Trans k="context" />
+                  <Trans k="squads" />
                 </p>
-                <h2 className="mt-2 text-2xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="tablePositions" /></h2>
+                <h2 className="mt-1 text-xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="confirmedLineups" /></h2>
               </div>
-              <StandingsTable
-                standings={standings}
-                highlightedTeamIds={highlightedTeamIds}
-                previewRows={4}
-              />
+              <MatchLineups lineup={lineup} match={match} dataSource={source} />
             </div>
-          ) : null}
+
+            <aside id="estadisticas" className="scroll-mt-24 lg:sticky lg:top-4">
+              <div className="mb-3">
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-700 dark:text-amber-200">
+                  <Trans k="performance" />
+                </p>
+                <h2 className="mt-1 text-xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="mainStats" /></h2>
+              </div>
+              <MatchStats statistics={statistics} match={match} dataSource={source} />
+            </aside>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
+            <div id="eventos" className="scroll-mt-24">
+              <div className="mb-3">
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-700 dark:text-amber-200">
+                  <Trans k="minuteByMinute" />
+                </p>
+                <h2 className="mt-1 text-xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="matchEvents" /></h2>
+              </div>
+              <MatchEventsTimeline events={events} match={match} dataSource={source} />
+            </div>
+
+            {standings ? (
+              <div id="tabla" className="scroll-mt-24">
+                <div className="mb-3">
+                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-700 dark:text-amber-200">
+                    <Trans k="context" />
+                  </p>
+                  <h2 className="mt-1 text-xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="tablePositions" /></h2>
+                </div>
+                <StandingsTable
+                  standings={standings}
+                  highlightedTeamIds={highlightedTeamIds}
+                  previewRows={4}
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
     </main>

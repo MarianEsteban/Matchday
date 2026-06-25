@@ -335,8 +335,14 @@ function addStandingsContext(match: Match, standings?: CompetitionStandings): Ma
 
 function normalizeEvent(event: ApiFootballRecord, fixtureId: number, index: number, match: Match): MatchEvent | undefined {
   const detail = String(event.detail ?? "");
-  const typeMap: Record<string, MatchEvent["type"]> = { Goal: "goal", Card: detail === "Red Card" ? "red-card" : "yellow-card", subst: "substitution" };
-  const type = typeMap[String(event.type ?? "")];
+  const rawType = String(event.type ?? "");
+  const typeMap: Record<string, MatchEvent["type"]> = {
+    Goal: "goal",
+    Card: detail === "Red Card" ? "red-card" : "yellow-card",
+    subst: "substitution",
+    Var: "var",
+  };
+  const type = detail.toLowerCase().includes("penalty") ? "penalty" : typeMap[rawType];
   const teamRecord = asRecord(event.team);
   const time = asRecord(event.time);
   const player = asRecord(event.player);
@@ -346,7 +352,7 @@ function normalizeEvent(event: ApiFootballRecord, fixtureId: number, index: numb
   if (!type || Number.isNaN(minute) || !playerName) return undefined;
   const eventTeam: "home" | "away" = Number(teamRecord.id) === match.awayTeam.apiFootballId ? "away" : "home";
   const base = { id: `api-football-${fixtureId}-event-${index}`, matchId: `api-football-${fixtureId}`, minute, team: eventTeam, playerName };
-  if (type === "goal") return { ...base, type, assistName: typeof assist.name === "string" ? assist.name : undefined };
+  if (type === "goal" || type === "penalty") return { ...base, type, assistName: typeof assist.name === "string" ? assist.name : undefined };
   if (type === "substitution") return { ...base, type, playerInName: typeof assist.name === "string" ? assist.name : playerName, playerOutName: playerName };
   return { ...base, type, reason: detail };
 }
@@ -365,13 +371,23 @@ function normalizeStatistic(home: ApiFootballRecord, away: ApiFootballRecord, ma
   return { id: `${matchId}-stat-${index}`, matchId, label, unit: String(home.value).includes("%") ? "%" : undefined, values: { home: homeValue, away: awayValue } };
 }
 
+function normalizeLineupPlayer(entry: ApiFootballRecord, team: "home" | "away", index: number) {
+  const player = asRecord(entry.player);
+  return {
+    id: String(player.id ?? `${team}-${index}`),
+    name: String(player.name ?? "TBD"),
+    position: String(player.pos ?? "—"),
+    number: Number(player.number ?? index + 1),
+  };
+}
+
 function normalizeLineupTeam(lineup: ApiFootballRecord, team: "home" | "away"): MatchLineup["home"] {
+  const coach = asRecord(lineup.coach);
   return {
     team,
     formation: String(lineup.formation ?? "—"),
-    startingEleven: toRecordArray(lineup.startXI).map((entry, index) => {
-      const player = asRecord(entry.player);
-      return { id: String(player.id ?? `${team}-${index}`), name: String(player.name ?? "TBD"), position: String(player.pos ?? "—"), number: Number(player.number ?? index + 1) };
-    }),
+    startingEleven: toRecordArray(lineup.startXI).map((entry, index) => normalizeLineupPlayer(entry, team, index)),
+    substitutes: toRecordArray(lineup.substitutes).map((entry, index) => normalizeLineupPlayer(entry, team, index + 12)),
+    coach: typeof coach.name === "string" ? coach.name : undefined,
   };
 }

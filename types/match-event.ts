@@ -1,4 +1,4 @@
-export type MatchEventType = "goal" | "yellow-card" | "red-card" | "substitution";
+export type MatchEventType = "goal" | "yellow-card" | "red-card" | "substitution" | "var" | "penalty";
 
 export type MatchEventTeam = "home" | "away";
 
@@ -16,8 +16,13 @@ export type GoalMatchEvent = BaseMatchEvent & {
 };
 
 export type CardMatchEvent = BaseMatchEvent & {
-  type: "yellow-card" | "red-card";
+  type: "yellow-card" | "red-card" | "var";
   reason?: string;
+};
+
+export type PenaltyMatchEvent = BaseMatchEvent & {
+  type: "penalty";
+  assistName?: string;
 };
 
 export type SubstitutionMatchEvent = BaseMatchEvent & {
@@ -26,4 +31,4 @@ export type SubstitutionMatchEvent = BaseMatchEvent & {
   playerOutName: string;
 };
 
-export type MatchEvent = GoalMatchEvent | CardMatchEvent | SubstitutionMatchEvent;
+export type MatchEvent = GoalMatchEvent | PenaltyMatchEvent | CardMatchEvent | SubstitutionMatchEvent;
