@@ -77,16 +77,38 @@ export const sidebarSections: SidebarSection[] = [
   },
 ];
 
-const competitionPriority = new Map<string, number>();
+export const featuredCompetitionPriority = [
+  "FIFA World Cup",
+  "FIFA World Cup 2026",
+  "UEFA Champions League",
+  "Copa Libertadores",
+  "Copa Sudamericana",
+  "Premier League",
+  "LaLiga",
+  "Serie A",
+  "Bundesliga",
+  "Ligue 1",
+  "Liga Profesional Argentina",
+  "Brasileirão Série A",
+  "MLS",
+] as const;
+
+const competitionPriority = new Map<string, number>(
+  featuredCompetitionPriority.map((competition, index) => [competition, index]),
+);
 
 sidebarSections.forEach((section, sectionIndex) => {
   section.competitions.forEach((competition, competitionIndex) => {
     if (!competitionPriority.has(competition.name)) {
-      competitionPriority.set(competition.name, sectionIndex * 100 + competitionIndex);
+      competitionPriority.set(competition.name, featuredCompetitionPriority.length + sectionIndex * 100 + competitionIndex);
     }
   });
 });
 
 export function getCompetitionSortPriority(competitionName: string) {
+  if (/^Group [A-Z]$/.test(competitionName)) {
+    return competitionPriority.get("FIFA World Cup") ?? 0;
+  }
+
   return competitionPriority.get(competitionName) ?? Number.MAX_SAFE_INTEGER;
 }

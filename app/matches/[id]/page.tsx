@@ -113,7 +113,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
               <div>
                 <dt className="text-stone-600 dark:text-zinc-500"><Trans k="dateTime" /></dt>
                 <dd className="mt-1 font-semibold capitalize text-zinc-900 dark:text-zinc-100">
-                  <LocalizedKickoff date={match.date} kickoffTime={match.kickoffTime} />
+                  <LocalizedKickoff date={match.date} kickoffTime={match.kickoffTime} kickoffAt={match.kickoffAt} />
                 </dd>
               </div>
               <div>

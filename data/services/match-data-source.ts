@@ -6,6 +6,7 @@ import type { Match, MatchDetails, MatchListDataSource } from "@/types/match";
 
 export type MatchQuery = {
   date?: Date;
+  timezone?: string;
 };
 
 export type MatchDataSource = {

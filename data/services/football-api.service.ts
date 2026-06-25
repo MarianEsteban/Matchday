@@ -99,6 +99,7 @@ type ApiFootballTeam = {
 
 export type FootballApiFixturesQuery = {
   date?: Date;
+  timezone?: string;
 };
 
 export class FootballApiService {
@@ -106,7 +107,8 @@ export class FootballApiService {
 
   async getFixtures(query: FootballApiFixturesQuery = {}): Promise<Match[]> {
     const date = formatMatchDate(query.date ?? new Date());
-    const matches = await this.fetchAndNormalizeFixtures(`/fixtures?date=${date}`, { onlySupportedCompetitions: true });
+    const timezone = query.timezone ? `&timezone=${encodeURIComponent(query.timezone)}` : "";
+    const matches = await this.fetchAndNormalizeFixtures(`/fixtures?date=${date}${timezone}`, { onlySupportedCompetitions: true });
     return this.withStandingsContexts(matches);
   }
 
@@ -266,6 +268,7 @@ function normalizeApiFootballFixture(
       minute: "2-digit",
       timeZone: "UTC",
     }),
+    kickoffAt: startsAt.toISOString(),
     venue: venueParts.join(", ") || "TBD",
     date: formatMatchDate(startsAt),
     status,

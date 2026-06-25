@@ -16,6 +16,7 @@ export type Match = {
   awayTeam: Team;
   competition: string;
   kickoffTime: string;
+  kickoffAt?: string;
   venue: string;
   date: string;
   status: MatchStatus;

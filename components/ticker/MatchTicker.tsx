@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import { usePreferences } from "@/components/ui/AppPreferences";
+import { LocalizedKickoffTime } from "@/components/ui/LocalizedKickoff";
 import { translateTeamName } from "@/lib/i18n";
+import { getCompetitionSortPriority } from "@/data/mock/competitions";
 import type { Match } from "@/types/match";
 
 type MatchTickerProps = {
@@ -21,7 +23,7 @@ function TickerItem({ match }: { match: Match }) {
   const { language, t } = usePreferences();
   const homeName = translateTeamName(match.homeTeam.name, language);
   const awayName = translateTeamName(match.awayTeam.name, language);
-  const matchStatusText = match.status === "scheduled" ? match.kickoffTime : t("live");
+  const matchStatusText = match.status === "scheduled" ? <LocalizedKickoffTime date={match.date} kickoffTime={match.kickoffTime} kickoffAt={match.kickoffAt} /> : t("live");
   return (
     <li className="mx-5 inline-flex min-w-max items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/95 px-3 py-1.5 text-xs text-zinc-100 shadow-lg shadow-black/20 sm:mx-8 sm:gap-3 sm:px-5 sm:py-2 sm:text-sm">
       <Image
@@ -52,7 +54,15 @@ function TickerItem({ match }: { match: Match }) {
 
 export function MatchTicker({ matches }: MatchTickerProps) {
   const { t } = usePreferences();
-  const displayMatches = matches.filter((match) => match.status === "live" || match.status === "scheduled");
+  const displayMatches = matches
+    .filter((match) => match.status === "live" || match.status === "scheduled")
+    .sort((firstMatch, secondMatch) => {
+      const priorityDifference = getCompetitionSortPriority(firstMatch.competition) - getCompetitionSortPriority(secondMatch.competition);
+
+      if (priorityDifference !== 0) return priorityDifference;
+
+      return (firstMatch.kickoffAt ?? firstMatch.kickoffTime).localeCompare(secondMatch.kickoffAt ?? secondMatch.kickoffTime);
+    });
 
   if (displayMatches.length === 0) {
     return null;

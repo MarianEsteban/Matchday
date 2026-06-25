@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePreferences } from "@/components/ui/AppPreferences";
+import { LocalizedKickoffTime } from "@/components/ui/LocalizedKickoff";
 import { translateCompetitionName, translateTeamName } from "@/lib/i18n";
 import type { Match, MatchStatus, Team } from "@/types/match";
 
@@ -74,7 +75,7 @@ export function MatchCard({ match }: MatchCardProps) {
               {translateCompetitionName(match.competition, language)}
             </span>
             <div className="truncate text-xs text-stone-600 dark:text-zinc-400 sm:text-sm">
-              <time dateTime={`${match.date}T${match.kickoffTime}`}>{match.kickoffTime}</time>
+              <time dateTime={match.kickoffAt ?? `${match.date}T${match.kickoffTime}`}><LocalizedKickoffTime date={match.date} kickoffTime={match.kickoffTime} kickoffAt={match.kickoffAt} /></time>
               <span className="mx-2 text-zinc-600">•</span>
               <span>{match.venue}</span>
             </div>

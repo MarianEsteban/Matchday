@@ -13,17 +13,19 @@ export type MatchesByDateResult = {
   source: MatchListDataSource;
 };
 
-export async function getMatchesByDateWithSource(date: Date = new Date()): Promise<MatchesByDateResult> {
+export async function getMatchesByDateWithSource(date: Date = new Date(), timezone?: string): Promise<MatchesByDateResult> {
   const requestedDate = formatMatchDate(date);
   const demoMatches = createMockMatches(date).filter((match) => match.date === requestedDate);
 
   try {
-    const matches = await matchDataSource.getMatches({ date });
+    const matches = await matchDataSource.getMatches({ date, timezone });
     const usableMatches = matches.filter((match) => match.date === requestedDate);
 
-    return usableMatches.length > 0
-      ? { matches: usableMatches, source: matchDataSource.source }
-      : { matches: demoMatches, source: "demo" };
+    if (matchDataSource.source === "api-football") {
+      return { matches: usableMatches, source: matchDataSource.source };
+    }
+
+    return { matches: demoMatches, source: "demo" };
   } catch (error) {
     console.error("Unable to load matches from configured data source. Falling back to demo data.", error);
 

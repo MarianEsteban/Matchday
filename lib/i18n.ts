@@ -75,8 +75,9 @@ export const translations = {
     playerOut: "Sale",
     viewMatchDetail: "Ver detalle de",
     against: "contra",
-    noMatchesDateTitle: "No hay partidos programados para esta fecha.",
+    noMatchesDateTitle: "No hay partidos destacados para esta fecha.",
     noMatchesDateDescription: "Probá con otra fecha o volvé a la vista de hoy.",
+    loadingMatches: "Cargando partidos de la fecha…",
     noLiveTitle: "No hay partidos en vivo ahora.",
     noLiveDescription: "Cuando empiece un partido, aparecerá en este filtro.",
     noUpcomingTitle: "No hay próximos partidos para esta fecha.",
@@ -151,8 +152,9 @@ export const translations = {
     playerOut: "Off",
     viewMatchDetail: "View details for",
     against: "against",
-    noMatchesDateTitle: "No matches scheduled for this date.",
+    noMatchesDateTitle: "No featured matches for this date.",
     noMatchesDateDescription: "Try another date or return to today's view.",
+    loadingMatches: "Loading matches for this date…",
     noLiveTitle: "No matches are live right now.",
     noLiveDescription: "When a match starts, it will appear in this filter.",
     noUpcomingTitle: "No upcoming matches for this date.",
@@ -227,8 +229,9 @@ export const translations = {
     playerOut: "Sai",
     viewMatchDetail: "Ver detalhes de",
     against: "contra",
-    noMatchesDateTitle: "Não há jogos programados para esta data.",
+    noMatchesDateTitle: "Não há jogos em destaque para esta data.",
     noMatchesDateDescription: "Tente outra data ou volte para a visão de hoje.",
+    loadingMatches: "Carregando jogos da data…",
     noLiveTitle: "Não há jogos ao vivo agora.",
     noLiveDescription: "Quando um jogo começar, ele aparecerá neste filtro.",
     noUpcomingTitle: "Não há próximos jogos para esta data.",
@@ -251,6 +254,13 @@ export function formatVisibleDate(date: Date, language: Language, options?: Intl
     day: "numeric",
     month: "long",
     ...options,
+  }).format(date);
+}
+
+export function formatVisibleTime(date: Date, language: Language) {
+  return new Intl.DateTimeFormat(languageLocales[language], {
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(date);
 }
 
