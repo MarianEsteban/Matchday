@@ -1,12 +1,14 @@
 "use client";
 
 import { Trans, usePreferences } from "@/components/ui/AppPreferences";
+import { translateTeamName } from "@/lib/i18n";
 import type { MatchStatistic } from "@/types/match-statistic";
-import type { Match } from "@/types/match";
+import type { Match, MatchListDataSource } from "@/types/match";
 
 type MatchStatsProps = {
   match: Match;
   statistics: MatchStatistic[];
+  dataSource?: MatchListDataSource;
 };
 
 function formatValue(statistic: MatchStatistic, value: number) {
@@ -23,7 +25,7 @@ function translateStatisticLabel(label: string, language: keyof typeof statistic
   return statisticLabels[language][label as keyof typeof statisticLabels.es] ?? label;
 }
 
-export function MatchStats({ match, statistics }: MatchStatsProps) {
+export function MatchStats({ match, statistics, dataSource = "demo" }: MatchStatsProps) {
   const { language } = usePreferences();
 
   return (
@@ -34,16 +36,16 @@ export function MatchStats({ match, statistics }: MatchStatsProps) {
           <h2 className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-100"><Trans k="matchComparison" /></h2>
         </div>
         <span className="rounded-full border border-stone-300 bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
-          <Trans k="demoData" />
+          {dataSource === "api-football" ? <Trans k="apiFootballData" /> : <Trans k="demoData" />}
         </span>
       </div>
 
       {statistics.length > 0 ? (
         <div className="mt-6 space-y-5">
           <div className="grid grid-cols-[1fr_auto_1fr] gap-3 text-xs font-semibold uppercase tracking-wide text-stone-600 dark:text-zinc-500">
-            <span className="truncate text-left">{match.homeTeam.name}</span>
+            <span className="truncate text-left">{translateTeamName(match.homeTeam.name, language)}</span>
             <span><Trans k="detail" /></span>
-            <span className="truncate text-right">{match.awayTeam.name}</span>
+            <span className="truncate text-right">{translateTeamName(match.awayTeam.name, language)}</span>
           </div>
 
           {statistics.map((statistic) => {

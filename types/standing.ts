@@ -2,6 +2,7 @@ export type StandingRow = {
   position: number;
   teamId: string;
   teamName: string;
+  apiFootballTeamId?: number;
   played: number;
   won: number;
   drawn: number;

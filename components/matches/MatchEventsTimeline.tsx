@@ -1,12 +1,14 @@
 "use client";
 
 import { Trans, usePreferences } from "@/components/ui/AppPreferences";
+import { translateTeamName } from "@/lib/i18n";
 import type { MatchEvent, MatchEventTeam, MatchEventType } from "@/types/match-event";
-import type { Match } from "@/types/match";
+import type { Match, MatchListDataSource } from "@/types/match";
 
 type MatchEventsTimelineProps = {
   events: MatchEvent[];
   match: Match;
+  dataSource?: MatchListDataSource;
 };
 
 const eventLabelKeys: Record<MatchEventType, "goal" | "yellowCard" | "redCard" | "substitution"> = {
@@ -55,8 +57,8 @@ function EventDetail({ event }: { event: MatchEvent }) {
   return <span>{event.reason ?? t(eventLabelKeys[event.type])}</span>;
 }
 
-export function MatchEventsTimeline({ events, match }: MatchEventsTimelineProps) {
-  const { t } = usePreferences();
+export function MatchEventsTimeline({ events, match, dataSource = "demo" }: MatchEventsTimelineProps) {
+  const { language, t } = usePreferences();
   const sortedEvents = [...events].sort(
     (firstEvent, secondEvent) => firstEvent.minute - secondEvent.minute,
   );
@@ -66,7 +68,7 @@ export function MatchEventsTimeline({ events, match }: MatchEventsTimelineProps)
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100"><Trans k="events" /></h2>
         <span className="rounded-full border border-stone-300 bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
-          <Trans k="demoData" />
+          {dataSource === "api-football" ? <Trans k="apiFootballData" /> : <Trans k="demoData" />}
         </span>
       </div>
 
@@ -87,7 +89,7 @@ export function MatchEventsTimeline({ events, match }: MatchEventsTimelineProps)
                       {t(eventLabelKeys[event.type])} · {event.playerName}
                     </p>
                     <p className="mt-1 text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                      {getTeamName(match, event.team)}
+                      {translateTeamName(getTeamName(match, event.team), language)}
                     </p>
                     <p className="mt-2 text-xs text-stone-600 dark:text-zinc-400">
                       <EventDetail event={event} />

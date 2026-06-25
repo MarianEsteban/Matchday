@@ -1,7 +1,7 @@
 "use client";
 
 import { Trans, usePreferences } from "@/components/ui/AppPreferences";
-import { translateCompetitionName } from "@/lib/i18n";
+import { translateCompetitionName, translateTeamName } from "@/lib/i18n";
 import type { CompetitionStandings } from "@/types/standing";
 
 type StandingsTableProps = {
@@ -49,7 +49,7 @@ export function StandingsTable({
                   className={isHighlighted ? "bg-amber-100 text-amber-950 dark:bg-amber-400/10 dark:text-amber-50" : "text-zinc-700 dark:text-zinc-300"}
                 >
                   <td className="px-4 py-3 font-semibold text-stone-600 dark:text-zinc-500">{row.position}</td>
-                  <td className="px-4 py-3 font-semibold">{row.teamName}</td>
+                  <td className="px-4 py-3 font-semibold">{translateTeamName(row.teamName, language)}</td>
                   <td className="px-3 py-3 text-center">{row.played}</td>
                   <td className="px-3 py-3 text-center">{row.won}</td>
                   <td className="px-3 py-3 text-center">{row.drawn}</td>

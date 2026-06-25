@@ -1,7 +1,11 @@
 import "server-only";
 
 import { formatMatchDate } from "@/data/mock/matches";
-import type { Match, MatchStatus, Team } from "@/types/match";
+import type { Match, MatchDetails, MatchStatus, Team } from "@/types/match";
+import type { MatchEvent } from "@/types/match-event";
+import type { MatchStatistic } from "@/types/match-statistic";
+import type { MatchLineup } from "@/types/lineup";
+import type { CompetitionStandings } from "@/types/standing";
 
 const API_FOOTBALL_BASE_URL = "https://v3.football.api-sports.io";
 const API_FOOTBALL_LOGO_HOST = "https://media.api-sports.io/football/teams";
@@ -53,6 +57,8 @@ const supportedCompetitionNameAliases = new Map<string, string>([
   ["brasileirão série a", "Brasileirão Série A"],
 ]);
 
+type ApiFootballRecord = Record<string, unknown>;
+
 type ApiFootballFixturesResponse = {
   response?: ApiFootballFixture[];
 };
@@ -73,6 +79,7 @@ type ApiFootballFixture = {
     id?: number;
     name?: string;
     round?: string;
+    season?: number;
   };
   teams?: {
     home?: ApiFootballTeam;
@@ -99,7 +106,8 @@ export class FootballApiService {
 
   async getFixtures(query: FootballApiFixturesQuery = {}): Promise<Match[]> {
     const date = formatMatchDate(query.date ?? new Date());
-    return this.fetchAndNormalizeFixtures(`/fixtures?date=${date}`, { onlySupportedCompetitions: true });
+    const matches = await this.fetchAndNormalizeFixtures(`/fixtures?date=${date}`, { onlySupportedCompetitions: true });
+    return this.withStandingsContexts(matches);
   }
 
   async getFixtureById(id: string): Promise<Match | undefined> {
@@ -110,7 +118,89 @@ export class FootballApiService {
     const fixtureId = id.replace("api-football-", "");
     const matches = await this.fetchAndNormalizeFixtures(`/fixtures?id=${fixtureId}`, { onlySupportedCompetitions: true });
 
-    return matches[0];
+    const match = matches[0];
+    if (!match) return undefined;
+    return this.withStandingsContext(match);
+  }
+
+  async getFixtureDetails(id: string): Promise<MatchDetails | undefined> {
+    const match = await this.getFixtureById(id);
+    const fixtureId = match?.apiFootball?.fixtureId;
+    if (!match || !fixtureId) return undefined;
+
+    const [events, statistics, lineup, standings] = await Promise.all([
+      this.getFixtureEvents(fixtureId, match),
+      this.getFixtureStatistics(fixtureId, match.id),
+      this.getFixtureLineups(fixtureId, match.id),
+      this.getStandings(match),
+    ]);
+
+    return { match: addStandingsContext(match, standings), events, statistics, lineup, standings, source: "api-football" };
+  }
+
+  private async getFixtureEvents(fixtureId: number, match: Match): Promise<MatchEvent[]> {
+    const payload = await this.fetchApi<{ response?: ApiFootballRecord[] }>(`/fixtures/events?fixture=${fixtureId}`, 300).catch(() => undefined);
+    return (payload?.response ?? []).map((event, index) => normalizeEvent(event, fixtureId, index, match)).filter((event): event is MatchEvent => Boolean(event));
+  }
+
+  private async getFixtureStatistics(fixtureId: number, matchId: string): Promise<MatchStatistic[]> {
+    const payload = await this.fetchApi<{ response?: ApiFootballRecord[] }>(`/fixtures/statistics?fixture=${fixtureId}`, 300).catch(() => undefined);
+    const [home, away] = payload?.response ?? [];
+    const homeStats = toRecordArray(home?.statistics);
+    const awayStats = toRecordArray(away?.statistics);
+    if (homeStats.length === 0 || awayStats.length === 0) return [];
+    return homeStats.map((stat, index) => normalizeStatistic(stat, awayStats[index], matchId, index)).filter((statistic): statistic is MatchStatistic => Boolean(statistic));
+  }
+
+  private async getFixtureLineups(fixtureId: number, matchId: string): Promise<MatchLineup | undefined> {
+    const payload = await this.fetchApi<{ response?: ApiFootballRecord[] }>(`/fixtures/lineups?fixture=${fixtureId}`, 300).catch(() => undefined);
+    const [home, away] = payload?.response ?? [];
+    if (toRecordArray(home?.startXI).length === 0 || toRecordArray(away?.startXI).length === 0) return undefined;
+    return { matchId, home: normalizeLineupTeam(home, "home"), away: normalizeLineupTeam(away, "away") };
+  }
+
+  async getStandings(match: Match): Promise<CompetitionStandings | undefined> {
+    const leagueId = match.apiFootball?.leagueId;
+    const season = match.apiFootball?.season;
+    if (!leagueId || !season) return undefined;
+    const payload = await this.fetchApi<{ response?: ApiFootballRecord[] }>(`/standings?league=${leagueId}&season=${season}`, 900).catch(() => undefined);
+    const league = asRecord(payload?.response?.[0]?.league);
+    const groups = Array.isArray(league.standings) ? league.standings.map(toRecordArray) : [];
+    const group = groups.find((rows) => rows.some((row) => {
+      const team = asRecord(row.team);
+      return [match.homeTeam.apiFootballId, match.awayTeam.apiFootballId].includes(Number(team.id));
+    })) ?? groups[0];
+    if (!group) return undefined;
+    return {
+      competition: match.apiFootball?.round?.match(/Group [A-Z]/)?.[0] ?? match.competition,
+      rows: group.map((row) => {
+        const team = asRecord(row.team);
+        const all = asRecord(row.all);
+        const goals = asRecord(all.goals);
+        return {
+          position: Number(row.rank), teamId: `api-football-team-${team.id}`, apiFootballTeamId: Number(team.id), teamName: String(team.name ?? ""),
+          played: Number(all.played ?? 0), won: Number(all.win ?? 0), drawn: Number(all.draw ?? 0), lost: Number(all.lose ?? 0),
+          goalsFor: Number(goals.for ?? 0), goalsAgainst: Number(goals.against ?? 0), goalDifference: Number(row.goalsDiff ?? 0), points: Number(row.points ?? 0),
+        };
+      }).filter((row) => row.position && row.teamName),
+    };
+  }
+
+  private async withStandingsContext(match: Match) {
+    return addStandingsContext(match, await this.getStandings(match));
+  }
+
+  private async withStandingsContexts(matches: Match[]): Promise<Match[]> {
+    const cache = new Map<string, Promise<CompetitionStandings | undefined>>();
+
+    return Promise.all(matches.map(async (match) => {
+      const leagueId = match.apiFootball?.leagueId;
+      const season = match.apiFootball?.season;
+      if (!leagueId || !season) return match;
+      const key = `${leagueId}:${season}`;
+      if (!cache.has(key)) cache.set(key, this.getStandings(match));
+      return addStandingsContext(match, await cache.get(key));
+    }));
   }
 
   private async fetchAndNormalizeFixtures(
@@ -121,22 +211,21 @@ export class FootballApiService {
       return [];
     }
 
-    const response = await fetch(`${API_FOOTBALL_BASE_URL}${path}`, {
-      headers: {
-        "x-apisports-key": this.apiKey,
-      },
-      next: { revalidate: 60 },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Football API returned ${response.status}`);
-    }
-
-    const payload = (await response.json()) as ApiFootballFixturesResponse;
+    const payload = await this.fetchApi<ApiFootballFixturesResponse>(path, 60);
 
     return (payload.response ?? [])
       .map((fixture) => normalizeApiFootballFixture(fixture, options))
       .filter((match): match is Match => Boolean(match));
+  }
+
+  private async fetchApi<T>(path: string, revalidate: number): Promise<T> {
+    if (!this.apiKey) throw new Error("Football API key is not configured");
+    const response = await fetch(`${API_FOOTBALL_BASE_URL}${path}`, {
+      headers: { "x-apisports-key": this.apiKey },
+      next: { revalidate },
+    });
+    if (!response.ok) throw new Error(`Football API returned ${response.status}`);
+    return response.json() as Promise<T>;
   }
 }
 
@@ -180,6 +269,7 @@ function normalizeApiFootballFixture(
     venue: venueParts.join(", ") || "TBD",
     date: formatMatchDate(startsAt),
     status,
+    apiFootball: { fixtureId, leagueId: fixture.league?.id, season: fixture.league?.season, round: fixture.league?.round },
     ...(hasScore ? { score: { home: homeGoals, away: awayGoals } } : {}),
   };
 }
@@ -208,6 +298,7 @@ function normalizeTeam(team: ApiFootballTeam | undefined): Team | undefined {
     name: team.name,
     countryCode: "",
     crestUrl: team.logo ?? `${API_FOOTBALL_LOGO_HOST}/${team.id}.png`,
+    apiFootballId: team.id,
   };
 }
 
@@ -221,4 +312,63 @@ function normalizeStatus(status: string | undefined): MatchStatus {
   }
 
   return "scheduled";
+}
+
+
+function toRecordArray(value: unknown): ApiFootballRecord[] {
+  return Array.isArray(value) ? value.filter((item): item is ApiFootballRecord => Boolean(item) && typeof item === "object" && !Array.isArray(item)) : [];
+}
+
+function asRecord(value: unknown): ApiFootballRecord {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value) ? value as ApiFootballRecord : {};
+}
+
+function addStandingsContext(match: Match, standings?: CompetitionStandings): Match {
+  if (!standings) return match;
+  const home = standings.rows.find((row) => row.teamId === match.homeTeam.id || row.apiFootballTeamId === match.homeTeam.apiFootballId);
+  const away = standings.rows.find((row) => row.teamId === match.awayTeam.id || row.apiFootballTeamId === match.awayTeam.apiFootballId);
+  return home && away ? { ...match, standingsContext: { label: standings.competition, homePosition: home.position, awayPosition: away.position } } : match;
+}
+
+function normalizeEvent(event: ApiFootballRecord, fixtureId: number, index: number, match: Match): MatchEvent | undefined {
+  const detail = String(event.detail ?? "");
+  const typeMap: Record<string, MatchEvent["type"]> = { Goal: "goal", Card: detail === "Red Card" ? "red-card" : "yellow-card", subst: "substitution" };
+  const type = typeMap[String(event.type ?? "")];
+  const teamRecord = asRecord(event.team);
+  const time = asRecord(event.time);
+  const player = asRecord(event.player);
+  const assist = asRecord(event.assist);
+  const minute = Number(time.elapsed);
+  const playerName = typeof player.name === "string" ? player.name : undefined;
+  if (!type || Number.isNaN(minute) || !playerName) return undefined;
+  const eventTeam: "home" | "away" = Number(teamRecord.id) === match.awayTeam.apiFootballId ? "away" : "home";
+  const base = { id: `api-football-${fixtureId}-event-${index}`, matchId: `api-football-${fixtureId}`, minute, team: eventTeam, playerName };
+  if (type === "goal") return { ...base, type, assistName: typeof assist.name === "string" ? assist.name : undefined };
+  if (type === "substitution") return { ...base, type, playerInName: typeof assist.name === "string" ? assist.name : playerName, playerOutName: playerName };
+  return { ...base, type, reason: detail };
+}
+
+function parseStatValue(value: unknown): number | undefined {
+  if (typeof value === "number") return value;
+  if (typeof value === "string") return Number(value.replace("%", ""));
+  return undefined;
+}
+
+function normalizeStatistic(home: ApiFootballRecord, away: ApiFootballRecord, matchId: string, index: number): MatchStatistic | undefined {
+  const homeValue = parseStatValue(home?.value);
+  const awayValue = parseStatValue(away?.value);
+  const label = typeof home.type === "string" ? home.type : undefined;
+  if (!label || homeValue === undefined || awayValue === undefined || Number.isNaN(homeValue) || Number.isNaN(awayValue)) return undefined;
+  return { id: `${matchId}-stat-${index}`, matchId, label, unit: String(home.value).includes("%") ? "%" : undefined, values: { home: homeValue, away: awayValue } };
+}
+
+function normalizeLineupTeam(lineup: ApiFootballRecord, team: "home" | "away"): MatchLineup["home"] {
+  return {
+    team,
+    formation: String(lineup.formation ?? "—"),
+    startingEleven: toRecordArray(lineup.startXI).map((entry, index) => {
+      const player = asRecord(entry.player);
+      return { id: String(player.id ?? `${team}-${index}`), name: String(player.name ?? "TBD"), position: String(player.pos ?? "—"), number: Number(player.number ?? index + 1) };
+    }),
+  };
 }

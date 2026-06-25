@@ -9,12 +9,9 @@ import { LocalizedKickoff } from "@/components/ui/LocalizedKickoff";
 import { TranslatedCompetitionName } from "@/components/ui/TranslatedCompetitionName";
 import { MatchStats } from "@/components/matches/MatchStats";
 import { StandingsTable } from "@/components/standings/StandingsTable";
-import { getLineupsByMatchId } from "@/data/mock/lineups";
-import { getMatchEventsByMatchId } from "@/data/mock/match-events";
-import { getMatchStatisticsByMatchId } from "@/data/mock/match-statistics";
-import { getStandingsByCompetition } from "@/data/mock/standings";
-import { getMatchById } from "@/data/repositories/matches.repository";
+import { getMatchDetailsById } from "@/data/repositories/matches.repository";
 import type { MatchStatus } from "@/types/match";
+import { TeamName } from "@/components/ui/TeamName";
 
 type MatchDetailPageProps = {
   params: Promise<{
@@ -30,16 +27,13 @@ const statusBadgeStyles: Record<MatchStatus, string> = {
 
 export default async function MatchDetailPage({ params }: MatchDetailPageProps) {
   const { id } = await params;
-  const match = await getMatchById(id);
+  const details = await getMatchDetailsById(id);
 
-  if (!match) {
+  if (!details) {
     notFound();
   }
 
-  const standings = getStandingsByCompetition(match.competition);
-  const events = getMatchEventsByMatchId(match.id);
-  const statistics = getMatchStatisticsByMatchId(match.id);
-  const lineup = getLineupsByMatchId(match.id);
+  const { match, events, statistics, lineup, standings, source } = details;
   const highlightedTeamIds = [match.homeTeam.id, match.awayTeam.id];
 
   return (
@@ -63,7 +57,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                   <TranslatedCompetitionName competition={match.competition} />
                 </p>
                 <h1 className="mt-2 text-2xl font-bold leading-tight text-white sm:mt-3 sm:text-5xl">
-                  {match.homeTeam.name} vs {match.awayTeam.name}
+                  <TeamName name={match.homeTeam.name} /> vs <TeamName name={match.awayTeam.name} />
                 </h1>
               </div>
 
@@ -94,7 +88,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                     className="h-12 w-12 drop-shadow-lg sm:h-24 sm:w-24"
                   />
                   <p className="max-w-full truncate text-sm font-black text-zinc-950 dark:text-zinc-50 sm:text-3xl">
-                    {match.homeTeam.name}
+                    <TeamName name={match.homeTeam.name} />
                   </p>
                 </div>
                 <div className="rounded-[1.75rem] border border-amber-300/30 bg-gradient-to-b from-white to-amber-50 dark:from-zinc-800 dark:to-zinc-950 px-4 py-3 text-3xl font-black tracking-tight sm:px-9 sm:py-6 sm:text-6xl text-zinc-950 dark:text-zinc-50 shadow-inner shadow-black/60">
@@ -109,7 +103,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                     className="h-12 w-12 drop-shadow-lg sm:h-24 sm:w-24"
                   />
                   <p className="max-w-full truncate text-sm font-black text-zinc-950 dark:text-zinc-50 sm:text-3xl">
-                    {match.awayTeam.name}
+                    <TeamName name={match.awayTeam.name} />
                   </p>
                 </div>
               </div>
@@ -126,6 +120,14 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                 <dt className="text-stone-600 dark:text-zinc-500"><Trans k="stadium" /></dt>
                 <dd className="mt-1 font-semibold text-zinc-900 dark:text-zinc-100">{match.venue}</dd>
               </div>
+              {match.standingsContext ? (
+                <div>
+                  <dt className="text-stone-600 dark:text-zinc-500"><Trans k="tablePositions" /></dt>
+                  <dd className="mt-1 font-semibold text-zinc-900 dark:text-zinc-100">
+                    <TranslatedCompetitionName competition={match.standingsContext.label} /> · {match.standingsContext.homePosition}° vs {match.standingsContext.awayPosition}°
+                  </dd>
+                </div>
+              ) : null}
               <div>
                 <dt className="text-stone-600 dark:text-zinc-500"><Trans k="status" /></dt>
                 <dd className="mt-1 font-semibold text-zinc-900 dark:text-zinc-100"><TranslatedStatus status={match.status} /></dd>
@@ -164,7 +166,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
               </p>
               <h2 className="mt-2 text-2xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="matchEvents" /></h2>
             </div>
-            <MatchEventsTimeline events={events} match={match} />
+            <MatchEventsTimeline events={events} match={match} dataSource={source} />
           </div>
 
           <div id="estadisticas" className="scroll-mt-24">
@@ -174,7 +176,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
               </p>
               <h2 className="mt-2 text-2xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="mainStats" /></h2>
             </div>
-            <MatchStats statistics={statistics} match={match} />
+            <MatchStats statistics={statistics} match={match} dataSource={source} />
           </div>
 
           <div id="alineaciones" className="scroll-mt-24">
@@ -184,7 +186,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
               </p>
               <h2 className="mt-2 text-2xl font-black text-zinc-950 dark:text-zinc-50"><Trans k="confirmedLineups" /></h2>
             </div>
-            <MatchLineups lineup={lineup} match={match} />
+            <MatchLineups lineup={lineup} match={match} dataSource={source} />
           </div>
 
           {standings ? (
