@@ -8,9 +8,9 @@ import { CompetitionSidebar } from "@/components/matches/CompetitionSidebar";
 import { DateSelector } from "@/components/matches/DateSelector";
 import { EmptyMatchState } from "@/components/matches/EmptyMatchState";
 import { MatchFilters, type MatchFilter } from "@/components/matches/MatchFilters";
-import { formatMatchDate } from "@/data/mock/matches";
 import { getCompetitionSortPriority } from "@/data/mock/competitions";
 import { formatCompactVisibleDate, formatVisibleDate, type TranslationKey } from "@/lib/i18n";
+import { createLocalDateFromKey, filterMatchesByLocalDate, formatDateKey, shiftLocalDateKey } from "@/lib/match-date";
 
 type MatchListProps = {
   matches: Match[];
@@ -34,27 +34,12 @@ function groupMatchesByCompetition(matches: Match[]) {
   }, {});
 }
 
-function createDateFromDateString(dateString: string) {
-  return new Date(`${dateString}T00:00:00`);
-}
-
-function shiftDate(dateString: string, daysToShift: number) {
-  const date = createDateFromDateString(dateString);
-  date.setDate(date.getDate() + daysToShift);
-
-  return formatMatchDate(date);
-}
-
 function formatSelectedDateLabel(dateString: string, language: Parameters<typeof formatVisibleDate>[1]) {
-  return formatVisibleDate(createDateFromDateString(dateString), language);
+  return formatVisibleDate(createLocalDateFromKey(dateString), language);
 }
 
 function formatCompactSelectedDateLabel(dateString: string, language: Parameters<typeof formatCompactVisibleDate>[1]) {
-  return formatCompactVisibleDate(createDateFromDateString(dateString), language);
-}
-
-function filterMatchesByDate(matches: Match[], selectedDate: string) {
-  return matches.filter((match) => match.date === selectedDate);
+  return formatCompactVisibleDate(createLocalDateFromKey(dateString), language);
 }
 
 function filterMatches(matches: Match[], activeFilter: MatchFilter) {
@@ -128,7 +113,7 @@ function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boo
 export function MatchList({ matches, dataSource }: MatchListProps) {
   const { language, t } = usePreferences();
   const [activeFilter, setActiveFilter] = useState<MatchFilter>("all");
-  const [selectedDate, setSelectedDate] = useState(() => formatMatchDate(new Date()));
+  const [selectedDate, setSelectedDate] = useState(() => formatDateKey(new Date()));
   const [visibleMatches, setVisibleMatches] = useState(matches);
   const [visibleDataSource, setVisibleDataSource] = useState(dataSource);
   const [isLoading, setIsLoading] = useState(false);
@@ -170,7 +155,10 @@ export function MatchList({ matches, dataSource }: MatchListProps) {
     };
   }, [dataSource, selectedDate]);
 
-  const matchesForSelectedDate = filterMatchesByDate(visibleMatches, selectedDate);
+  const viewerTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // Re-check each kickoff instant in the browser timezone so cards, sections, and detail links
+  // all use the same local-date boundary as the selected day.
+  const matchesForSelectedDate = filterMatchesByLocalDate(visibleMatches, selectedDate, viewerTimeZone);
   const filteredMatches = filterMatches(matchesForSelectedDate, activeFilter);
   const groupedMatches = groupMatchesByCompetition(filteredMatches);
   const competitionGroups = Object.entries(groupedMatches)
@@ -187,7 +175,7 @@ export function MatchList({ matches, dataSource }: MatchListProps) {
 
       return firstCompetition.name.localeCompare(secondCompetition.name);
     });
-  const todayDate = formatMatchDate(new Date());
+  const todayDate = formatDateKey(new Date());
   const emptyState = getEmptyState(activeFilter, matchesForSelectedDate.length > 0);
 
   function toggleCompetition(competition: string) {
@@ -202,8 +190,8 @@ export function MatchList({ matches, dataSource }: MatchListProps) {
       <DateSelector
         selectedDateLabel={formatSelectedDateLabel(selectedDate, language)}
         compactSelectedDateLabel={formatCompactSelectedDateLabel(selectedDate, language)}
-        onSelectPreviousDate={() => setSelectedDate((currentDate) => shiftDate(currentDate, -1))}
-        onSelectNextDate={() => setSelectedDate((currentDate) => shiftDate(currentDate, 1))}
+        onSelectPreviousDate={() => setSelectedDate((currentDate) => shiftLocalDateKey(currentDate, -1))}
+        onSelectNextDate={() => setSelectedDate((currentDate) => shiftLocalDateKey(currentDate, 1))}
         onSelectToday={() => setSelectedDate(todayDate)}
       />
 

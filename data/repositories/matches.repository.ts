@@ -1,4 +1,5 @@
 import { createMockMatches, formatMatchDate } from "@/data/mock/matches";
+import { filterMatchesByLocalDate } from "@/lib/match-date";
 import { createMatchDataSource } from "@/data/services/match-data-source";
 import type { Match, MatchDetails, MatchListDataSource } from "@/types/match";
 import { getLineupsByMatchId } from "@/data/mock/lineups";
@@ -22,7 +23,9 @@ export async function getMatchesByDateWithSource(date: Date = new Date(), timezo
 
   try {
     const matches = await matchDataSource.getMatches({ date, timezone });
-    const usableMatches = matches.filter((match) => match.date === requestedDate);
+    // API-Football can return fixtures whose UTC/API date differs from the viewer's calendar day.
+    // Keep only fixtures whose kickoff instant falls on the requested local date.
+    const usableMatches = filterMatchesByLocalDate(matches, requestedDate, timezone);
 
     if (matchDataSource.source === "api-football") {
       return { matches: usableMatches, source: matchDataSource.source };
