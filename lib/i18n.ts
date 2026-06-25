@@ -90,6 +90,7 @@ export const translations = {
     noMatchesDescription: "Probá con otra fecha para encontrar partidos disponibles.",
     noMockEvents: "Sin eventos demo para este partido.",
     noMockStats: "Sin estadísticas demo para este partido.",
+    moreStats: "Más estadísticas",
     noMockLineups: "Sin alineaciones demo para este partido.",
   },
   en: {
@@ -169,6 +170,7 @@ export const translations = {
     noMatchesDescription: "Try another date to find available matches.",
     noMockEvents: "No demo events for this match.",
     noMockStats: "No demo statistics for this match.",
+    moreStats: "More stats",
     noMockLineups: "No demo lineups for this match.",
   },
   pt: {
@@ -248,6 +250,7 @@ export const translations = {
     noMatchesDescription: "Tente outra data para encontrar jogos disponíveis.",
     noMockEvents: "Sem eventos demo para este jogo.",
     noMockStats: "Sem estatísticas demo para este jogo.",
+    moreStats: "Mais estatísticas",
     noMockLineups: "Sem escalações demo para este jogo.",
   },
 } as const;
