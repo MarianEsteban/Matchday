@@ -49,3 +49,19 @@ export function getMatchLocalDateKey(match: Match, timeZone?: string): string | 
 export function filterMatchesByLocalDate(matches: Match[], selectedDateKey: string, timeZone?: string): Match[] {
   return matches.filter((match) => getMatchLocalDateKey(match, timeZone) === selectedDateKey);
 }
+
+export function getMatchesForSelectedLocalDate(matches: Match[], selectedDateKey: string, timeZone?: string): Match[] {
+  const localMatches = filterMatchesByLocalDate(matches, selectedDateKey, timeZone);
+
+  if (localMatches.length > 0 || matches.length === 0) {
+    return localMatches;
+  }
+
+  const sameCalendarDateMatches = matches.filter((match) => match.date === selectedDateKey);
+
+  if (sameCalendarDateMatches.length > 0) {
+    return sameCalendarDateMatches;
+  }
+
+  return [];
+}

@@ -2,7 +2,7 @@
 
 import { usePreferences } from "@/components/ui/AppPreferences";
 import { createCompetitionSectionId } from "@/components/matches/CompetitionSection";
-import { sidebarSections } from "@/data/mock/competitions";
+import { featuredCompetitionPriority, sidebarSections } from "@/data/mock/competitions";
 import { translateCompetitionName } from "@/lib/i18n";
 import type { Match, MatchListDataSource } from "@/types/match";
 
@@ -17,13 +17,22 @@ type CompetitionSidebarProps = {
 };
 
 function createApiFootballSidebarSections(competitions: CompetitionGroup[]) {
+  const visibleCompetitionNames = new Set(competitions.map((competition) => competition.name));
+  const visibleCompetitions = competitions.map((competition) => ({
+    name: competition.name,
+    fallbackMatchCount: 0,
+  }));
+  const remainingCuratedCompetitions = featuredCompetitionPriority
+    .filter((competition) => !visibleCompetitionNames.has(competition))
+    .map((competition) => ({
+      name: competition,
+      fallbackMatchCount: 0,
+    }));
+
   return [
     {
       title: "Today",
-      competitions: competitions.map((competition) => ({
-        name: competition.name,
-        fallbackMatchCount: 0,
-      })),
+      competitions: [...visibleCompetitions, ...remainingCuratedCompetitions],
     },
   ];
 }
