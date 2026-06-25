@@ -10,7 +10,7 @@ import { EmptyMatchState } from "@/components/matches/EmptyMatchState";
 import { MatchFilters, type MatchFilter } from "@/components/matches/MatchFilters";
 import { getCompetitionSortPriority } from "@/data/mock/competitions";
 import { formatCompactVisibleDate, formatVisibleDate, type TranslationKey } from "@/lib/i18n";
-import { createLocalDateFromKey, filterMatchesByLocalDate, formatDateKey, shiftLocalDateKey } from "@/lib/match-date";
+import { createLocalDateFromKey, formatDateKey, getMatchesForSelectedLocalDate, shiftLocalDateKey } from "@/lib/match-date";
 
 type MatchListProps = {
   matches: Match[];
@@ -158,7 +158,7 @@ export function MatchList({ matches, dataSource }: MatchListProps) {
   const viewerTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   // Re-check each kickoff instant in the browser timezone so cards, sections, and detail links
   // all use the same local-date boundary as the selected day.
-  const matchesForSelectedDate = filterMatchesByLocalDate(visibleMatches, selectedDate, viewerTimeZone);
+  const matchesForSelectedDate = getMatchesForSelectedLocalDate(visibleMatches, selectedDate, viewerTimeZone);
   const filteredMatches = filterMatches(matchesForSelectedDate, activeFilter);
   const groupedMatches = groupMatchesByCompetition(filteredMatches);
   const competitionGroups = Object.entries(groupedMatches)
@@ -203,11 +203,11 @@ export function MatchList({ matches, dataSource }: MatchListProps) {
         <p className="text-sm font-medium text-stone-600 dark:text-zinc-400" role="status">{t("loadingMatches")}</p>
       ) : null}
 
-      {filteredMatches.length === 0 ? (
-        <EmptyMatchState icon={emptyState.icon} title={t(emptyState.titleKey)} description={t(emptyState.descriptionKey)} />
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
-          <CompetitionSidebar competitions={competitionGroups} dataSource={visibleDataSource} />
+      <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
+        <CompetitionSidebar competitions={competitionGroups} dataSource={visibleDataSource} />
+        {filteredMatches.length === 0 ? (
+          <EmptyMatchState icon={emptyState.icon} title={t(emptyState.titleKey)} description={t(emptyState.descriptionKey)} />
+        ) : (
           <div className="space-y-6 sm:space-y-8">
             {competitionGroups.map(({ name: competition, matches: competitionMatches }) => (
               <CompetitionSection
@@ -219,8 +219,8 @@ export function MatchList({ matches, dataSource }: MatchListProps) {
               />
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
