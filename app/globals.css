@@ -43,18 +43,18 @@ body {
 }
 
 .animate-match-ticker {
-  animation: match-ticker-scroll 82s linear infinite;
+  animation: match-ticker-scroll 150s linear infinite;
 }
 
 @media (max-width: 640px) {
   .animate-match-ticker {
-    animation-duration: 118s;
+    animation-duration: 180s;
   }
 }
 
 @media (min-width: 1024px) {
   .animate-match-ticker {
-    animation-duration: 74s;
+    animation-duration: 140s;
   }
 }
 
