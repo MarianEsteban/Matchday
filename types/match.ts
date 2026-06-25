@@ -1,5 +1,7 @@
 export type MatchStatus = "scheduled" | "live" | "finished";
 
+export type MatchListDataSource = "api-football" | "demo";
+
 export type Team = {
   id: string;
   name: string;

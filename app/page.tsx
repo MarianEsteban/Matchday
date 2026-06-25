@@ -1,10 +1,10 @@
 import { MatchList } from "@/components/matches/MatchList";
 import { MatchTicker } from "@/components/ticker/MatchTicker";
 import { PreferenceControls, Trans } from "@/components/ui/AppPreferences";
-import { getMatchesByDate } from "@/data/repositories/matches.repository";
+import { getMatchesByDateWithSource } from "@/data/repositories/matches.repository";
 
 export default async function Home() {
-  const todayMatches = await getMatchesByDate();
+  const { matches: todayMatches, source: matchDataSource } = await getMatchesByDateWithSource();
 
   return (
     <main className="min-h-screen bg-[#fbf7ee] pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-zinc-950 dark:bg-zinc-950 dark:text-white">
@@ -20,7 +20,7 @@ export default async function Home() {
             <h2 className="text-2xl font-semibold"><Trans k="todaysMatches" /></h2>
           </div>
 
-          <MatchList matches={todayMatches} />
+          <MatchList matches={todayMatches} dataSource={matchDataSource} />
         </section>
       </div>
     </main>
