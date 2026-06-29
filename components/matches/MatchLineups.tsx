@@ -142,7 +142,7 @@ export function MatchLineups({ lineup, match, dataSource = "demo" }: MatchLineup
         </div>
       ) : (
         <div className="m-4 rounded-2xl border border-dashed border-stone-300 bg-stone-50 p-6 text-center dark:border-zinc-700 dark:bg-zinc-950/50">
-          <p className="text-sm font-semibold text-stone-600 dark:text-zinc-400"><Trans k="noMockLineups" /></p>
+          <p className="text-sm font-semibold text-stone-600 dark:text-zinc-400"><Trans k="lineupsUnavailable" /></p>
         </div>
       )}
     </section>

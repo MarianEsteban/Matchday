@@ -107,7 +107,7 @@ export function MatchEventsTimeline({ events, match, dataSource = "demo" }: Matc
           ))}
         </ol>
       ) : (
-        <p className="mt-3 text-sm text-stone-600 dark:text-zinc-400"><Trans k="noMockEvents" /></p>
+        <p className="mt-3 text-sm text-stone-600 dark:text-zinc-400"><Trans k="eventsUnavailable" /></p>
       )}
     </section>
   );
