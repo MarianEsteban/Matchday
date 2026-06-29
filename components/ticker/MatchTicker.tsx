@@ -25,16 +25,16 @@ function TickerItem({ match }: { match: Match }) {
   const awayName = translateTeamName(match.awayTeam.name, language);
   const matchStatusText = match.status === "scheduled" ? <LocalizedKickoffTime date={match.date} kickoffTime={match.kickoffTime} kickoffAt={match.kickoffAt} /> : t("live");
   return (
-    <li className="mx-5 inline-flex min-w-max items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/95 px-3 py-1.5 text-xs text-zinc-100 shadow-lg shadow-black/20 sm:mx-8 sm:gap-3 sm:px-5 sm:py-2 sm:text-sm">
+    <li className="mx-2 inline-flex min-w-max items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs text-zinc-100 shadow-sm shadow-black/10 sm:mx-3 sm:gap-2.5 sm:px-3">
       <Image
         src={match.homeTeam.crestUrl}
         alt={`${homeName} flag`}
         width={24}
         height={24}
-        className="h-5 w-5 rounded-full object-cover ring-1 ring-white/15 sm:h-6 sm:w-6"
+        className="h-5 w-5 rounded-full object-contain ring-1 ring-white/15"
       />
       <span className="max-w-20 truncate font-semibold sm:max-w-none">{homeName}</span>
-      <span className="rounded-full bg-amber-400 px-2 py-0.5 text-xs font-black uppercase tracking-wide text-zinc-950">
+      <span className="rounded-md bg-white px-2 py-0.5 text-xs font-black uppercase tracking-wide text-zinc-950">
         {getMatchCenterText(match)}
       </span>
       <Image
@@ -42,10 +42,10 @@ function TickerItem({ match }: { match: Match }) {
         alt={`${awayName} flag`}
         width={24}
         height={24}
-        className="h-5 w-5 rounded-full object-cover ring-1 ring-white/15 sm:h-6 sm:w-6"
+        className="h-5 w-5 rounded-full object-contain ring-1 ring-white/15"
       />
       <span className="max-w-20 truncate font-semibold sm:max-w-none">{awayName}</span>
-      <span className="ml-1 rounded-full border border-zinc-700 px-2 py-0.5 text-xs uppercase tracking-wide text-zinc-400">
+      <span className="ml-1 rounded-full bg-emerald-400/10 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-emerald-200">
         {matchStatusText}
       </span>
     </li>
@@ -72,8 +72,8 @@ export function MatchTicker({ matches }: MatchTickerProps) {
   const tickerItems = [...displayMatches, ...displayMatches];
 
   return (
-    <section className="border-b border-zinc-800 bg-zinc-950/95 py-2 text-white sm:py-3" aria-label={t("matchTicker")}>
-      <div className="mb-1.5 flex items-center gap-2 px-4 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-amber-300 sm:mb-2 sm:px-6 sm:text-xs">
+    <section className="border-b border-zinc-800 bg-zinc-950/96 py-1.5 text-white" aria-label={t("matchTicker")}>
+      <div className="mb-1 flex items-center gap-2 px-4 text-[0.62rem] font-black uppercase tracking-[0.18em] text-emerald-300 sm:px-6">
         <span className="h-2 w-2 rounded-full bg-emerald-400" />
         {t("matchTicker")}
       </div>

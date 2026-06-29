@@ -1,56 +1,72 @@
 "use client";
 
 import { usePreferences } from "@/components/ui/AppPreferences";
+import { createLocalDateFromKey, formatDateKey, shiftLocalDateKey } from "@/lib/match-date";
+import { languageLocales } from "@/lib/i18n";
 
 type DateSelectorProps = {
-  selectedDateLabel: string;
-  compactSelectedDateLabel: string;
-  onSelectPreviousDate: () => void;
-  onSelectNextDate: () => void;
-  onSelectToday: () => void;
+  selectedDate: string;
+  onSelectDate: (selectedDate: string) => void;
 };
 
-export function DateSelector({
-  selectedDateLabel,
-  compactSelectedDateLabel,
-  onSelectPreviousDate,
-  onSelectNextDate,
-  onSelectToday,
-}: DateSelectorProps) {
-  const { t } = usePreferences();
+export function DateSelector({ selectedDate, onSelectDate }: DateSelectorProps) {
+  const { language, t } = usePreferences();
+  const todayKey = formatDateKey(new Date());
+  const dates = [-3, -2, -1, 0, 1, 2, 3].map((offset) => shiftLocalDateKey(selectedDate, offset));
 
   return (
-    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-2xl border border-stone-300 bg-white/85 p-2 shadow-sm shadow-stone-300/30 dark:border-zinc-800 dark:bg-zinc-900/70 dark:shadow-black/20 sm:flex sm:flex-wrap sm:gap-3 sm:p-3">
-      <button
-        type="button"
-        onClick={onSelectPreviousDate}
-        className="rounded-full border border-stone-300 px-3 py-2 text-sm font-semibold text-zinc-800 transition-colors hover:border-stone-500 hover:bg-stone-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:bg-zinc-800 sm:min-w-28"
-        aria-label={t("previous")}
-      >
-        <span aria-hidden="true">←</span><span className="sr-only sm:not-sr-only sm:ml-1">{t("previous")}</span>
-      </button>
+    <div className="rounded-2xl border border-stone-200 bg-white/80 p-2 shadow-sm shadow-stone-200/50 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/70 dark:shadow-black/20">
+      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onSelectDate(shiftLocalDateKey(selectedDate, -1))}
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-stone-200 bg-stone-50 text-sm font-bold text-zinc-800 transition hover:border-stone-400 hover:bg-white dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-zinc-600"
+          aria-label={t("previous")}
+        >
+          ←
+        </button>
 
-      <p className="min-w-0 whitespace-nowrap text-center text-sm font-semibold text-zinc-900 dark:text-zinc-100 sm:flex-1 sm:text-base">
-        <span className="sm:hidden">{compactSelectedDateLabel}</span>
-        <span className="hidden capitalize sm:inline">{selectedDateLabel}</span>
-      </p>
+        <div className="ticker-mask overflow-x-auto" aria-label={t("dateTime")}>
+          <div className="mx-auto flex min-w-max justify-center gap-1.5 px-1">
+            {dates.map((dateKey) => {
+              const date = createLocalDateFromKey(dateKey);
+              const isSelected = dateKey === selectedDate;
+              const isToday = dateKey === todayKey;
+              const weekday = new Intl.DateTimeFormat(languageLocales[language], { weekday: "short" }).format(date).replace(".", "");
+              const month = new Intl.DateTimeFormat(languageLocales[language], { month: "short" }).format(date).replace(".", "");
+              const day = new Intl.DateTimeFormat(languageLocales[language], { day: "numeric" }).format(date);
 
-      <button
-        type="button"
-        onClick={onSelectNextDate}
-        className="rounded-full border border-stone-300 px-3 py-2 text-sm font-semibold text-zinc-800 transition-colors hover:border-stone-500 hover:bg-stone-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:bg-zinc-800 sm:min-w-28"
-        aria-label={t("next")}
-      >
-        <span className="sr-only sm:not-sr-only sm:mr-1">{t("next")}</span><span aria-hidden="true">→</span>
-      </button>
+              return (
+                <button
+                  key={dateKey}
+                  type="button"
+                  onClick={() => onSelectDate(dateKey)}
+                  className={`relative min-w-[4.35rem] rounded-xl border px-2.5 py-2 text-center transition ${
+                    isSelected
+                      ? "border-emerald-500 bg-zinc-950 text-white shadow-sm shadow-emerald-500/20 dark:bg-white dark:text-zinc-950"
+                      : "border-transparent text-stone-600 hover:border-stone-200 hover:bg-stone-50 hover:text-zinc-950 dark:text-zinc-400 dark:hover:border-zinc-800 dark:hover:bg-zinc-950 dark:hover:text-white"
+                  }`}
+                  aria-current={isSelected ? "date" : undefined}
+                >
+                  <span className="block text-[0.62rem] font-black uppercase tracking-[0.16em]">{weekday}</span>
+                  <span className="mt-0.5 block text-base font-black leading-none">{day}</span>
+                  <span className="mt-0.5 block text-[0.62rem] font-bold uppercase tracking-wide opacity-70">{month}</span>
+                  {isToday ? <span className={`mt-1 inline-block rounded-full px-1.5 py-0.5 text-[0.55rem] font-black uppercase ${isSelected ? "bg-emerald-400 text-zinc-950" : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"}`}>{t("today")}</span> : null}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-      <button
-        type="button"
-        onClick={onSelectToday}
-        className="col-span-3 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-stone-300/30 transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:shadow-white/10 dark:hover:bg-white sm:col-span-1"
-      >
-        {t("today")}
-      </button>
+        <button
+          type="button"
+          onClick={() => onSelectDate(shiftLocalDateKey(selectedDate, 1))}
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-stone-200 bg-stone-50 text-sm font-bold text-zinc-800 transition hover:border-stone-400 hover:bg-white dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-zinc-600"
+          aria-label={t("next")}
+        >
+          →
+        </button>
+      </div>
     </div>
   );
 }
