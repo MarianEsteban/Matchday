@@ -63,6 +63,7 @@ export const sidebarSections: SidebarSection[] = [
       { name: "Serie A", fallbackMatchCount: 0 },
       { name: "Bundesliga", fallbackMatchCount: 0 },
       { name: "Ligue 1", fallbackMatchCount: 0 },
+      { name: "Primeira Liga Portugal", fallbackMatchCount: 0 },
     ],
   },
   {
@@ -79,7 +80,6 @@ export const sidebarSections: SidebarSection[] = [
 
 export const featuredCompetitionPriority = [
   "FIFA World Cup",
-  "FIFA World Cup 2026",
   "UEFA Champions League",
   "Copa Libertadores",
   "Copa Sudamericana",
@@ -88,6 +88,7 @@ export const featuredCompetitionPriority = [
   "Serie A",
   "Bundesliga",
   "Ligue 1",
+  "Primeira Liga Portugal",
   "Liga Profesional Argentina",
   "Brasileirão Série A",
   "MLS",

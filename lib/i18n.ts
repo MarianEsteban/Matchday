@@ -319,6 +319,7 @@ export function translateCompetitionName(name: string, language: Language) {
     "Serie A": { es: "Serie A", en: "Serie A", pt: "Serie A" },
     Bundesliga: { es: "Bundesliga", en: "Bundesliga", pt: "Bundesliga" },
     "Ligue 1": { es: "Ligue 1", en: "Ligue 1", pt: "Ligue 1" },
+    "Primeira Liga Portugal": { es: "Primeira Liga Portugal", en: "Primeira Liga Portugal", pt: "Primeira Liga Portugal" },
     MLS: { es: "MLS", en: "MLS", pt: "MLS" },
     "Liga Profesional Argentina": { es: "Liga Profesional Argentina", en: "Argentine Primera División", pt: "Liga Profissional Argentina" },
     "Brasileirão Série A": { es: "Brasileirão Série A", en: "Brasileirão Série A", pt: "Brasileirão Série A" },
