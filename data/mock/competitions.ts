@@ -1,3 +1,26 @@
+export type FeaturedCompetitionDefinition = {
+  apiFootballLeagueId: number;
+  name: string;
+  country?: string;
+  aliases: readonly string[];
+};
+
+export const featuredCompetitionDefinitions = [
+  { apiFootballLeagueId: 1, name: "FIFA World Cup", aliases: ["fifa world cup", "world cup"] },
+  { apiFootballLeagueId: 2, name: "UEFA Champions League", aliases: ["uefa champions league", "champions league"] },
+  { apiFootballLeagueId: 13, name: "Copa Libertadores", aliases: ["conmebol libertadores", "copa libertadores"] },
+  { apiFootballLeagueId: 11, name: "Copa Sudamericana", aliases: ["conmebol sudamericana", "copa sudamericana"] },
+  { apiFootballLeagueId: 39, name: "Premier League", country: "England", aliases: ["premier league"] },
+  { apiFootballLeagueId: 140, name: "LaLiga", country: "Spain", aliases: ["la liga", "laliga", "primera division"] },
+  { apiFootballLeagueId: 135, name: "Serie A", country: "Italy", aliases: ["serie a"] },
+  { apiFootballLeagueId: 78, name: "Bundesliga", country: "Germany", aliases: ["bundesliga"] },
+  { apiFootballLeagueId: 61, name: "Ligue 1", country: "France", aliases: ["ligue 1"] },
+  { apiFootballLeagueId: 94, name: "Primeira Liga Portugal", country: "Portugal", aliases: ["primeira liga", "liga portugal", "primeira liga portugal"] },
+  { apiFootballLeagueId: 128, name: "Liga Profesional Argentina", country: "Argentina", aliases: ["liga profesional argentina", "primera division"] },
+  { apiFootballLeagueId: 71, name: "Brasileirão Série A", country: "Brazil", aliases: ["serie a", "serie a brazil", "brasileiro serie a", "brasileirao serie a", "brasileirão série a"] },
+  { apiFootballLeagueId: 253, name: "MLS", country: "USA", aliases: ["major league soccer", "mls"] },
+] as const satisfies readonly FeaturedCompetitionDefinition[];
+
 export type SidebarCompetition = {
   name: string;
   fallbackMatchCount: number;
@@ -78,21 +101,7 @@ export const sidebarSections: SidebarSection[] = [
   },
 ];
 
-export const featuredCompetitionPriority = [
-  "FIFA World Cup",
-  "UEFA Champions League",
-  "Copa Libertadores",
-  "Copa Sudamericana",
-  "Premier League",
-  "LaLiga",
-  "Serie A",
-  "Bundesliga",
-  "Ligue 1",
-  "Primeira Liga Portugal",
-  "Liga Profesional Argentina",
-  "Brasileirão Série A",
-  "MLS",
-] as const;
+export const featuredCompetitionPriority = featuredCompetitionDefinitions.map((competition) => competition.name);
 
 const competitionPriority = new Map<string, number>(
   featuredCompetitionPriority.map((competition, index) => [competition, index]),
