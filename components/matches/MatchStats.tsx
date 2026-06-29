@@ -29,7 +29,11 @@ const statisticLabels = {
     Faltas: "Faltas",
     Fouls: "Faltas",
     "Yellow Cards": "Amarillas",
+    "Red Cards": "Rojas",
+    "Total passes": "Pases",
+    Passes: "Pases",
     "Passes %": "Precisión de pase",
+    "Expected Goals": "Goles esperados",
   },
   en: {
     Posesión: "Possession",
@@ -44,7 +48,11 @@ const statisticLabels = {
     Faltas: "Fouls",
     Fouls: "Fouls",
     "Yellow Cards": "Yellow cards",
+    "Red Cards": "Red cards",
+    "Total passes": "Passes",
+    Passes: "Passes",
     "Passes %": "Pass accuracy",
+    "Expected Goals": "Expected goals",
   },
   pt: {
     Posesión: "Posse",
@@ -59,11 +67,15 @@ const statisticLabels = {
     Faltas: "Faltas",
     Fouls: "Faltas",
     "Yellow Cards": "Cartões amarelos",
+    "Red Cards": "Cartões vermelhos",
+    "Total passes": "Passes",
+    Passes: "Passes",
     "Passes %": "Precisão de passe",
+    "Expected Goals": "Gols esperados",
   },
 } as const;
 
-const keyStats = ["ball possession", "posesión", "shots on goal", "shots on target", "remates al arco", "total shots", "remates", "corner kicks", "córners", "fouls", "faltas", "yellow cards", "passes %"];
+const keyStats = ["ball possession", "posesión", "shots on goal", "shots on target", "remates al arco", "total shots", "remates", "corner kicks", "córners", "fouls", "faltas", "yellow cards", "red cards", "total passes", "passes", "passes %", "expected goals", "xg"];
 
 function translateStatisticLabel(label: string, language: keyof typeof statisticLabels) {
   return statisticLabels[language][label as keyof typeof statisticLabels.es] ?? label;
@@ -140,7 +152,7 @@ export function MatchStats({ match, statistics, dataSource = "demo" }: MatchStat
         </div>
       ) : (
         <div className="m-4 rounded-2xl border border-dashed border-stone-300 bg-stone-50 p-6 text-center dark:border-zinc-700 dark:bg-zinc-950/50">
-          <p className="text-sm font-semibold text-stone-600 dark:text-zinc-400"><Trans k="noMockStats" /></p>
+          <p className="text-sm font-semibold text-stone-600 dark:text-zinc-400"><Trans k="statisticsUnavailable" /></p>
         </div>
       )}
     </section>
