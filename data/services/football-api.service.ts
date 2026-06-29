@@ -3,6 +3,8 @@ import "server-only";
 import { featuredCompetitionDefinitions, getCompetitionSortPriority } from "@/data/mock/competitions";
 import { formatMatchDate } from "@/data/mock/matches";
 import { formatDateKey } from "@/lib/match-date";
+import { getMatchdayDataMode } from "@/data/services/data-mode";
+import { getOrSetInFlight, getServerCacheValue, setServerCacheValue } from "@/data/services/server-cache";
 import type { Match, MatchDetails, MatchStatus, Team } from "@/types/match";
 import type { MatchEvent } from "@/types/match-event";
 import type { MatchStatistic } from "@/types/match-statistic";
@@ -52,7 +54,42 @@ type ApiFootballRecord = Record<string, unknown>;
 
 type ApiFootballFixturesResponse = {
   response?: ApiFootballFixture[];
+  errors?: unknown;
 };
+
+class ApiFootballQuotaError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ApiFootballQuotaError";
+  }
+}
+
+class ApiFootballRequestError extends Error {
+  constructor(message: string, readonly status?: number) {
+    super(message);
+    this.name = "ApiFootballRequestError";
+  }
+}
+
+const globalQuotaState = globalThis as typeof globalThis & { __matchdayApiFootballQuotaExhausted?: boolean };
+
+export function isApiFootballQuotaError(error: unknown): boolean {
+  return error instanceof ApiFootballQuotaError;
+}
+
+function getFixtureRevalidateSeconds(date: Date): number {
+  const fixtureDate = new Date(date);
+  fixtureDate.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (fixtureDate.getTime() === today.getTime()) return 600;
+  if (fixtureDate.getTime() > today.getTime()) return 3_600;
+  return 86_400;
+}
+
+function getDetailRevalidateSeconds(match?: Match): number {
+  return match?.status === "live" ? 300 : 21_600;
+}
 
 type ApiFootballFixture = {
   fixture?: {
@@ -95,15 +132,26 @@ export type FootballApiFixturesQuery = {
 };
 
 export class FootballApiService {
+  private lastFixturesFromCache = false;
+
   constructor(private readonly apiKey = process.env.FOOTBALL_API_KEY) {}
+
+  didLastFixturesUseCache() {
+    return this.lastFixturesFromCache;
+  }
 
   async getFixtures(query: FootballApiFixturesQuery = {}): Promise<Match[]> {
     const date = formatMatchDate(query.date ?? new Date());
     const timezone = query.timezone ? `&timezone=${encodeURIComponent(query.timezone)}` : "";
     const apiDateKeys = getApiDateKeysForSelectedDate(date);
+    const revalidate = getFixtureRevalidateSeconds(query.date ?? new Date());
+    const mode = getMatchdayDataMode();
+    this.lastFixturesFromCache = false;
     const payloads = await Promise.all(apiDateKeys.map(async (apiDateKey) => {
       const path = `/fixtures?date=${apiDateKey}${timezone}`;
-      const payload = await this.fetchApi<ApiFootballFixturesResponse>(path, 60);
+      const cacheKey = `api-football:${mode}:fixtures:${apiDateKey}:tz:${query.timezone ?? "UTC"}`;
+      const { payload, fromCache } = await this.fetchCachedApi<ApiFootballFixturesResponse>(path, revalidate, cacheKey);
+      if (fromCache) this.lastFixturesFromCache = true;
       return { apiDateKey, fixtures: payload.response ?? [] };
     }));
     const rawFixtures = dedupeApiFixtures(payloads.flatMap((payload) => payload.fixtures));
@@ -148,8 +196,8 @@ export class FootballApiService {
 
     const [events, statistics, lineup, standings] = await Promise.all([
       this.getFixtureEvents(fixtureId, match),
-      this.getFixtureStatistics(fixtureId, match.id),
-      this.getFixtureLineups(fixtureId, match.id),
+      this.getFixtureStatistics(fixtureId, match),
+      this.getFixtureLineups(fixtureId, match),
       this.getStandings(match),
     ]);
 
@@ -157,12 +205,15 @@ export class FootballApiService {
   }
 
   private async getFixtureEvents(fixtureId: number, match: Match): Promise<MatchEvent[]> {
-    const payload = await this.fetchApi<{ response?: ApiFootballRecord[] }>(`/fixtures/events?fixture=${fixtureId}`, 300).catch(() => undefined);
+    const result = await this.fetchCachedApi<{ response?: ApiFootballRecord[] }>(`/fixtures/events?fixture=${fixtureId}`, getDetailRevalidateSeconds(match), `api-football:events:${fixtureId}`).catch(() => undefined);
+    const payload = result?.payload;
     return (payload?.response ?? []).map((event, index) => normalizeEvent(event, fixtureId, index, match)).filter((event): event is MatchEvent => Boolean(event));
   }
 
-  private async getFixtureStatistics(fixtureId: number, matchId: string): Promise<MatchStatistic[]> {
-    const payload = await this.fetchApi<{ response?: ApiFootballRecord[] }>(`/fixtures/statistics?fixture=${fixtureId}`, 300).catch(() => undefined);
+  private async getFixtureStatistics(fixtureId: number, match: Match): Promise<MatchStatistic[]> {
+    const matchId = match.id;
+    const result = await this.fetchCachedApi<{ response?: ApiFootballRecord[] }>(`/fixtures/statistics?fixture=${fixtureId}`, getDetailRevalidateSeconds(match), `api-football:statistics:${fixtureId}`).catch(() => undefined);
+    const payload = result?.payload;
     const [home, away] = payload?.response ?? [];
     const homeStats = toRecordArray(home?.statistics);
     const awayStats = toRecordArray(away?.statistics);
@@ -170,8 +221,10 @@ export class FootballApiService {
     return homeStats.map((stat, index) => normalizeStatistic(stat, awayStats[index], matchId, index)).filter((statistic): statistic is MatchStatistic => Boolean(statistic));
   }
 
-  private async getFixtureLineups(fixtureId: number, matchId: string): Promise<MatchLineup | undefined> {
-    const payload = await this.fetchApi<{ response?: ApiFootballRecord[] }>(`/fixtures/lineups?fixture=${fixtureId}`, 300).catch(() => undefined);
+  private async getFixtureLineups(fixtureId: number, match: Match): Promise<MatchLineup | undefined> {
+    const matchId = match.id;
+    const result = await this.fetchCachedApi<{ response?: ApiFootballRecord[] }>(`/fixtures/lineups?fixture=${fixtureId}`, getDetailRevalidateSeconds(match), `api-football:lineups:${fixtureId}`).catch(() => undefined);
+    const payload = result?.payload;
     const [home, away] = payload?.response ?? [];
     if (toRecordArray(home?.startXI).length === 0 || toRecordArray(away?.startXI).length === 0) return undefined;
     return { matchId, home: normalizeLineupTeam(home, "home"), away: normalizeLineupTeam(away, "away") };
@@ -181,7 +234,8 @@ export class FootballApiService {
     const leagueId = match.apiFootball?.leagueId;
     const season = match.apiFootball?.season;
     if (!leagueId || !season) return undefined;
-    const payload = await this.fetchApi<{ response?: ApiFootballRecord[] }>(`/standings?league=${leagueId}&season=${season}`, 900).catch(() => undefined);
+    const result = await this.fetchCachedApi<{ response?: ApiFootballRecord[] }>(`/standings?league=${leagueId}&season=${season}`, 21_600, `api-football:standings:${leagueId}:${season}`).catch(() => undefined);
+    const payload = result?.payload;
     const league = asRecord(payload?.response?.[0]?.league);
     const groups = Array.isArray(league.standings) ? league.standings.map(toRecordArray) : [];
     const group = groups.find((rows) => rows.some((row) => {
@@ -229,21 +283,55 @@ export class FootballApiService {
       return [];
     }
 
-    const payload = await this.fetchApi<ApiFootballFixturesResponse>(path, 60);
+    const { payload } = await this.fetchCachedApi<ApiFootballFixturesResponse>(path, 600, `api-football:fixture:${path}`);
 
     return (payload.response ?? [])
       .map((fixture) => normalizeApiFootballFixture(fixture, options))
       .filter((match): match is Match => Boolean(match));
   }
 
+  private async fetchCachedApi<T>(path: string, revalidate: number, cacheKey: string): Promise<{ payload: T; fromCache: boolean }> {
+    const cached = getServerCacheValue<T>(cacheKey);
+    if (cached) return { payload: cached, fromCache: true };
+
+    if (globalQuotaState.__matchdayApiFootballQuotaExhausted) {
+      const stale = getServerCacheValue<T>(cacheKey, { allowStale: true });
+      if (stale) return { payload: stale, fromCache: true };
+      throw new ApiFootballQuotaError("API-Football quota is exhausted for this runtime session");
+    }
+
+    return getOrSetInFlight(`${cacheKey}:load`, async () => {
+      try {
+        const payload = await this.fetchApi<T>(path, revalidate);
+        return { payload: setServerCacheValue(cacheKey, payload, revalidate), fromCache: false };
+      } catch (error) {
+        const stale = getServerCacheValue<T>(cacheKey, { allowStale: true });
+        if (stale) return { payload: stale, fromCache: true };
+        throw error;
+      }
+    });
+  }
+
   private async fetchApi<T>(path: string, revalidate: number): Promise<T> {
     if (!this.apiKey) throw new Error("Football API key is not configured");
     const response = await fetch(`${API_FOOTBALL_BASE_URL}${path}`, {
+      cache: "force-cache",
       headers: { "x-apisports-key": this.apiKey },
       next: { revalidate },
     });
-    if (!response.ok) throw new Error(`Football API returned ${response.status}`);
-    return response.json() as Promise<T>;
+    if (response.status === 429) {
+      globalQuotaState.__matchdayApiFootballQuotaExhausted = true;
+      console.warn("API-Football quota/rate limit reached. Serving cache or demo fallback for this runtime session.");
+      throw new ApiFootballQuotaError("API-Football quota/rate limit reached");
+    }
+    if (!response.ok) throw new ApiFootballRequestError(`Football API returned ${response.status}`, response.status);
+    const payload = await response.json() as T;
+    if (hasQuotaErrorPayload(payload)) {
+      globalQuotaState.__matchdayApiFootballQuotaExhausted = true;
+      console.warn("API-Football quota/rate limit payload detected. Serving cache or demo fallback for this runtime session.");
+      throw new ApiFootballQuotaError("API-Football quota/rate limit payload detected");
+    }
+    return payload;
   }
 }
 
@@ -571,4 +659,10 @@ function normalizeLineupTeam(lineup: ApiFootballRecord, team: "home" | "away"): 
     substitutes: toRecordArray(lineup.substitutes).map((entry, index) => normalizeLineupPlayer(entry, team, index + 12)),
     coach: typeof coach.name === "string" ? coach.name : undefined,
   };
+}
+
+function hasQuotaErrorPayload(payload: unknown): boolean {
+  const errors = (payload as { errors?: unknown })?.errors;
+  const text = typeof errors === "string" ? errors : JSON.stringify(errors ?? "");
+  return /quota|rate|limit|request/i.test(text);
 }
