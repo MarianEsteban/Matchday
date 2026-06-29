@@ -27,6 +27,8 @@ export type Match = {
   apiFootball?: {
     fixtureId: number;
     leagueId?: number;
+    leagueName?: string;
+    leagueCountry?: string;
     season?: number;
     round?: string;
   };

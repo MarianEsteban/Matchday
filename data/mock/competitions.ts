@@ -122,3 +122,22 @@ export function getCompetitionSortPriority(competitionName: string) {
 
   return competitionPriority.get(competitionName) ?? Number.MAX_SAFE_INTEGER;
 }
+
+
+export function getFeaturedCompetitionDefinition(competitionName: string) {
+  return featuredCompetitionDefinitions.find((competition) => competition.name === competitionName);
+}
+
+export function getFeaturedCompetitionNameForMatch(match: Pick<import("@/types/match").Match, "competition" | "apiFootball">): string | undefined {
+  const leagueId = match.apiFootball?.leagueId;
+  if (typeof leagueId === "number") {
+    const byId = featuredCompetitionDefinitions.find((competition) => competition.apiFootballLeagueId === leagueId);
+    if (byId) return byId.name;
+  }
+
+  return (featuredCompetitionPriority as readonly string[]).includes(match.competition) ? match.competition : undefined;
+}
+
+export function isFeaturedCompetitionMatch(match: Pick<import("@/types/match").Match, "competition" | "apiFootball">) {
+  return Boolean(getFeaturedCompetitionNameForMatch(match));
+}
