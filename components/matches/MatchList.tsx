@@ -8,6 +8,7 @@ import { CompetitionSidebar } from "@/components/matches/CompetitionSidebar";
 import { DateSelector } from "@/components/matches/DateSelector";
 import { EmptyMatchState } from "@/components/matches/EmptyMatchState";
 import { MatchFilters, type MatchFilter } from "@/components/matches/MatchFilters";
+import { MatchListSkeleton } from "@/components/matches/MatchListSkeleton";
 import { featuredCompetitionPriority, getCompetitionSortPriority, isFeaturedCompetitionMatch } from "@/data/mock/competitions";
 import { type TranslationKey } from "@/lib/i18n";
 
@@ -196,7 +197,9 @@ export function MatchList({ matches, dataSource, selectedDate, isLoading, onSele
       </div>
 
       {isLoading ? (
-        <p className="rounded-2xl border border-stone-200 bg-white/70 px-4 py-3 text-sm font-semibold text-stone-600 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-400" role="status">{t("loadingMatches")}</p>
+        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-50/70 px-4 py-3 text-sm font-semibold text-emerald-900 shadow-sm shadow-emerald-100/50 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-100" role="status" aria-live="polite">
+          {t("loadingMatches")}
+        </div>
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-[17rem_1fr] lg:gap-5">
@@ -205,7 +208,9 @@ export function MatchList({ matches, dataSource, selectedDate, isLoading, onSele
           selectedCompetition={selectedCompetition}
           onSelectCompetition={setSelectedCompetition}
         />
-        {visibleMatches.length === 0 ? (
+        {isLoading ? (
+          <MatchListSkeleton />
+        ) : visibleMatches.length === 0 ? (
           <EmptyMatchState icon={emptyState.icon} title={t(emptyState.titleKey)} description={t(emptyState.descriptionKey)} />
         ) : (
           <div className="space-y-4">
