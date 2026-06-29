@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePreferences } from "@/components/ui/AppPreferences";
 import type { Match, MatchListDataSource } from "@/types/match";
 import { CompetitionSection } from "@/components/matches/CompetitionSection";
@@ -10,12 +10,14 @@ import { EmptyMatchState } from "@/components/matches/EmptyMatchState";
 import { MatchFilters, type MatchFilter } from "@/components/matches/MatchFilters";
 import { getCompetitionSortPriority } from "@/data/mock/competitions";
 import { formatCompactVisibleDate, formatVisibleDate, type TranslationKey } from "@/lib/i18n";
-import { createLocalDateFromKey, formatDateKey, getMatchesForSelectedLocalDate, shiftLocalDateKey } from "@/lib/match-date";
+import { createLocalDateFromKey, formatDateKey, shiftLocalDateKey } from "@/lib/match-date";
 
 type MatchListProps = {
   matches: Match[];
   dataSource: MatchListDataSource;
-  selectedDateKey: string;
+  selectedDate: string;
+  isLoading: boolean;
+  onSelectDate: (selectedDate: string) => void;
 };
 
 type EmptyState = {
@@ -111,59 +113,14 @@ function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boo
   };
 }
 
-export function MatchList({ matches, dataSource, selectedDateKey }: MatchListProps) {
+export function MatchList({ matches, dataSource, selectedDate, isLoading, onSelectDate }: MatchListProps) {
   const { language, t } = usePreferences();
   const [activeFilter, setActiveFilter] = useState<MatchFilter>("all");
-  const [selectedDate, setSelectedDate] = useState(selectedDateKey);
-  const [visibleMatches, setVisibleMatches] = useState(matches);
-  const [visibleDataSource, setVisibleDataSource] = useState(dataSource);
-  const [isLoading, setIsLoading] = useState(false);
   const [collapsedCompetitions, setCollapsedCompetitions] = useState<Record<string, boolean>>(
     {},
   );
 
-  useEffect(() => {
-    let isCurrentRequest = true;
-
-    async function loadMatchesForSelectedDate() {
-      setIsLoading(true);
-
-      try {
-        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const response = await fetch(`/api/matches?date=${selectedDate}&timezone=${encodeURIComponent(timezone)}`);
-        if (!response.ok) throw new Error(`Match request failed: ${response.status}`);
-        const result = await response.json() as { matches: Match[]; source: MatchListDataSource };
-
-        if (isCurrentRequest) {
-          setVisibleMatches(result.matches);
-          setVisibleDataSource(result.source);
-        }
-      } catch (error) {
-        console.error("Unable to load matches for selected date.", error);
-        if (isCurrentRequest) {
-          setVisibleMatches([]);
-          setVisibleDataSource(dataSource);
-        }
-      } finally {
-        if (isCurrentRequest) setIsLoading(false);
-      }
-    }
-
-    void loadMatchesForSelectedDate();
-
-    return () => {
-      isCurrentRequest = false;
-    };
-  }, [dataSource, selectedDate]);
-
-  const viewerTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  // Re-check each kickoff instant in the browser timezone so cards, sections, and detail links
-  // all use the same local-date boundary as the selected day.
-  const browserDateMatches = getMatchesForSelectedLocalDate(visibleMatches, selectedDate, viewerTimeZone);
-  const serverDateMatches = visibleMatches.filter((match) => match.date === selectedDate);
-  const matchesForSelectedDate = browserDateMatches.length > 0 || serverDateMatches.length === 0
-    ? browserDateMatches
-    : serverDateMatches;
+  const matchesForSelectedDate = matches;
   const filteredMatches = filterMatches(matchesForSelectedDate, activeFilter);
   const groupedMatches = groupMatchesByCompetition(filteredMatches);
   const competitionGroups = Object.entries(groupedMatches)
@@ -195,21 +152,21 @@ export function MatchList({ matches, dataSource, selectedDateKey }: MatchListPro
       <DateSelector
         selectedDateLabel={formatSelectedDateLabel(selectedDate, language)}
         compactSelectedDateLabel={formatCompactSelectedDateLabel(selectedDate, language)}
-        onSelectPreviousDate={() => setSelectedDate((currentDate) => shiftLocalDateKey(currentDate, -1))}
-        onSelectNextDate={() => setSelectedDate((currentDate) => shiftLocalDateKey(currentDate, 1))}
-        onSelectToday={() => setSelectedDate(todayDate)}
+        onSelectPreviousDate={() => onSelectDate(shiftLocalDateKey(selectedDate, -1))}
+        onSelectNextDate={() => onSelectDate(shiftLocalDateKey(selectedDate, 1))}
+        onSelectToday={() => onSelectDate(todayDate)}
       />
 
       <MatchFilters activeFilter={activeFilter} onSelectFilter={setActiveFilter} />
 
-      <DataSourceIndicator source={visibleDataSource} />
+      <DataSourceIndicator source={dataSource} />
 
       {isLoading ? (
         <p className="text-sm font-medium text-stone-600 dark:text-zinc-400" role="status">{t("loadingMatches")}</p>
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
-        <CompetitionSidebar competitions={competitionGroups} dataSource={visibleDataSource} />
+        <CompetitionSidebar competitions={competitionGroups} dataSource={dataSource} />
         {filteredMatches.length === 0 ? (
           <EmptyMatchState icon={emptyState.icon} title={t(emptyState.titleKey)} description={t(emptyState.descriptionKey)} />
         ) : (
