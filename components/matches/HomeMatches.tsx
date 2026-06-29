@@ -76,15 +76,15 @@ export function HomeMatches({ initialMatches, initialDataSource, initialSelected
   return (
     <>
       <MatchTicker matches={visibleMatches} />
-      <div className="mx-auto max-w-6xl px-4 py-5 sm:p-6">
-        <header className="mb-6 flex items-center justify-between gap-3 sm:mb-8 sm:flex-wrap sm:gap-4">
+      <div className="mx-auto max-w-7xl px-3 py-4 sm:px-5 sm:py-5">
+        <header className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
           <BrandLockup />
           <PreferenceControls />
         </header>
 
-        <section className="mb-8">
-          <div className="mb-4">
-            <h2 className="text-2xl font-semibold"><Trans k="todaysMatches" /></h2>
+        <section>
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <h2 className="text-xl font-black tracking-tight sm:text-2xl"><Trans k="todaysMatches" /></h2>
           </div>
 
           <MatchList

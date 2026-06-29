@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { usePreferences } from "@/components/ui/AppPreferences";
 import { translateCompetitionName } from "@/lib/i18n";
 import type { Match } from "@/types/match";
@@ -18,14 +19,7 @@ type CompetitionSidebarProps = {
 
 function MatchCount({ count, isActive }: { count: number; isActive: boolean }) {
   return (
-    <span className={`rounded-full border px-2 py-0.5 text-xs font-bold ${
-      isActive
-        ? "border-white/30 bg-white/20 text-white"
-        : count > 0
-          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200"
-          : "border-stone-300 bg-stone-100 text-stone-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-500"
-    }`}
-    >
+    <span className={`rounded-full px-2 py-0.5 text-[0.68rem] font-black ${isActive ? "bg-white/20 text-white dark:bg-zinc-950/10 dark:text-zinc-950" : count > 0 ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-stone-100 text-stone-400 dark:bg-zinc-800 dark:text-zinc-500"}`}>
       {count}
     </span>
   );
@@ -33,44 +27,55 @@ function MatchCount({ count, isActive }: { count: number; isActive: boolean }) {
 
 export function CompetitionSidebar({ competitions, selectedCompetition, onSelectCompetition }: CompetitionSidebarProps) {
   const { language, t } = usePreferences();
+  const [query, setQuery] = useState("");
   const featuredWithMatches = competitions.filter((competition) => competition.isFeatured && competition.matches.length > 0);
   const otherWithMatches = competitions.filter((competition) => !competition.isFeatured && competition.matches.length > 0);
   const featuredWithoutMatches = competitions.filter((competition) => competition.isFeatured && competition.matches.length === 0);
-  const sections = [
+  const featuredCount = featuredWithMatches.reduce((total, competition) => total + competition.matches.length, 0);
+
+  const sections = useMemo(() => [
     { title: t("featured"), competitions: featuredWithMatches },
     { title: t("otherCompetitions"), competitions: otherWithMatches },
     { title: t("allCompetitions"), competitions: featuredWithoutMatches },
-  ].filter((section) => section.competitions.length > 0);
+  ].map((section) => ({
+    ...section,
+    competitions: section.competitions.filter((competition) => translateCompetitionName(competition.name, language).toLowerCase().includes(query.trim().toLowerCase())),
+  })).filter((section) => section.competitions.length > 0), [featuredWithMatches, featuredWithoutMatches, language, otherWithMatches, query, t]);
 
-  return (
-    <aside className="sticky top-6 hidden max-h-[calc(100vh-3rem)] self-start overflow-hidden rounded-3xl border border-stone-300 bg-white/90 shadow-xl shadow-stone-300/40 dark:border-zinc-800 dark:bg-zinc-950/90 dark:shadow-black/30 lg:block">
-      <div className="border-b border-stone-300 bg-gradient-to-r from-emerald-100 via-sky-50 to-white px-4 py-4 dark:border-zinc-800 dark:from-emerald-500/15 dark:via-sky-500/10 dark:to-zinc-900">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-300">MatchDay</p>
-        <h2 className="mt-1 text-lg font-bold text-zinc-950 dark:text-white">{t("competitions")}</h2>
+  const content = (
+    <>
+      <div className="border-b border-stone-200 px-3 py-3 dark:border-zinc-800">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[0.62rem] font-black uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300">MatchDay</p>
+            <h2 className="text-base font-black text-zinc-950 dark:text-white">{t("competitions")}</h2>
+          </div>
+          <MatchCount count={competitions.filter((competition) => competition.matches.length > 0).length} isActive={false} />
+        </div>
+        {competitions.length > 8 ? (
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t("competitions")}
+            className="mt-3 w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-xs font-semibold text-zinc-900 outline-none transition placeholder:text-stone-400 focus:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white dark:placeholder:text-zinc-600"
+          />
+        ) : null}
       </div>
 
-      <nav aria-label={t("competitions")} className="max-h-[calc(100vh-9rem)] space-y-5 overflow-y-auto px-3 py-4">
+      <nav aria-label={t("competitions")} className="max-h-[calc(100vh-11rem)] space-y-4 overflow-y-auto p-2.5">
         <button
           type="button"
           onClick={() => onSelectCompetition(null)}
-          className={`flex w-full items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 text-left text-sm font-semibold transition-colors ${
-            selectedCompetition === null
-              ? "border-emerald-500 bg-emerald-600 text-white shadow-sm shadow-emerald-500/25"
-              : "border-transparent text-zinc-700 hover:border-emerald-500/40 hover:bg-emerald-50 hover:text-zinc-950 dark:text-zinc-200 dark:hover:bg-emerald-500/10 dark:hover:text-white"
-          }`}
+          className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm font-black transition ${selectedCompetition === null ? "bg-zinc-950 text-white shadow-sm shadow-emerald-500/15 dark:bg-white dark:text-zinc-950" : "text-zinc-700 hover:bg-stone-100 dark:text-zinc-200 dark:hover:bg-zinc-800"}`}
         >
           <span className="truncate">{t("featured")}</span>
-          <MatchCount count={featuredWithMatches.reduce((total, competition) => total + competition.matches.length, 0)} isActive={selectedCompetition === null} />
+          <MatchCount count={featuredCount} isActive={selectedCompetition === null} />
         </button>
 
         {sections.map((section) => (
           <section key={section.title} aria-labelledby={`sidebar-${section.title}`}>
-            <div className="mb-2 flex items-center gap-2 px-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
-              <h3 id={`sidebar-${section.title}`} className="text-xs font-bold uppercase tracking-[0.18em] text-stone-500 dark:text-zinc-500">{section.title}</h3>
-            </div>
-
-            <div className="space-y-1">
+            <h3 id={`sidebar-${section.title}`} className="mb-1.5 px-2 text-[0.62rem] font-black uppercase tracking-[0.18em] text-stone-400 dark:text-zinc-500">{section.title}</h3>
+            <div className="space-y-0.5">
               {section.competitions.map((competition) => {
                 const isActive = selectedCompetition === competition.name;
                 return (
@@ -78,16 +83,10 @@ export function CompetitionSidebar({ competitions, selectedCompetition, onSelect
                     key={competition.name}
                     type="button"
                     onClick={() => onSelectCompetition(competition.name)}
-                    className={`flex w-full items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 text-left text-sm transition-colors ${
-                      isActive
-                        ? "border-emerald-500 bg-emerald-600 text-white shadow-sm shadow-emerald-500/25"
-                        : competition.matches.length > 0
-                          ? "border-transparent text-zinc-700 hover:border-emerald-500/40 hover:bg-emerald-50 hover:text-zinc-950 dark:text-zinc-200 dark:hover:bg-emerald-500/10 dark:hover:text-white"
-                          : "border-transparent text-stone-500 dark:text-zinc-500"
-                    }`}
+                    className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm transition ${isActive ? "bg-emerald-600 text-white shadow-sm shadow-emerald-500/20" : competition.matches.length > 0 ? "text-zinc-700 hover:bg-emerald-50 hover:text-zinc-950 dark:text-zinc-200 dark:hover:bg-emerald-500/10 dark:hover:text-white" : "text-stone-400 dark:text-zinc-600"}`}
                     disabled={competition.matches.length === 0}
                   >
-                    <span className="truncate">{translateCompetitionName(competition.name, language)}</span>
+                    <span className="truncate font-semibold">{translateCompetitionName(competition.name, language)}</span>
                     <MatchCount count={competition.matches.length} isActive={isActive} />
                   </button>
                 );
@@ -96,6 +95,17 @@ export function CompetitionSidebar({ competitions, selectedCompetition, onSelect
           </section>
         ))}
       </nav>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      <aside className="hidden self-start overflow-hidden rounded-2xl border border-stone-200 bg-white/88 shadow-lg shadow-stone-200/60 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/88 dark:shadow-black/25 lg:sticky lg:top-4 lg:block">
+        {content}
+      </aside>
+      <aside className="overflow-hidden rounded-2xl border border-stone-200 bg-white/88 shadow-sm shadow-stone-200/50 dark:border-zinc-800 dark:bg-zinc-950/88 lg:hidden">
+        {content}
+      </aside>
+    </>
   );
 }

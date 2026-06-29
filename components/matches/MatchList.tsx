@@ -9,8 +9,7 @@ import { DateSelector } from "@/components/matches/DateSelector";
 import { EmptyMatchState } from "@/components/matches/EmptyMatchState";
 import { MatchFilters, type MatchFilter } from "@/components/matches/MatchFilters";
 import { featuredCompetitionPriority, getCompetitionSortPriority, isFeaturedCompetitionMatch } from "@/data/mock/competitions";
-import { formatCompactVisibleDate, formatVisibleDate, type TranslationKey } from "@/lib/i18n";
-import { createLocalDateFromKey, formatDateKey, shiftLocalDateKey } from "@/lib/match-date";
+import { type TranslationKey } from "@/lib/i18n";
 
 type MatchListProps = {
   matches: Match[];
@@ -74,14 +73,6 @@ function createAvailableCompetitionGroups(matches: Match[]) {
 
     return firstCompetition.name.localeCompare(secondCompetition.name);
   });
-}
-
-function formatSelectedDateLabel(dateString: string, language: Parameters<typeof formatVisibleDate>[1]) {
-  return formatVisibleDate(createLocalDateFromKey(dateString), language);
-}
-
-function formatCompactSelectedDateLabel(dateString: string, language: Parameters<typeof formatCompactVisibleDate>[1]) {
-  return formatCompactVisibleDate(createLocalDateFromKey(dateString), language);
 }
 
 function filterMatches(matches: Match[], activeFilter: MatchFilter) {
@@ -159,7 +150,7 @@ function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boo
 }
 
 export function MatchList({ matches, dataSource, selectedDate, isLoading, onSelectDate }: MatchListProps) {
-  const { language, t } = usePreferences();
+  const { t } = usePreferences();
   const [activeFilter, setActiveFilter] = useState<MatchFilter>("all");
   const [collapsedCompetitions, setCollapsedCompetitions] = useState<Record<string, boolean>>({});
   const [selectedCompetition, setSelectedCompetition] = useState<string | null>(null);
@@ -186,7 +177,6 @@ export function MatchList({ matches, dataSource, selectedDate, isLoading, onSele
 
       return firstCompetition.name.localeCompare(secondCompetition.name);
     });
-  const todayDate = formatDateKey(new Date());
   const emptyState = getEmptyState(activeFilter, selectedCompetitionMatches.length > 0);
 
   function toggleCompetition(competition: string) {
@@ -198,23 +188,18 @@ export function MatchList({ matches, dataSource, selectedDate, isLoading, onSele
 
   return (
     <div className="space-y-6">
-      <DateSelector
-        selectedDateLabel={formatSelectedDateLabel(selectedDate, language)}
-        compactSelectedDateLabel={formatCompactSelectedDateLabel(selectedDate, language)}
-        onSelectPreviousDate={() => onSelectDate(shiftLocalDateKey(selectedDate, -1))}
-        onSelectNextDate={() => onSelectDate(shiftLocalDateKey(selectedDate, 1))}
-        onSelectToday={() => onSelectDate(todayDate)}
-      />
+      <DateSelector selectedDate={selectedDate} onSelectDate={onSelectDate} />
 
-      <MatchFilters activeFilter={activeFilter} onSelectFilter={setActiveFilter} />
-
-      <DataSourceIndicator source={dataSource} />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <MatchFilters activeFilter={activeFilter} onSelectFilter={setActiveFilter} />
+        <DataSourceIndicator source={dataSource} />
+      </div>
 
       {isLoading ? (
-        <p className="text-sm font-medium text-stone-600 dark:text-zinc-400" role="status">{t("loadingMatches")}</p>
+        <p className="rounded-2xl border border-stone-200 bg-white/70 px-4 py-3 text-sm font-semibold text-stone-600 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-400" role="status">{t("loadingMatches")}</p>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[17rem_1fr] lg:gap-5">
         <CompetitionSidebar
           competitions={availableCompetitionsForDate}
           selectedCompetition={selectedCompetition}
@@ -223,7 +208,7 @@ export function MatchList({ matches, dataSource, selectedDate, isLoading, onSele
         {visibleMatches.length === 0 ? (
           <EmptyMatchState icon={emptyState.icon} title={t(emptyState.titleKey)} description={t(emptyState.descriptionKey)} />
         ) : (
-          <div className="space-y-6 sm:space-y-8">
+          <div className="space-y-4">
             {competitionGroups.map(({ name: competition, matches: competitionMatches }) => (
               <CompetitionSection
                 key={competition}
