@@ -5,7 +5,7 @@ import { MatchEventsTimeline } from "@/components/matches/MatchEventsTimeline";
 import { MatchLineups } from "@/components/matches/MatchLineups";
 import { MatchStats } from "@/components/matches/MatchStats";
 import { StandingsTable } from "@/components/standings/StandingsTable";
-import { Trans } from "@/components/ui/AppPreferences";
+import { Trans, usePreferences } from "@/components/ui/AppPreferences";
 import { LocalizedKickoff } from "@/components/ui/LocalizedKickoff";
 import { TranslatedCompetitionName } from "@/components/ui/TranslatedCompetitionName";
 import { TranslatedStatus } from "@/components/ui/TranslatedStatus";
@@ -71,11 +71,12 @@ function EmptyStandings() {
 
 export function MatchCenterTabs(details: MatchCenterTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>("details");
+  const { t } = usePreferences();
   const highlightedTeamIds = [details.match.homeTeam.id, details.match.awayTeam.id];
 
   return (
     <div className="mt-4">
-      <nav className="overflow-x-auto rounded-2xl border border-stone-300 bg-white/90 p-1.5 shadow-lg shadow-stone-300/20 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90 dark:shadow-black/30" aria-label="match sections">
+      <nav className="overflow-x-auto rounded-2xl border border-stone-300 bg-white/90 p-1.5 shadow-lg shadow-stone-300/20 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90 dark:shadow-black/30" aria-label={t("matchSections")} role="tablist">
         <div className="flex min-w-max gap-1.5">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -83,8 +84,10 @@ export function MatchCenterTabs(details: MatchCenterTabsProps) {
               <button
                 key={tab.id}
                 type="button"
+                role="tab"
                 onClick={() => setActiveTab(tab.id)}
-                className={`rounded-full px-4 py-2 text-sm font-black transition-colors ${isActive ? "bg-zinc-950 text-white shadow-sm dark:bg-amber-300 dark:text-zinc-950" : "text-zinc-600 hover:bg-stone-100 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white"}`}
+                aria-selected={isActive}
+                className={`rounded-full px-4 py-2 text-sm font-black transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${isActive ? "bg-zinc-950 text-white shadow-sm dark:bg-amber-300 dark:text-zinc-950" : "text-zinc-600 hover:bg-stone-100 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white"}`}
               >
                 <Trans k={tab.labelKey} />
               </button>

@@ -28,6 +28,7 @@ function MatchCount({ count, isActive }: { count: number; isActive: boolean }) {
 export function CompetitionSidebar({ competitions, selectedCompetition, onSelectCompetition }: CompetitionSidebarProps) {
   const { language, t } = usePreferences();
   const [query, setQuery] = useState("");
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const featuredWithMatches = competitions.filter((competition) => competition.isFeatured && competition.matches.length > 0);
   const otherWithMatches = competitions.filter((competition) => !competition.isFeatured && competition.matches.length > 0);
   const featuredWithoutMatches = competitions.filter((competition) => competition.isFeatured && competition.matches.length === 0);
@@ -65,7 +66,10 @@ export function CompetitionSidebar({ competitions, selectedCompetition, onSelect
       <nav aria-label={t("competitions")} className="max-h-[calc(100vh-11rem)] space-y-4 overflow-y-auto p-2.5">
         <button
           type="button"
-          onClick={() => onSelectCompetition(null)}
+          onClick={() => {
+            onSelectCompetition(null);
+            setIsMobileOpen(false);
+          }}
           className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm font-black transition ${selectedCompetition === null ? "bg-zinc-950 text-white shadow-sm shadow-emerald-500/15 dark:bg-white dark:text-zinc-950" : "text-zinc-700 hover:bg-stone-100 dark:text-zinc-200 dark:hover:bg-zinc-800"}`}
         >
           <span className="truncate">{t("featured")}</span>
@@ -82,7 +86,10 @@ export function CompetitionSidebar({ competitions, selectedCompetition, onSelect
                   <button
                     key={competition.name}
                     type="button"
-                    onClick={() => onSelectCompetition(competition.name)}
+                    onClick={() => {
+                      onSelectCompetition(competition.name);
+                      setIsMobileOpen(false);
+                    }}
                     className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm transition ${isActive ? "bg-emerald-600 text-white shadow-sm shadow-emerald-500/20" : competition.matches.length > 0 ? "text-zinc-700 hover:bg-emerald-50 hover:text-zinc-950 dark:text-zinc-200 dark:hover:bg-emerald-500/10 dark:hover:text-white" : "text-stone-400 dark:text-zinc-600"}`}
                     disabled={competition.matches.length === 0}
                   >
@@ -103,9 +110,25 @@ export function CompetitionSidebar({ competitions, selectedCompetition, onSelect
       <aside className="hidden self-start overflow-hidden rounded-2xl border border-stone-200 bg-white/88 shadow-lg shadow-stone-200/60 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/88 dark:shadow-black/25 lg:sticky lg:top-4 lg:block">
         {content}
       </aside>
-      <aside className="overflow-hidden rounded-2xl border border-stone-200 bg-white/88 shadow-sm shadow-stone-200/50 dark:border-zinc-800 dark:bg-zinc-950/88 lg:hidden">
-        {content}
-      </aside>
+      <div className="lg:hidden">
+        <button
+          type="button"
+          onClick={() => setIsMobileOpen((open) => !open)}
+          aria-expanded={isMobileOpen}
+          className="flex w-full items-center justify-between rounded-2xl border border-stone-200 bg-white/88 px-4 py-3 text-left shadow-sm shadow-stone-200/50 transition hover:border-emerald-500/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-zinc-800 dark:bg-zinc-950/88 dark:shadow-black/20"
+        >
+          <span>
+            <span className="block text-[0.62rem] font-black uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300">{t("browseCompetitions")}</span>
+            <span className="mt-0.5 block text-sm font-black text-zinc-950 dark:text-white">{selectedCompetition ? translateCompetitionName(selectedCompetition, language) : t("featured")}</span>
+          </span>
+          <span className="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-black text-stone-600 dark:bg-zinc-800 dark:text-zinc-300">{isMobileOpen ? "−" : "+"}</span>
+        </button>
+        {isMobileOpen ? (
+          <aside className="mt-2 max-h-[72vh] overflow-hidden rounded-2xl border border-stone-200 bg-white/96 shadow-lg shadow-stone-200/50 dark:border-zinc-800 dark:bg-zinc-950/96 dark:shadow-black/30">
+            {content}
+          </aside>
+        ) : null}
+      </div>
     </>
   );
 }
