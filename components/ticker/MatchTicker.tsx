@@ -55,7 +55,8 @@ function TickerItem({ match }: { match: Match }) {
 export function MatchTicker({ matches }: MatchTickerProps) {
   const { t } = usePreferences();
   const displayMatches = matches
-    .filter((match) => match.status === "live" || match.status === "scheduled")
+    .filter((match) => (match.status === "live" || match.status === "scheduled")
+      && getCompetitionSortPriority(match.competition) !== Number.MAX_SAFE_INTEGER)
     .sort((firstMatch, secondMatch) => {
       const priorityDifference = getCompetitionSortPriority(firstMatch.competition) - getCompetitionSortPriority(secondMatch.competition);
 

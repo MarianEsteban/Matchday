@@ -1,7 +1,4 @@
-import { MatchList } from "@/components/matches/MatchList";
-import { MatchTicker } from "@/components/ticker/MatchTicker";
-import { PreferenceControls, Trans } from "@/components/ui/AppPreferences";
-import { BrandLockup } from "@/components/ui/BrandLockup";
+import { HomeMatches } from "@/components/matches/HomeMatches";
 import { getMatchesByDateWithSource } from "@/data/repositories/matches.repository";
 import { formatDateKey } from "@/lib/match-date";
 
@@ -11,21 +8,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-[#fbf7ee] pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-zinc-950 dark:bg-zinc-950 dark:text-white">
-      <MatchTicker matches={todayMatches} />
-      <div className="mx-auto max-w-6xl px-4 py-5 sm:p-6">
-        <header className="mb-6 flex items-center justify-between gap-3 sm:mb-8 sm:flex-wrap sm:gap-4">
-          <BrandLockup />
-          <PreferenceControls />
-        </header>
-
-        <section className="mb-8">
-          <div className="mb-4">
-            <h2 className="text-2xl font-semibold"><Trans k="todaysMatches" /></h2>
-          </div>
-
-          <MatchList matches={todayMatches} dataSource={matchDataSource} selectedDateKey={selectedDateKey} />
-        </section>
-      </div>
+      <HomeMatches initialMatches={todayMatches} initialDataSource={matchDataSource} initialSelectedDateKey={selectedDateKey} />
     </main>
   );
 }
