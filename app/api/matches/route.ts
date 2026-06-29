@@ -10,5 +10,7 @@ export async function GET(request: NextRequest) {
   const date = parseDateParam(request.nextUrl.searchParams.get("date"));
   const timezone = request.nextUrl.searchParams.get("timezone") ?? undefined;
   const result = await getMatchesByDateWithSource(date, timezone);
-  return NextResponse.json(result);
+  const response = NextResponse.json(result);
+  response.headers.set("Cache-Control", "private, max-age=60, stale-while-revalidate=300");
+  return response;
 }

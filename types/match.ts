@@ -1,6 +1,6 @@
 export type MatchStatus = "scheduled" | "live" | "finished";
 
-export type MatchListDataSource = "api-football" | "demo";
+export type MatchListDataSource = "api-football" | "cached-api-football" | "demo" | "api-unavailable-fallback";
 
 export type Team = {
   id: string;

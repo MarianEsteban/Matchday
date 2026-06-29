@@ -1,6 +1,8 @@
 import { createMockMatches, formatMatchDate } from "@/data/mock/matches";
 import { getMatchesForSelectedLocalDate } from "@/lib/match-date";
 import { createMatchDataSource } from "@/data/services/match-data-source";
+import { getMatchdayDataMode } from "@/data/services/data-mode";
+import { isApiFootballQuotaError } from "@/data/services/football-api.service";
 import type { Match, MatchDetails, MatchListDataSource } from "@/types/match";
 import { getLineupsByMatchId } from "@/data/mock/lineups";
 import { getMatchEventsByMatchId } from "@/data/mock/match-events";
@@ -16,10 +18,7 @@ export type MatchesByDateResult = {
 
 export async function getMatchesByDateWithSource(date: Date = new Date(), timezone?: string): Promise<MatchesByDateResult> {
   const requestedDate = formatMatchDate(date);
-  const todayDate = formatMatchDate(new Date());
-  const demoMatches = requestedDate === todayDate
-    ? createMockMatches(date).filter((match) => match.date === requestedDate)
-    : [];
+  const demoMatches = createMockMatches(date).filter((match) => match.date === requestedDate);
 
   try {
     const matches = await matchDataSource.getMatches({ date, timezone });
@@ -29,14 +28,18 @@ export async function getMatchesByDateWithSource(date: Date = new Date(), timezo
     const usableMatches = getMatchesForSelectedLocalDate(matches, requestedDate, timezone);
 
     if (matchDataSource.source === "api-football") {
-      return { matches: usableMatches, source: matchDataSource.source };
+      return { matches: usableMatches, source: matchDataSource.didLastFixturesUseCache?.() ? "cached-api-football" : matchDataSource.source };
     }
 
     return { matches: demoMatches, source: "demo" };
   } catch (error) {
-    console.error("Unable to load matches from configured data source. Falling back to demo data.", error);
+    const mode = getMatchdayDataMode();
+    const message = isApiFootballQuotaError(error)
+      ? "API-Football quota/rate limit reached. Falling back without retrying aggressively."
+      : "Unable to load matches from configured data source. Falling back to demo data.";
+    console.warn(message, { dataMode: mode, hasApiKey: Boolean(process.env.FOOTBALL_API_KEY) });
 
-    return { matches: demoMatches, source: "demo" };
+    return { matches: demoMatches, source: matchDataSource.source === "api-football" ? "api-unavailable-fallback" : "demo" };
   }
 }
 

@@ -2,6 +2,7 @@ import "server-only";
 
 import { createMockMatches } from "@/data/mock/matches";
 import { FootballApiService } from "@/data/services/football-api.service";
+import { getMatchdayDataMode } from "@/data/services/data-mode";
 import type { Match, MatchDetails, MatchListDataSource } from "@/types/match";
 
 export type MatchQuery = {
@@ -14,6 +15,7 @@ export type MatchDataSource = {
   getMatches(query?: MatchQuery): Promise<Match[]> | Match[];
   getMatchById(id: string): Promise<Match | undefined> | Match | undefined;
   getMatchDetailsById?(id: string): Promise<MatchDetails | undefined> | MatchDetails | undefined;
+  didLastFixturesUseCache?(): boolean;
 };
 
 export class DemoMatchDataSource implements MatchDataSource {
@@ -33,8 +35,12 @@ export class FootballApiMatchDataSource implements MatchDataSource {
 
   constructor(private readonly footballApi = new FootballApiService()) {}
 
-  getMatches(query: MatchQuery = {}): Promise<Match[]> {
+  async getMatches(query: MatchQuery = {}): Promise<Match[]> {
     return this.footballApi.getFixtures(query);
+  }
+
+  didLastFixturesUseCache() {
+    return this.footballApi.didLastFixturesUseCache();
   }
 
   getMatchById(id: string): Promise<Match | undefined> {
@@ -47,10 +53,20 @@ export class FootballApiMatchDataSource implements MatchDataSource {
 }
 
 export function createMatchDataSource(): MatchDataSource {
+  const dataMode = getMatchdayDataMode();
+
+  if (dataMode === "demo") {
+    return new DemoMatchDataSource();
+  }
+
   if (process.env.FOOTBALL_API_KEY) {
     // The real football provider selection lives here so API keys stay server-side.
     // Add future providers by swapping or composing MatchDataSource implementations.
     return new FootballApiMatchDataSource();
+  }
+
+  if (dataMode === "api") {
+    console.warn("MATCHDAY_DATA_MODE=api is set, but FOOTBALL_API_KEY is not configured. Using demo fallback.");
   }
 
   return new DemoMatchDataSource();

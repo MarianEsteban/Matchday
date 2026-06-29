@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MatchList } from "@/components/matches/MatchList";
 import { MatchTicker } from "@/components/ticker/MatchTicker";
 import { PreferenceControls, Trans } from "@/components/ui/AppPreferences";
@@ -19,9 +19,16 @@ export function HomeMatches({ initialMatches, initialDataSource, initialSelected
   const [matches, setMatches] = useState(initialMatches);
   const [dataSource, setDataSource] = useState(initialDataSource);
   const [isLoading, setIsLoading] = useState(false);
+  const loadedDatesRef = useRef(new Map([[initialSelectedDateKey, { matches: initialMatches, source: initialDataSource }]]));
 
   useEffect(() => {
     let isCurrentRequest = true;
+    const cachedDate = loadedDatesRef.current.get(selectedDate);
+    if (cachedDate) {
+      setMatches(cachedDate.matches);
+      setDataSource(cachedDate.source);
+      return;
+    }
 
     async function loadMatchesForSelectedDate() {
       setIsLoading(true);
@@ -33,14 +40,16 @@ export function HomeMatches({ initialMatches, initialDataSource, initialSelected
         const result = await response.json() as { matches: Match[]; source: MatchListDataSource };
 
         if (isCurrentRequest) {
+          loadedDatesRef.current.set(selectedDate, result);
           setMatches(result.matches);
           setDataSource(result.source);
         }
       } catch (error) {
         console.error("Unable to load matches for selected date.", error);
         if (isCurrentRequest) {
-          setMatches([]);
-          setDataSource(initialDataSource);
+          const fallback = loadedDatesRef.current.get(initialSelectedDateKey);
+          setMatches(fallback?.matches ?? []);
+          setDataSource(fallback?.source ?? initialDataSource);
         }
       } finally {
         if (isCurrentRequest) setIsLoading(false);
@@ -52,7 +61,7 @@ export function HomeMatches({ initialMatches, initialDataSource, initialSelected
     return () => {
       isCurrentRequest = false;
     };
-  }, [initialDataSource, selectedDate]);
+  }, [initialDataSource, initialSelectedDateKey, selectedDate]);
 
   const visibleMatches = useMemo(() => {
     const viewerTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;

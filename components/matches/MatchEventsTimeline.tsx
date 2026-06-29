@@ -74,7 +74,7 @@ export function MatchEventsTimeline({ events, match, dataSource = "demo" }: Matc
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100"><Trans k="events" /></h2>
         <span className="rounded-full border border-stone-300 bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
-          {dataSource === "api-football" ? <Trans k="apiFootballData" /> : <Trans k="demoData" />}
+          {dataSource === "api-football" || dataSource === "cached-api-football" ? <Trans k="apiFootballData" /> : <Trans k="demoData" />}
         </span>
       </div>
 

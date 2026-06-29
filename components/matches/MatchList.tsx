@@ -94,7 +94,13 @@ function filterMatches(matches: Match[], activeFilter: MatchFilter) {
 
 function DataSourceIndicator({ source }: { source: MatchListDataSource }) {
   const { t } = usePreferences();
-  const label = source === "api-football" ? t("apiFootballData") : t("demoData");
+  const label = source === "api-football"
+    ? t("apiFootballData")
+    : source === "cached-api-football"
+      ? t("cachedApiFootballData")
+      : source === "api-unavailable-fallback"
+        ? t("fallbackData")
+        : t("demoData");
 
   return (
     <div className="flex justify-end">

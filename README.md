@@ -49,9 +49,16 @@ MatchDay is a football match center web app designed to present match informatio
    npm install
    ```
 
-3. Optional: configure a real fixtures provider. MatchDay reads `FOOTBALL_API_KEY` on the server for API-Football fixtures and falls back to demo data when it is omitted or unavailable. Do not prefix this variable with `NEXT_PUBLIC_` or commit real keys.
+3. Optional: configure the data mode and real fixtures provider. MatchDay reads `MATCHDAY_DATA_MODE` on the server and defaults to `auto`.
+
+   - `MATCHDAY_DATA_MODE=demo`: always use demo/mock data and never call API-Football. Use this while working on UI/design to avoid consuming daily requests.
+   - `MATCHDAY_DATA_MODE=auto`: use API-Football when `FOOTBALL_API_KEY` exists, then fall back to cached API data or demo data on missing keys, request failures, or quota/rate-limit responses.
+   - `MATCHDAY_DATA_MODE=api`: prefer API-Football when `FOOTBALL_API_KEY` exists, while still falling back gracefully if the provider fails.
+
+   Do not prefix server variables with `NEXT_PUBLIC_`, do not commit real keys, and keep local secrets in `.env.local` (already ignored by Git).
 
    ```bash
+   MATCHDAY_DATA_MODE=demo
    FOOTBALL_API_KEY=your_api_key_here
    ```
 
@@ -79,7 +86,7 @@ https://matchday-beige-three.vercel.app
 
 ### Current status
 
-MatchDay is currently a portfolio project with demo/mock data as its safe fallback. If `FOOTBALL_API_KEY` is configured in the server environment, the fixtures list first tries to load live API-Football data before falling back to the demo data.
+MatchDay is currently a portfolio project with demo/mock data as its safe fallback. In `auto` or `api` mode with `FOOTBALL_API_KEY` configured, the app tries API-Football first, uses server-side caching to reduce duplicate requests, remembers quota/rate-limit exhaustion during the runtime session, and falls back to cached API-Football data or demo data instead of showing an empty broken app.
 
 ### Roadmap
 
@@ -139,9 +146,16 @@ MatchDay es una aplicación web de centro de partidos de fútbol diseñada para 
    npm install
    ```
 
-3. Opcional: configura un proveedor real de calendarios. MatchDay lee `FOOTBALL_API_KEY` en el servidor para obtener partidos de API-Football y vuelve a los datos demo cuando falta la variable o el proveedor no está disponible. No uses el prefijo `NEXT_PUBLIC_` ni subas claves reales al repositorio.
+3. Opcional: configura el modo de datos y el proveedor real de calendarios. MatchDay lee `MATCHDAY_DATA_MODE` en el servidor y usa `auto` por defecto.
+
+   - `MATCHDAY_DATA_MODE=demo`: usa siempre datos demo/mock y nunca llama a API-Football. Usalo mientras trabajás en UI/diseño para evitar consumir requests diarios.
+   - `MATCHDAY_DATA_MODE=auto`: usa API-Football cuando existe `FOOTBALL_API_KEY`, y vuelve a datos de API en caché o datos demo ante claves faltantes, fallos de request o respuestas de cuota/rate-limit.
+   - `MATCHDAY_DATA_MODE=api`: prefiere API-Football cuando existe `FOOTBALL_API_KEY`, pero igualmente vuelve a un respaldo seguro si el proveedor falla.
+
+   No uses el prefijo `NEXT_PUBLIC_` para variables del servidor, no subas claves reales y mantené secretos locales en `.env.local` (ya ignorado por Git).
 
    ```bash
+   MATCHDAY_DATA_MODE=demo
    FOOTBALL_API_KEY=tu_api_key_aqui
    ```
 
@@ -169,7 +183,7 @@ https://matchday-beige-three.vercel.app
 
 ### Estado actual
 
-MatchDay es actualmente un proyecto de portafolio con datos demo/mock como respaldo seguro. Si `FOOTBALL_API_KEY` está configurada en el entorno del servidor, la lista de partidos primero intenta cargar datos reales de API-Football antes de volver a los datos demo.
+MatchDay es actualmente un proyecto de portafolio con datos demo/mock como respaldo seguro. En modo `auto` o `api` con `FOOTBALL_API_KEY` configurada, la app intenta usar API-Football primero, aplica caché del lado del servidor para reducir requests duplicados, recuerda el agotamiento de cuota/rate-limit durante la sesión de runtime y vuelve a datos de API-Football en caché o datos demo en lugar de mostrar una pantalla vacía.
 
 ### Roadmap
 
