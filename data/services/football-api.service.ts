@@ -134,7 +134,7 @@ export class FootballApiService {
     }
 
     const fixtureId = id.replace("api-football-", "");
-    const matches = await this.fetchAndNormalizeFixtures(`/fixtures?id=${fixtureId}`, { onlySupportedCompetitions: true });
+    const matches = await this.fetchAndNormalizeFixtures(`/fixtures?id=${fixtureId}`, { onlySupportedCompetitions: false });
 
     const match = matches[0];
     if (!match) return undefined;
@@ -214,7 +214,7 @@ export class FootballApiService {
     return Promise.all(matches.map(async (match) => {
       const leagueId = match.apiFootball?.leagueId;
       const season = match.apiFootball?.season;
-      if (!leagueId || !season) return match;
+      if (!leagueId || !season || getCompetitionSortPriority(match.competition) === Number.MAX_SAFE_INTEGER) return match;
       const key = `${leagueId}:${season}`;
       if (!cache.has(key)) cache.set(key, this.getStandings(match));
       return addStandingsContext(match, await cache.get(key));
@@ -289,7 +289,14 @@ function normalizeApiFootballFixture(
     venue: venueParts.join(", ") || "TBD",
     date: formatDateKey(startsAt, options.timezone),
     status,
-    apiFootball: { fixtureId, leagueId: fixture.league?.id, season: fixture.league?.season, round: fixture.league?.round },
+    apiFootball: {
+      fixtureId,
+      leagueId: fixture.league?.id,
+      leagueName: fixture.league?.name,
+      leagueCountry: fixture.league?.country,
+      season: fixture.league?.season,
+      round: fixture.league?.round,
+    },
     ...(hasScore ? { score: { home: homeGoals, away: awayGoals } } : {}),
   };
 }
@@ -380,9 +387,10 @@ function getApiMatchPriority(match: Match): number {
   return getCompetitionSortPriority(match.competition);
 }
 
-function selectApiMatchesForDate(curatedMatches: Match[], _rawMatches: Match[], options: FixtureSelectionOptions): Match[] {
-  const curatedForDate = curatedMatches.filter((match) => match.date === options.selectedDateKey);
-  return curatedForDate.sort(compareApiMatches);
+function selectApiMatchesForDate(_curatedMatches: Match[], rawMatches: Match[], options: FixtureSelectionOptions): Match[] {
+  return rawMatches
+    .filter((match) => match.date === options.selectedDateKey)
+    .sort(compareApiMatches);
 }
 
 function compareApiMatches(firstMatch: Match, secondMatch: Match): number {

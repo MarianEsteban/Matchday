@@ -8,7 +8,7 @@ import { CompetitionSidebar } from "@/components/matches/CompetitionSidebar";
 import { DateSelector } from "@/components/matches/DateSelector";
 import { EmptyMatchState } from "@/components/matches/EmptyMatchState";
 import { MatchFilters, type MatchFilter } from "@/components/matches/MatchFilters";
-import { getCompetitionSortPriority } from "@/data/mock/competitions";
+import { featuredCompetitionPriority, getCompetitionSortPriority, isFeaturedCompetitionMatch } from "@/data/mock/competitions";
 import { formatCompactVisibleDate, formatVisibleDate, type TranslationKey } from "@/lib/i18n";
 import { createLocalDateFromKey, formatDateKey, shiftLocalDateKey } from "@/lib/match-date";
 
@@ -35,6 +35,45 @@ function groupMatchesByCompetition(matches: Match[]) {
       [match.competition]: [...competitionMatches, match],
     };
   }, {});
+}
+
+function createAvailableCompetitionGroups(matches: Match[]) {
+  const groupedMatches = groupMatchesByCompetition(matches);
+  const groupsByName = new Map(Object.entries(groupedMatches).map(([name, competitionMatches]) => [name, {
+    name,
+    matches: competitionMatches,
+    isFeatured: competitionMatches.some(isFeaturedCompetitionMatch),
+  }]));
+
+  featuredCompetitionPriority.forEach((competitionName) => {
+    if (!groupsByName.has(competitionName)) {
+      groupsByName.set(competitionName, { name: competitionName, matches: [], isFeatured: true });
+    }
+  });
+
+  return [...groupsByName.values()].sort((firstCompetition, secondCompetition) => {
+    const firstHasMatches = firstCompetition.matches.length > 0;
+    const secondHasMatches = secondCompetition.matches.length > 0;
+
+    if (firstCompetition.isFeatured && secondCompetition.isFeatured) {
+      if (firstHasMatches !== secondHasMatches) return firstHasMatches ? -1 : 1;
+      return getCompetitionSortPriority(firstCompetition.name) - getCompetitionSortPriority(secondCompetition.name);
+    }
+
+    if (firstCompetition.isFeatured !== secondCompetition.isFeatured) {
+      if (firstHasMatches && secondHasMatches) return firstCompetition.isFeatured ? -1 : 1;
+      if (!firstHasMatches && secondHasMatches) return 1;
+      if (firstHasMatches && !secondHasMatches) return -1;
+      return firstCompetition.isFeatured ? -1 : 1;
+    }
+
+    if (firstHasMatches !== secondHasMatches) return firstHasMatches ? -1 : 1;
+    if (firstCompetition.matches.length !== secondCompetition.matches.length) {
+      return secondCompetition.matches.length - firstCompetition.matches.length;
+    }
+
+    return firstCompetition.name.localeCompare(secondCompetition.name);
+  });
 }
 
 function formatSelectedDateLabel(dateString: string, language: Parameters<typeof formatVisibleDate>[1]) {
@@ -116,13 +155,17 @@ function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boo
 export function MatchList({ matches, dataSource, selectedDate, isLoading, onSelectDate }: MatchListProps) {
   const { language, t } = usePreferences();
   const [activeFilter, setActiveFilter] = useState<MatchFilter>("all");
-  const [collapsedCompetitions, setCollapsedCompetitions] = useState<Record<string, boolean>>(
-    {},
-  );
+  const [collapsedCompetitions, setCollapsedCompetitions] = useState<Record<string, boolean>>({});
+  const [selectedCompetition, setSelectedCompetition] = useState<string | null>(null);
 
-  const matchesForSelectedDate = matches;
-  const filteredMatches = filterMatches(matchesForSelectedDate, activeFilter);
-  const groupedMatches = groupMatchesByCompetition(filteredMatches);
+  const allMatchesForDate = matches;
+  const featuredMatchesForDate = allMatchesForDate.filter(isFeaturedCompetitionMatch);
+  const selectedCompetitionMatches = selectedCompetition
+    ? allMatchesForDate.filter((match) => match.competition === selectedCompetition)
+    : featuredMatchesForDate;
+  const visibleMatches = filterMatches(selectedCompetitionMatches, activeFilter);
+  const availableCompetitionsForDate = createAvailableCompetitionGroups(allMatchesForDate);
+  const groupedMatches = groupMatchesByCompetition(visibleMatches);
   const competitionGroups = Object.entries(groupedMatches)
     .map(([name, competitionMatches]) => ({
       name,
@@ -138,7 +181,7 @@ export function MatchList({ matches, dataSource, selectedDate, isLoading, onSele
       return firstCompetition.name.localeCompare(secondCompetition.name);
     });
   const todayDate = formatDateKey(new Date());
-  const emptyState = getEmptyState(activeFilter, matchesForSelectedDate.length > 0);
+  const emptyState = getEmptyState(activeFilter, selectedCompetitionMatches.length > 0);
 
   function toggleCompetition(competition: string) {
     setCollapsedCompetitions((currentCollapsedCompetitions) => ({
@@ -166,8 +209,12 @@ export function MatchList({ matches, dataSource, selectedDate, isLoading, onSele
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
-        <CompetitionSidebar competitions={competitionGroups} dataSource={dataSource} />
-        {filteredMatches.length === 0 ? (
+        <CompetitionSidebar
+          competitions={availableCompetitionsForDate}
+          selectedCompetition={selectedCompetition}
+          onSelectCompetition={setSelectedCompetition}
+        />
+        {visibleMatches.length === 0 ? (
           <EmptyMatchState icon={emptyState.icon} title={t(emptyState.titleKey)} description={t(emptyState.descriptionKey)} />
         ) : (
           <div className="space-y-6 sm:space-y-8">
