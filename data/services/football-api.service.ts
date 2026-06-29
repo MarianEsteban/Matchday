@@ -42,12 +42,6 @@ const supportedCompetitionById = new Map<number, SupportedApiCompetition>(
 );
 
 const supportedCompetitionNameAliases = new Map<string, string>([
-  ["world cup", "FIFA World Cup"],
-  ["fifa world cup", "FIFA World Cup"],
-  ["copa mundial", "FIFA World Cup"],
-  ["round of 32", "FIFA World Cup"],
-  ["last 32", "FIFA World Cup"],
-  ["knockout stage", "FIFA World Cup"],
   ["uefa champions league", "UEFA Champions League"],
   ["champions league", "UEFA Champions League"],
 
@@ -279,7 +273,7 @@ function normalizeApiFootballFixture(
   const startsAt = fixture.fixture?.date ? new Date(fixture.fixture.date) : undefined;
   const homeTeam = normalizeTeam(fixture.teams?.home);
   const awayTeam = normalizeTeam(fixture.teams?.away);
-  const competition = normalizeCompetition(fixture.league);
+  const competition = normalizeCompetition(fixture);
   const fallbackCompetition = fixture.league?.name?.trim() || "Football";
 
   if (
@@ -318,7 +312,9 @@ function normalizeApiFootballFixture(
   };
 }
 
-function normalizeCompetition(league: ApiFootballFixture["league"]): string | undefined {
+function normalizeCompetition(fixture: ApiFootballFixture): string | undefined {
+  const league = fixture.league;
+
   if (typeof league?.id === "number") {
     const supportedCompetition = supportedCompetitionById.get(league.id);
 
@@ -328,11 +324,13 @@ function normalizeCompetition(league: ApiFootballFixture["league"]): string | un
   }
 
   const leagueName = normalizeCompetitionKey(league?.name);
-  const roundName = normalizeCompetitionKey(league?.round);
+
+  if (isExplicitWorldCupLeagueName(leagueName)) {
+    return hasNationalTeams(fixture) ? "FIFA World Cup" : undefined;
+  }
 
   return (leagueName ? supportedCompetitionNameAliases.get(leagueName) : undefined)
-    ?? (roundName ? supportedCompetitionNameAliases.get(roundName) : undefined)
-    ?? inferSupportedCompetitionName(leagueName, roundName);
+    ?? inferSupportedCompetitionName(leagueName);
 }
 
 function normalizeCompetitionKey(value: string | undefined): string | undefined {
@@ -340,10 +338,55 @@ function normalizeCompetitionKey(value: string | undefined): string | undefined 
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
+function isExplicitWorldCupLeagueName(leagueName: string | undefined): boolean {
+  return leagueName === "fifa world cup" || leagueName === "world cup";
+}
+
+function hasNationalTeams(fixture: ApiFootballFixture): boolean {
+  return isNationalTeamName(fixture.teams?.home?.name) && isNationalTeamName(fixture.teams?.away?.name);
+}
+
+function isNationalTeamName(teamName: string | undefined): boolean {
+  const normalizedName = normalizeCompetitionKey(teamName);
+
+  return Boolean(normalizedName && nationalTeamNames.has(normalizedName));
+}
+
+function doesFixtureLookLikeWorldCup(fixture: ApiFootballFixture): boolean {
+  return fixture.league?.id === 1 || isExplicitWorldCupLeagueName(normalizeCompetitionKey(fixture.league?.name));
+}
+
+const nationalTeamNames = new Set([
+  "afghanistan", "albania", "algeria", "american samoa", "andorra", "angola", "anguilla", "antigua and barbuda", "argentina", "armenia", "aruba", "australia", "austria", "azerbaijan",
+  "bahamas", "bahrain", "bangladesh", "barbados", "belarus", "belgium", "belize", "benin", "bermuda", "bhutan", "bolivia", "bosnia and herzegovina", "botswana", "brazil", "british virgin islands", "brunei", "bulgaria", "burkina faso", "burundi",
+  "cambodia", "cameroon", "canada", "cape verde", "cayman islands", "central african republic", "chad", "chile", "china", "chinese taipei", "colombia", "comoros", "congo", "costa rica", "croatia", "cuba", "curacao", "cyprus", "czech republic", "czechia",
+  "denmark", "djibouti", "dominica", "dominican republic", "dr congo",
+  "ecuador", "egypt", "el salvador", "england", "equatorial guinea", "eritrea", "estonia", "eswatini", "ethiopia",
+  "faroe islands", "fiji", "finland", "france",
+  "gabon", "gambia", "georgia", "germany", "ghana", "gibraltar", "greece", "grenada", "guam", "guatemala", "guinea", "guinea bissau", "guyana",
+  "haiti", "honduras", "hong kong", "hungary",
+  "iceland", "india", "indonesia", "iran", "iraq", "israel", "italy", "ivory coast", "cote d ivoire",
+  "jamaica", "japan", "jordan",
+  "kazakhstan", "kenya", "korea republic", "kosovo", "kuwait", "kyrgyzstan",
+  "laos", "latvia", "lebanon", "lesotho", "liberia", "libya", "liechtenstein", "lithuania", "luxembourg",
+  "macau", "madagascar", "malawi", "malaysia", "maldives", "mali", "malta", "mauritania", "mauritius", "mexico", "moldova", "mongolia", "montenegro", "montserrat", "morocco", "mozambique", "myanmar",
+  "namibia", "nepal", "netherlands", "new caledonia", "new zealand", "nicaragua", "niger", "nigeria", "north korea", "north macedonia", "northern ireland", "norway",
+  "oman",
+  "pakistan", "palestine", "panama", "papua new guinea", "paraguay", "peru", "philippines", "poland", "portugal", "puerto rico",
+  "qatar",
+  "republic of ireland", "romania", "russia", "rwanda",
+  "saint kitts and nevis", "saint lucia", "saint vincent and the grenadines", "samoa", "san marino", "sao tome and principe", "saudi arabia", "scotland", "senegal", "serbia", "seychelles", "sierra leone", "singapore", "slovakia", "slovenia", "solomon islands", "somalia", "south africa", "south korea", "south sudan", "spain", "sri lanka", "sudan", "suriname", "sweden", "switzerland", "syria",
+  "tahiti", "tajikistan", "tanzania", "thailand", "timor leste", "togo", "tonga", "trinidad and tobago", "tunisia", "turkey", "turkmenistan", "turks and caicos islands",
+  "uganda", "ukraine", "united arab emirates", "united states", "uruguay", "usa", "uzbekistan",
+  "vanuatu", "venezuela", "vietnam",
+  "wales",
+  "yemen",
+  "zambia", "zimbabwe",
+]);
+
 function inferSupportedCompetitionName(...values: Array<string | undefined>): string | undefined {
   const text = values.filter(Boolean).join(" ");
   if (!text) return undefined;
-  if (/fifa.*world cup|world cup|copa mundial|round of 32|last 32|knockout stage/.test(text)) return "FIFA World Cup";
   if (/champions league/.test(text)) return "UEFA Champions League";
   if (/libertadores/.test(text)) return "Copa Libertadores";
   if (/sudamericana/.test(text)) return "Copa Sudamericana";
@@ -415,7 +458,7 @@ function dedupeApiFixtures(fixtures: ApiFootballFixture[]): ApiFootballFixture[]
 function logFixtureDiagnostics(details: { apiDateKeys: string[]; selectedDateKey: string; timezone: string; rawFixtures: ApiFootballFixture[]; rawCount: number; supportedCount: number; localDateCount: number }) {
   if (process.env.NODE_ENV === "production") return;
   const leagues = details.rawFixtures.slice(0, 6).map((fixture) => ({ id: fixture.league?.id, name: fixture.league?.name }));
-  const worldCupFixtures = details.rawFixtures.filter((fixture) => normalizeCompetition(fixture.league) === "FIFA World Cup").map((fixture) => ({
+  const worldCupFixtures = details.rawFixtures.filter(doesFixtureLookLikeWorldCup).map((fixture) => ({
     id: fixture.fixture?.id,
     apiDate: fixture.fixture?.date?.slice(0, 10),
     localDate: fixture.fixture?.date ? formatDateKey(new Date(fixture.fixture.date), details.timezone) : undefined,
