@@ -73,10 +73,12 @@ function getEmptyApiFallbackReason(details: {
   featuredFixtureCount: number;
   quotaLimited: boolean;
   apiStatus?: number;
+  usedLeagueSpecificFixtures?: boolean;
 }) {
   if (details.quotaLimited) return "API quota limited, showing demo fallback";
   if (details.apiStatus && details.apiStatus >= 400) return "API request failed, showing demo fallback";
-  if (details.rawFixtureCount === 0) return "API returned zero fixtures, showing demo fallback";
+  if (details.usedLeagueSpecificFixtures) return "Using league-specific API fixtures";
+  if (details.rawFixtureCount === 0) return "API date endpoint returned zero fixtures; featured league-specific queries also returned zero fixtures";
   if (details.normalizedFixtureCount === 0 || details.localFixtureCount === 0) return "API returned fixtures but none matched selected local date, showing demo fallback";
   if (details.featuredFixtureCount === 0) return "API returned fixtures but none were featured, showing demo fallback";
   return "API returned fixtures but none were visible, showing demo fallback";
@@ -106,7 +108,7 @@ export async function loadMatchesForDate(query: PipelineQuery = {}): Promise<Mat
     const fromCache = api.didLastFixturesUseCache();
 
     if (visibleApiMatches.length > 0) {
-      return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: visibleApiMatches, source: fromCache ? "cached-api-football" : "api-football", rawFixtureCount: diagnostics?.rawFixtureCount ?? apiMatches.length, normalizedFixtureCount: diagnostics?.normalizedFixtureCount, queriedApiDateKeys: diagnostics?.queriedApiDateKeys, apiFixtureSamples: diagnostics?.fixtureSamples, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, fromCache });
+      return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: visibleApiMatches, source: fromCache ? "cached-api-football" : "api-football", rawFixtureCount: diagnostics?.rawFixtureCount ?? apiMatches.length, normalizedFixtureCount: diagnostics?.normalizedFixtureCount, queriedApiDateKeys: diagnostics?.queriedApiDateKeys, apiFixtureSamples: diagnostics?.fixtureSamples, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, fromCache, fallbackReason: diagnostics?.usedLeagueSpecificFixtures ? "Using league-specific API fixtures" : undefined });
     }
 
     const fallbackReason = getEmptyApiFallbackReason({
@@ -116,6 +118,7 @@ export async function loadMatchesForDate(query: PipelineQuery = {}): Promise<Mat
       featuredFixtureCount: apiMatches.filter(isFeaturedCompetitionMatch).length,
       quotaLimited: diagnostics?.quotaLimited ?? false,
       apiStatus: diagnostics?.apiStatus,
+      usedLeagueSpecificFixtures: diagnostics?.usedLeagueSpecificFixtures,
     });
     return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: demoMatches, source: "api-unavailable-fallback", rawFixtureCount: diagnostics?.rawFixtureCount ?? 0, normalizedFixtureCount: diagnostics?.normalizedFixtureCount, queriedApiDateKeys: diagnostics?.queriedApiDateKeys, apiFixtureSamples: diagnostics?.fixtureSamples, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, fallbackReason });
   } catch (error) {
@@ -136,6 +139,7 @@ function buildResult(input: {
   normalizedFixtureCount?: number;
   queriedApiDateKeys?: string[];
   apiFixtureSamples?: MatchDataStatusMetadata["apiFixtureSamples"];
+  apiQueryDiagnostics?: MatchDataStatusMetadata["apiQueryDiagnostics"];
   apiAttempted: boolean;
   apiStatus?: number;
   quotaLimited?: boolean;
@@ -165,6 +169,7 @@ function buildResult(input: {
     sidebarCompetitionCount: buildSidebarCompetitionCount(input.matches),
     queriedApiDateKeys: input.queriedApiDateKeys ?? [],
     apiFixtureSamples: input.apiFixtureSamples,
+    apiQueryDiagnostics: input.apiQueryDiagnostics,
     visibleFixtures: buildVisibleFixtureMetadata(input.matches),
   };
   return { matches: input.matches, source: input.source, metadata };

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMatchesByDateWithSource } from "@/data/repositories/matches.repository";
+import { FootballApiService } from "@/data/services/football-api.service";
+import { getMatchdayDataMode } from "@/data/services/data-mode";
 
 function parseDateParam(value: string | null): Date | undefined {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
@@ -10,6 +12,7 @@ export async function GET(request: NextRequest) {
   const date = parseDateParam(request.nextUrl.searchParams.get("date"));
   const timezone = request.nextUrl.searchParams.get("timezone") ?? undefined;
   const { matches, metadata } = await getMatchesByDateWithSource(date, timezone);
+  const apiQueryDiagnostics = getMatchdayDataMode() === "demo" || !process.env.FOOTBALL_API_KEY ? [] : await new FootballApiService().getFixtureQueryDiagnostics({ date, timezone });
 
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json({
@@ -30,6 +33,7 @@ export async function GET(request: NextRequest) {
       fallbackUsed: metadata.fallbackUsed,
       fallbackReason: metadata.fallbackReason,
       sourceLabel: metadata.sourceLabel,
+      apiQueryDiagnostics,
     });
   }
 
@@ -53,6 +57,7 @@ export async function GET(request: NextRequest) {
     fallbackReason: metadata.fallbackReason,
     sourceLabel: metadata.sourceLabel,
     apiFixtureSamples: metadata.apiFixtureSamples,
+    apiQueryDiagnostics,
     visibleFixtures: metadata.visibleFixtures,
     visibleMatches: matches.map((match) => ({
       id: match.id,
