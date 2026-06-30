@@ -9,7 +9,7 @@ function parseDateParam(value: string | null): Date | undefined {
 export async function GET(request: NextRequest) {
   const date = parseDateParam(request.nextUrl.searchParams.get("date"));
   const timezone = request.nextUrl.searchParams.get("timezone") ?? undefined;
-  const { metadata } = await getMatchesByDateWithSource(date, timezone);
+  const { matches, metadata } = await getMatchesByDateWithSource(date, timezone);
 
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json({
@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
       usedFallback: metadata.usedFallback,
       fallbackReason: metadata.fallbackReason,
       selectedDate: metadata.selectedDate,
+      visibleFixtures: metadata.visibleFixtures,
     });
   }
 
@@ -39,5 +40,20 @@ export async function GET(request: NextRequest) {
     fallbackReason: metadata.fallbackReason,
     resolvedDataSource: metadata.resolvedDataSource,
     sourceLabel: metadata.sourceLabel,
+    visibleFixtures: metadata.visibleFixtures,
+    visibleMatches: matches.map((match) => ({
+      id: match.id,
+      homeTeam: match.homeTeam.name,
+      awayTeam: match.awayTeam.name,
+      competition: match.competition,
+      stage: match.stage,
+      group: match.group,
+      apiFootball: {
+        leagueId: match.apiFootball?.leagueId,
+        leagueName: match.apiFootball?.leagueName,
+        round: match.apiFootball?.round,
+      },
+      standingsContextLabel: match.standingsContext?.label,
+    })),
   });
 }

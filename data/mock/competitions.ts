@@ -31,51 +31,29 @@ export type SidebarSection = {
   competitions: SidebarCompetition[];
 };
 
-const worldCupGroups: SidebarCompetition[] = Array.from({ length: 12 }, (_, index) => ({
-  name: `Group ${String.fromCharCode(65 + index)}`,
-  fallbackMatchCount: 0,
-}));
-
 export const sidebarSections: SidebarSection[] = [
   {
     title: "Today",
     competitions: [
-      { name: "Group J", fallbackMatchCount: 0 },
-      { name: "Group C", fallbackMatchCount: 0 },
-      { name: "Group K", fallbackMatchCount: 0 },
-      { name: "Group A", fallbackMatchCount: 0 },
-      { name: "Group B", fallbackMatchCount: 0 },
-      { name: "Group D", fallbackMatchCount: 0 },
-      { name: "Group E", fallbackMatchCount: 0 },
-      { name: "Group F", fallbackMatchCount: 0 },
-      { name: "Group G", fallbackMatchCount: 0 },
-      { name: "Group H", fallbackMatchCount: 0 },
-      { name: "Group I", fallbackMatchCount: 0 },
-      { name: "Group L", fallbackMatchCount: 0 },
+      { name: "FIFA World Cup", fallbackMatchCount: 0 },
     ],
   },
   {
     title: "Argentina",
     competitions: [
-      { name: "Group J", fallbackMatchCount: 0 },
+      { name: "FIFA World Cup", fallbackMatchCount: 0 },
       { name: "Liga Profesional Argentina", fallbackMatchCount: 0 },
     ],
   },
   {
     title: "World Cup 2026",
     competitions: [
-      { name: "FIFA World Cup 2026", fallbackMatchCount: 0 },
-      ...worldCupGroups,
-      { name: "Round of 32", fallbackMatchCount: 0 },
-      { name: "Round of 16", fallbackMatchCount: 0 },
-      { name: "Quarterfinals", fallbackMatchCount: 0 },
-      { name: "Semifinals", fallbackMatchCount: 0 },
-      { name: "Final", fallbackMatchCount: 0 },
+      { name: "FIFA World Cup", fallbackMatchCount: 0 },
     ],
   },
   {
     title: "International",
-    competitions: [{ name: "FIFA World Cup 2026", fallbackMatchCount: 0 }],
+    competitions: [{ name: "FIFA World Cup", fallbackMatchCount: 0 }],
   },
   {
     title: "Europe",
@@ -116,10 +94,6 @@ sidebarSections.forEach((section, sectionIndex) => {
 });
 
 export function getCompetitionSortPriority(competitionName: string) {
-  if (/^Group [A-Z]$/.test(competitionName)) {
-    return competitionPriority.get("FIFA World Cup") ?? 0;
-  }
-
   return competitionPriority.get(competitionName) ?? Number.MAX_SAFE_INTEGER;
 }
 
@@ -136,6 +110,20 @@ export function getFeaturedCompetitionNameForMatch(match: Pick<import("@/types/m
   }
 
   return (featuredCompetitionPriority as readonly string[]).includes(match.competition) ? match.competition : undefined;
+}
+
+export function getFeaturedCompetitionReasonForMatch(match: Pick<import("@/types/match").Match, "competition" | "apiFootball">) {
+  const leagueId = match.apiFootball?.leagueId;
+  if (typeof leagueId === "number") {
+    const byId = featuredCompetitionDefinitions.find((competition) => competition.apiFootballLeagueId === leagueId);
+    if (byId) return `included: API-Football league id ${leagueId} maps to ${byId.name}`;
+  }
+
+  if ((featuredCompetitionPriority as readonly string[]).includes(match.competition)) {
+    return `included: canonical competition ${match.competition} is featured`;
+  }
+
+  return `excluded: ${match.competition} is not a featured competition and API-Football league id is not verified`;
 }
 
 export function isFeaturedCompetitionMatch(match: Pick<import("@/types/match").Match, "competition" | "apiFootball">) {

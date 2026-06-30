@@ -4,7 +4,7 @@ import Image from "next/image";
 import { usePreferences } from "@/components/ui/AppPreferences";
 import { LocalizedKickoffTime } from "@/components/ui/LocalizedKickoff";
 import { translateTeamName } from "@/lib/i18n";
-import { getCompetitionSortPriority } from "@/data/mock/competitions";
+import { getCompetitionSortPriority, isFeaturedCompetitionMatch } from "@/data/mock/competitions";
 import type { Match } from "@/types/match";
 
 type MatchTickerProps = {
@@ -56,7 +56,7 @@ export function MatchTicker({ matches }: MatchTickerProps) {
   const { t } = usePreferences();
   const displayMatches = matches
     .filter((match) => (match.status === "live" || match.status === "scheduled")
-      && getCompetitionSortPriority(match.competition) !== Number.MAX_SAFE_INTEGER)
+      && isFeaturedCompetitionMatch(match))
     .sort((firstMatch, secondMatch) => {
       const priorityDifference = getCompetitionSortPriority(firstMatch.competition) - getCompetitionSortPriority(secondMatch.competition);
 

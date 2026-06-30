@@ -52,7 +52,7 @@ export async function getMatchDetailsById(id: string): Promise<MatchDetails | un
     events: getMatchEventsByMatchId(demoMatch.id),
     statistics: getMatchStatisticsByMatchId(demoMatch.id),
     lineup: getLineupsByMatchId(demoMatch.id),
-    standings: getStandingsByCompetition(demoMatch.competition),
+    standings: getStandingsByCompetition(demoMatch.group ?? demoMatch.apiFootball?.round ?? demoMatch.competition),
     source: "demo",
   };
 }

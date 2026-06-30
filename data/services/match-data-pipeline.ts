@@ -1,6 +1,6 @@
 import "server-only";
 
-import { featuredCompetitionPriority, isFeaturedCompetitionMatch } from "@/data/mock/competitions";
+import { featuredCompetitionPriority, getFeaturedCompetitionReasonForMatch, isFeaturedCompetitionMatch } from "@/data/mock/competitions";
 import { createMockMatches, formatMatchDate } from "@/data/mock/matches";
 import { getMatchesForSelectedLocalDate } from "@/lib/match-date";
 import { getMatchdayDataMode, type MatchdayDataMode } from "@/data/services/data-mode";
@@ -49,6 +49,21 @@ function classifyApiError(error: unknown): SafeApiError {
 
 function buildSidebarCompetitionCount(matches: Match[]) {
   return new Set(matches.map((match) => match.competition)).size + featuredCompetitionPriority.filter((competition) => !matches.some((match) => match.competition === competition)).length;
+}
+
+function buildVisibleFixtureMetadata(matches: Match[]) {
+  return matches.map((match) => ({
+    id: match.id,
+    homeTeam: match.homeTeam.name,
+    awayTeam: match.awayTeam.name,
+    competition: match.competition,
+    apiFootballLeagueId: match.apiFootball?.leagueId,
+    apiFootballLeagueName: match.apiFootball?.leagueName,
+    apiFootballRound: match.apiFootball?.round,
+    standingsContextLabel: match.standingsContext?.label,
+    isFeatured: isFeaturedCompetitionMatch(match),
+    featuredReason: getFeaturedCompetitionReasonForMatch(match),
+  }));
 }
 
 export async function loadMatchesForDate(query: PipelineQuery = {}): Promise<MatchDataPipelineResult> {
@@ -121,6 +136,7 @@ function buildResult(input: {
     featuredFixtureCount,
     finalVisibleCount: input.matches.length,
     sidebarCompetitionCount: buildSidebarCompetitionCount(input.matches),
+    visibleFixtures: buildVisibleFixtureMetadata(input.matches),
   };
   return { matches: input.matches, source: input.source, metadata };
 }

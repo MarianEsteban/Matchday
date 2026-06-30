@@ -302,7 +302,7 @@ export class FootballApiService {
     })) ?? groups[0];
     if (!group) return undefined;
     return {
-      competition: match.apiFootball?.round?.match(/Group [A-Z]/)?.[0] ?? match.competition,
+      competition: normalizeFixtureGroup(match.apiFootball?.round) ?? match.competition,
       rows: group.map((row) => {
         const team = asRecord(row.team);
         const all = asRecord(row.all);
@@ -427,11 +427,16 @@ function normalizeApiFootballFixture(
   const hasScore = typeof homeGoals === "number" && typeof awayGoals === "number";
   const venueParts = [fixture.fixture?.venue?.name, fixture.fixture?.venue?.city].filter(Boolean);
 
+  const stage = normalizeFixtureStage(fixture.league?.round);
+  const group = normalizeFixtureGroup(fixture.league?.round);
+
   return {
     id: `api-football-${fixtureId}`,
     homeTeam,
     awayTeam,
     competition: competition ?? fallbackCompetition,
+    ...(stage ? { stage } : {}),
+    ...(group ? { group } : {}),
     kickoffTime: startsAt.toLocaleTimeString("en-GB", {
       hour: "2-digit",
       minute: "2-digit",
@@ -451,6 +456,17 @@ function normalizeApiFootballFixture(
     },
     ...(hasScore ? { score: { home: homeGoals, away: awayGoals } } : {}),
   };
+}
+
+function normalizeFixtureStage(round: string | undefined): string | undefined {
+  const value = round?.trim();
+  return value || undefined;
+}
+
+function normalizeFixtureGroup(round: string | undefined): string | undefined {
+  const value = normalizeFixtureStage(round);
+  if (!value) return undefined;
+  return value.match(/(?:Group|Grupo)\s+[A-Z]/i)?.[0];
 }
 
 function normalizeCompetition(fixture: ApiFootballFixture): string | undefined {
