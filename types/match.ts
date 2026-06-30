@@ -15,6 +15,8 @@ export type Match = {
   homeTeam: Team;
   awayTeam: Team;
   competition: string;
+  stage?: string;
+  group?: string;
   kickoffTime: string;
   kickoffAt?: string;
   venue: string;
@@ -57,6 +59,20 @@ export type MatchDataStatusMetadata = {
   featuredFixtureCount: number;
   finalVisibleCount: number;
   sidebarCompetitionCount: number;
+  visibleFixtures?: MatchFixtureDebugMetadata[];
+};
+
+export type MatchFixtureDebugMetadata = {
+  id: string;
+  homeTeam: string;
+  awayTeam: string;
+  competition: string;
+  apiFootballLeagueId?: number;
+  apiFootballLeagueName?: string;
+  apiFootballRound?: string;
+  standingsContextLabel?: string;
+  isFeatured: boolean;
+  featuredReason: string;
 };
 
 export type MatchDetails = {
