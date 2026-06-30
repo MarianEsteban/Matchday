@@ -90,9 +90,11 @@ function DataSourceIndicator({ source }: { source: MatchListDataSource }) {
     ? t("apiFootballData")
     : source === "cached-api-football"
       ? t("cachedApiFootballData")
-      : source === "api-unavailable-fallback"
-        ? t("fallbackData")
-        : t("demoData");
+      : source === "quota-limited-fallback"
+        ? t("quotaFallbackData")
+        : source === "api-unavailable-fallback"
+          ? t("fallbackData")
+          : t("demoData");
 
   return (
     <div className="flex justify-end">

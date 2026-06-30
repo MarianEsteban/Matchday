@@ -74,6 +74,16 @@ MatchDay is a football match center web app designed to present match informatio
    http://localhost:3000
    ```
 
+
+### API-Football troubleshooting
+
+- Use `MATCHDAY_DATA_MODE=demo` for UI work without API calls. Demo mode never calls API-Football.
+- Use `MATCHDAY_DATA_MODE=auto` when you want real API data with safe fallback to cached API-Football data or demo data.
+- Keep `FOOTBALL_API_KEY` server-only. Do not use `NEXT_PUBLIC_` and do not commit real keys.
+- After changing `.env.local`, restart `npm run dev` so the server reads the updated variables.
+- After changing Vercel environment variables, redeploy the project.
+- In development, MatchDay logs safe diagnostics for the active mode, key presence, selected date, timezone, queried API dates, API status, quota detection, fixture counts, final visible count, and fallback source. Keys are never printed.
+
 ### Deployment
 
 MatchDay is intended to be deployed on Vercel. After connecting the GitHub repository to Vercel, deployments can be triggered automatically from the selected production branch.
@@ -170,6 +180,15 @@ MatchDay es una aplicación web de centro de partidos de fútbol diseñada para 
    ```text
    http://localhost:3000
    ```
+
+### Diagnóstico de API-Football
+
+- Usá `MATCHDAY_DATA_MODE=demo` para trabajar en la UI sin llamadas a la API. El modo demo nunca llama a API-Football.
+- Usá `MATCHDAY_DATA_MODE=auto` cuando querés datos reales con respaldo seguro a datos API-Football en caché o datos demo.
+- Mantené `FOOTBALL_API_KEY` solo del lado del servidor. No uses `NEXT_PUBLIC_` y no commitees claves reales.
+- Después de cambiar `.env.local`, reiniciá `npm run dev` para que el servidor lea las variables nuevas.
+- Después de cambiar variables de entorno en Vercel, redeployá el proyecto.
+- En desarrollo, MatchDay registra diagnósticos seguros del modo activo, presencia de clave, fecha seleccionada, zona horaria, fechas consultadas en la API, estado de respuesta, cuota/rate-limit, conteos de fixtures, cantidad visible final y fuente de fallback. Las claves nunca se imprimen.
 
 ### Despliegue
 

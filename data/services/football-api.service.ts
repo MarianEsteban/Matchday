@@ -71,10 +71,31 @@ class ApiFootballRequestError extends Error {
   }
 }
 
-const globalQuotaState = globalThis as typeof globalThis & { __matchdayApiFootballQuotaExhausted?: boolean };
+const globalQuotaState = globalThis as typeof globalThis & { __matchdayApiFootballQuotaExhausted?: boolean; __matchdayApiFootballQuotaDate?: string };
 
 export function isApiFootballQuotaError(error: unknown): boolean {
   return error instanceof ApiFootballQuotaError;
+}
+
+export function isApiFootballQuotaExhausted(): boolean {
+  resetQuotaStateIfStale();
+  return Boolean(globalQuotaState.__matchdayApiFootballQuotaExhausted);
+}
+
+function getTodayQuotaKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function resetQuotaStateIfStale() {
+  if (globalQuotaState.__matchdayApiFootballQuotaDate && globalQuotaState.__matchdayApiFootballQuotaDate !== getTodayQuotaKey()) {
+    globalQuotaState.__matchdayApiFootballQuotaExhausted = false;
+    globalQuotaState.__matchdayApiFootballQuotaDate = undefined;
+  }
+}
+
+function markQuotaExhausted() {
+  globalQuotaState.__matchdayApiFootballQuotaExhausted = true;
+  globalQuotaState.__matchdayApiFootballQuotaDate = getTodayQuotaKey();
 }
 
 function getFixtureRevalidateSeconds(date: Date): number {
@@ -143,17 +164,29 @@ export class FootballApiService {
   async getFixtures(query: FootballApiFixturesQuery = {}): Promise<Match[]> {
     const date = formatMatchDate(query.date ?? new Date());
     const timezone = query.timezone ? `&timezone=${encodeURIComponent(query.timezone)}` : "";
-    const apiDateKeys = getApiDateKeysForSelectedDate(date);
+    const apiDateKeys = getApiDateKeysForSelectedDate(date, query.timezone);
     const revalidate = getFixtureRevalidateSeconds(query.date ?? new Date());
     const mode = getMatchdayDataMode();
     this.lastFixturesFromCache = false;
-    const payloads = await Promise.all(apiDateKeys.map(async (apiDateKey) => {
+    logRequestDiagnostics({
+      mode,
+      hasApiKey: Boolean(this.apiKey),
+      selectedDateKey: date,
+      timezone: query.timezone ?? "UTC",
+      apiDateKeys,
+      quotaLimited: isApiFootballQuotaExhausted(),
+    });
+
+    const settledPayloads = await Promise.allSettled(apiDateKeys.map(async (apiDateKey) => {
       const path = `/fixtures?date=${apiDateKey}${timezone}`;
       const cacheKey = `api-football:${mode}:fixtures:${apiDateKey}:tz:${query.timezone ?? "UTC"}`;
       const { payload, fromCache } = await this.fetchCachedApi<ApiFootballFixturesResponse>(path, revalidate, cacheKey);
       if (fromCache) this.lastFixturesFromCache = true;
       return { apiDateKey, fixtures: payload.response ?? [] };
     }));
+    const payloads = settledPayloads.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+    const failedCount = settledPayloads.length - payloads.length;
+    if (payloads.length === 0 && failedCount > 0) throw settledPayloads.find((result) => result.status === "rejected")?.reason ?? new Error("API-Football fixtures failed");
     const rawFixtures = dedupeApiFixtures(payloads.flatMap((payload) => payload.fixtures));
     const rawMatches = rawFixtures
       .map((fixture) => normalizeApiFootballFixture(fixture, { onlySupportedCompetitions: false, timezone: query.timezone }))
@@ -170,6 +203,9 @@ export class FootballApiService {
       rawCount: rawFixtures.length,
       supportedCount: curatedMatches.length,
       localDateCount: selectApiMatchesForDate(curatedMatches, rawMatches, { selectedDateKey: date, timezone: query.timezone }).length,
+      failedRequestCount: failedCount,
+      fromCache: this.lastFixturesFromCache,
+      quotaLimited: isApiFootballQuotaExhausted(),
     });
 
     const selectedMatches = selectApiMatchesForDate(curatedMatches, rawMatches, { selectedDateKey: date, timezone: query.timezone });
@@ -294,7 +330,7 @@ export class FootballApiService {
     const cached = getServerCacheValue<T>(cacheKey);
     if (cached) return { payload: cached, fromCache: true };
 
-    if (globalQuotaState.__matchdayApiFootballQuotaExhausted) {
+    if (isApiFootballQuotaExhausted()) {
       const stale = getServerCacheValue<T>(cacheKey, { allowStale: true });
       if (stale) return { payload: stale, fromCache: true };
       throw new ApiFootballQuotaError("API-Football quota is exhausted for this runtime session");
@@ -320,14 +356,17 @@ export class FootballApiService {
       next: { revalidate },
     });
     if (response.status === 429) {
-      globalQuotaState.__matchdayApiFootballQuotaExhausted = true;
+      markQuotaExhausted();
+      logApiStatusDiagnostics(response.status, true);
       console.warn("API-Football quota/rate limit reached. Serving cache or demo fallback for this runtime session.");
       throw new ApiFootballQuotaError("API-Football quota/rate limit reached");
     }
+    logApiStatusDiagnostics(response.status, false);
     if (!response.ok) throw new ApiFootballRequestError(`Football API returned ${response.status}`, response.status);
     const payload = await response.json() as T;
     if (hasQuotaErrorPayload(payload)) {
-      globalQuotaState.__matchdayApiFootballQuotaExhausted = true;
+      markQuotaExhausted();
+      logApiStatusDiagnostics(response.status, true);
       console.warn("API-Football quota/rate limit payload detected. Serving cache or demo fallback for this runtime session.");
       throw new ApiFootballQuotaError("API-Football quota/rate limit payload detected");
     }
@@ -492,9 +531,10 @@ function getMatchTime(match: Match): number {
   return Number.isNaN(time) ? 0 : time;
 }
 
-function getApiDateKeysForSelectedDate(selectedDateKey: string): string[] {
+function getApiDateKeysForSelectedDate(selectedDateKey: string, timezone?: string): string[] {
   const selectedDate = new Date(`${selectedDateKey}T00:00:00Z`);
-  return [-1, 0, 1].map((daysToShift) => {
+  const offsets = timezone ? [-1, 0, 1] : [0];
+  return offsets.map((daysToShift) => {
     const date = new Date(selectedDate);
     date.setUTCDate(date.getUTCDate() + daysToShift);
     return formatMatchDate(date);
@@ -510,7 +550,7 @@ function dedupeApiFixtures(fixtures: ApiFootballFixture[]): ApiFootballFixture[]
   return [...fixturesById.values()];
 }
 
-function logFixtureDiagnostics(details: { apiDateKeys: string[]; selectedDateKey: string; timezone: string; rawFixtures: ApiFootballFixture[]; rawCount: number; supportedCount: number; localDateCount: number }) {
+function logFixtureDiagnostics(details: { apiDateKeys: string[]; selectedDateKey: string; timezone: string; rawFixtures: ApiFootballFixture[]; rawCount: number; supportedCount: number; localDateCount: number; failedRequestCount: number; fromCache: boolean; quotaLimited: boolean }) {
   if (process.env.NODE_ENV === "production") return;
   const excludedFixtures = details.rawFixtures
     .filter((fixture) => !getSupportedCompetitionMatch(fixture))
@@ -543,7 +583,10 @@ function logFixtureDiagnostics(details: { apiDateKeys: string[]; selectedDateKey
     timezone: details.timezone,
     rawFixtures: details.rawCount,
     afterSupportedCompetitionFiltering: details.supportedCount,
-    afterLocalDateFiltering: details.localDateCount,
+    finalVisibleMatches: details.localDateCount,
+    failedRequestCount: details.failedRequestCount,
+    fallbackSource: details.fromCache ? "cached-api" : "api",
+    quotaLimited: details.quotaLimited,
     excludedFixtures,
     worldCupFixtures,
   });
@@ -665,4 +708,21 @@ function hasQuotaErrorPayload(payload: unknown): boolean {
   const errors = (payload as { errors?: unknown })?.errors;
   const text = typeof errors === "string" ? errors : JSON.stringify(errors ?? "");
   return /quota|rate|limit|request/i.test(text);
+}
+
+function logRequestDiagnostics(details: { mode: string; hasApiKey: boolean; selectedDateKey: string; timezone: string; apiDateKeys: string[]; quotaLimited: boolean }) {
+  if (process.env.NODE_ENV === "production") return;
+  console.info("[matchday data diagnostics]", {
+    activeDataMode: details.mode,
+    hasFootballApiKey: details.hasApiKey,
+    selectedDateKey: details.selectedDateKey,
+    timezone: details.timezone,
+    queriedApiDateKeys: details.apiDateKeys,
+    quotaLimited: details.quotaLimited,
+  });
+}
+
+function logApiStatusDiagnostics(status: number, quotaLimited: boolean) {
+  if (process.env.NODE_ENV === "production") return;
+  console.info("[api-football response diagnostics]", { status, quotaLimited });
 }
