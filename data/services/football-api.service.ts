@@ -25,6 +25,7 @@ type SupportedApiCompetition = {
 type FixtureSelectionOptions = {
   selectedDateKey: string;
   timezone?: string;
+  fresh?: boolean;
 };
 
 export const supportedApiFootballCompetitions = featuredCompetitionDefinitions.map((competition) => ({
@@ -65,11 +66,16 @@ type FeaturedFixtureQueryDefinition = {
   dateKey?: string;
 };
 
+type FetchCacheMode = "default" | "fresh";
+
 export type ApiFootballQueryDiagnostic = {
   label: string;
   apiStatus?: number;
   responseCount: number;
   samples: ApiFootballFixtureDebugSample[];
+  requestedUrl: string;
+  fromCache: boolean;
+  cacheSource: "fresh-api-request" | "next-cache-or-origin" | "internal-server-cache" | "stale-cache";
 };
 
 class ApiFootballQuotaError extends Error {
@@ -165,6 +171,7 @@ type ApiFootballTeam = {
 export type FootballApiFixturesQuery = {
   date?: Date;
   timezone?: string;
+  fresh?: boolean;
 };
 
 export type FootballApiFixturesDiagnostics = {
@@ -178,11 +185,14 @@ export type FootballApiFixturesDiagnostics = {
   fixtureSamples: ApiFootballFixtureDebugSample[];
   queryDiagnostics?: ApiFootballQueryDiagnostic[];
   usedLeagueSpecificFixtures?: boolean;
+  requestedApiUrls: string[];
+  responseFresh: boolean;
+  cacheSource: "fresh-api-request" | "next-cache-or-origin" | "internal-server-cache" | "stale-cache" | "mixed-cache" | "demo-fallback";
 };
 
 export class FootballApiService {
   private lastFixturesFromCache = false;
-  private lastFixturesDiagnostics: FootballApiFixturesDiagnostics = { apiAttempted: false, quotaLimited: false, fromCache: false, rawFixtureCount: 0, normalizedFixtureCount: 0, queriedApiDateKeys: [], fixtureSamples: [] };
+  private lastFixturesDiagnostics: FootballApiFixturesDiagnostics = { apiAttempted: false, quotaLimited: false, fromCache: false, rawFixtureCount: 0, normalizedFixtureCount: 0, queriedApiDateKeys: [], fixtureSamples: [], requestedApiUrls: [], responseFresh: false, cacheSource: "demo-fallback" };
 
   constructor(private readonly apiKey = process.env.FOOTBALL_API_KEY) {}
 
@@ -199,9 +209,10 @@ export class FootballApiService {
     const timezone = query.timezone ? `&timezone=${encodeURIComponent(query.timezone)}` : "";
     const apiDateKeys = getApiDateKeysForSelectedDate(date, query.timezone);
     const revalidate = getFixtureRevalidateSeconds(query.date ?? new Date());
+    const cacheMode: FetchCacheMode = query.fresh ? "fresh" : "default";
     const mode = getMatchdayDataMode();
     this.lastFixturesFromCache = false;
-    this.lastFixturesDiagnostics = { apiAttempted: true, quotaLimited: isApiFootballQuotaExhausted(), fromCache: false, rawFixtureCount: 0, normalizedFixtureCount: 0, queriedApiDateKeys: apiDateKeys, fixtureSamples: [] };
+    this.lastFixturesDiagnostics = { apiAttempted: true, quotaLimited: isApiFootballQuotaExhausted(), fromCache: false, rawFixtureCount: 0, normalizedFixtureCount: 0, queriedApiDateKeys: apiDateKeys, fixtureSamples: [], requestedApiUrls: [], responseFresh: query.fresh ?? false, cacheSource: query.fresh ? "fresh-api-request" : "next-cache-or-origin" };
     logRequestDiagnostics({
       mode,
       hasApiKey: Boolean(this.apiKey),
@@ -216,12 +227,12 @@ export class FootballApiService {
       ...apiDateKeys.map(async (apiDateKey) => {
         const path = `/fixtures?date=${apiDateKey}${timezone}`;
         const cacheKey = `api-football:${mode}:fixtures:${apiDateKey}:tz:${query.timezone ?? "UTC"}`;
-        const { payload, fromCache } = await this.fetchCachedApi<ApiFootballFixturesResponse>(path, revalidate, cacheKey);
+        const { payload, fromCache } = await this.fetchCachedApi<ApiFootballFixturesResponse>(path, revalidate, cacheKey, { mode: cacheMode });
         if (fromCache) this.lastFixturesFromCache = true;
         return { apiDateKey, fixtures: payload.response ?? [], source: "date" as const };
       }),
       ...featuredQueries.map(async (definition) => {
-        const { payload, fromCache } = await this.fetchCachedApi<ApiFootballFixturesResponse>(definition.path, revalidate, `api-football:${mode}:featured-fixtures:${definition.path}:tz:${query.timezone ?? "UTC"}`);
+        const { payload, fromCache } = await this.fetchCachedApi<ApiFootballFixturesResponse>(definition.path, revalidate, `api-football:${mode}:featured-fixtures:${definition.path}:tz:${query.timezone ?? "UTC"}`, { mode: cacheMode });
         if (fromCache) this.lastFixturesFromCache = true;
         return { apiDateKey: definition.dateKey ?? date, fixtures: payload.response ?? [], source: "featured" as const };
       }),
@@ -262,6 +273,9 @@ export class FootballApiService {
       queriedApiDateKeys: apiDateKeys,
       fixtureSamples: buildFixtureDebugSamples(rawFixtures, { selectedDateKey: date, timezone: query.timezone }).slice(0, 20),
       usedLeagueSpecificFixtures: dateFixtureCount === 0 && featuredFixtureCount > 0,
+      requestedApiUrls: [...apiDateKeys.map((apiDateKey) => redactApiUrl(`/fixtures?date=${apiDateKey}${timezone}`)), ...featuredQueries.map((definition) => redactApiUrl(definition.path))],
+      responseFresh: query.fresh ?? false,
+      cacheSource: getAggregateCacheSource(query.fresh ?? false, this.lastFixturesFromCache),
     };
     return this.withStandingsContexts(selectedMatches);
   }
@@ -280,13 +294,16 @@ export class FootballApiService {
     ]).concat([{ label: `/fixtures?league=1&season=${worldCupSeason}`, path: `/fixtures?league=1&season=${worldCupSeason}${timezone}` }]);
 
     const results = await Promise.allSettled(definitions.map(async (definition) => {
-      const { payload } = await this.fetchCachedApi<ApiFootballFixturesResponse>(definition.path, 600, `api-football:debug:${definition.path}:tz:${query.timezone ?? "UTC"}`);
+      const { payload, fromCache, cacheSource } = await this.fetchCachedApi<ApiFootballFixturesResponse>(definition.path, 600, `api-football:debug:${definition.path}:tz:${query.timezone ?? "UTC"}`, { mode: query.fresh ? "fresh" : "default" });
       const fixtures = payload.response ?? [];
       return {
         label: definition.label,
         apiStatus: this.lastFixturesDiagnostics.apiStatus,
         responseCount: fixtures.length,
         samples: buildFixtureDebugSamples(fixtures, { selectedDateKey: date, timezone: query.timezone }).slice(0, 5),
+        requestedUrl: redactApiUrl(definition.path),
+        fromCache,
+        cacheSource,
       };
     }));
 
@@ -295,6 +312,9 @@ export class FootballApiService {
       apiStatus: getApiStatusFromError(result.reason),
       responseCount: 0,
       samples: [],
+      requestedUrl: redactApiUrl(definitions[index]?.path ?? "unknown"),
+      fromCache: false,
+      cacheSource: query.fresh ? "fresh-api-request" : "next-cache-or-origin",
     });
   }
 
@@ -412,34 +432,37 @@ export class FootballApiService {
       .filter((match): match is Match => Boolean(match));
   }
 
-  private async fetchCachedApi<T>(path: string, revalidate: number, cacheKey: string): Promise<{ payload: T; fromCache: boolean }> {
-    const cached = getServerCacheValue<T>(cacheKey);
-    if (cached) return { payload: cached, fromCache: true };
+  private async fetchCachedApi<T>(path: string, revalidate: number, cacheKey: string, options: { mode?: FetchCacheMode } = {}): Promise<{ payload: T; fromCache: boolean; cacheSource: "fresh-api-request" | "next-cache-or-origin" | "internal-server-cache" | "stale-cache" }> {
+    if (options.mode !== "fresh") {
+      const cached = getServerCacheValue<T>(cacheKey);
+      if (cached) return { payload: cached, fromCache: true, cacheSource: "internal-server-cache" };
+    }
 
     if (isApiFootballQuotaExhausted()) {
       const stale = getServerCacheValue<T>(cacheKey, { allowStale: true });
-      if (stale) return { payload: stale, fromCache: true };
+      if (stale) return { payload: stale, fromCache: true, cacheSource: "stale-cache" };
       throw new ApiFootballQuotaError("API-Football quota is exhausted for this runtime session");
     }
 
-    return getOrSetInFlight(`${cacheKey}:load`, async () => {
+    return getOrSetInFlight(`${cacheKey}:load:${options.mode ?? "default"}`, async () => {
       try {
-        const payload = await this.fetchApi<T>(path, revalidate);
-        return { payload: setServerCacheValue(cacheKey, payload, revalidate), fromCache: false };
+        const payload = await this.fetchApi<T>(path, revalidate, options.mode);
+        const ttl = getPayloadCacheTtlSeconds(payload, revalidate);
+        return { payload: setServerCacheValue(cacheKey, payload, ttl), fromCache: false, cacheSource: options.mode === "fresh" ? "fresh-api-request" : "next-cache-or-origin" };
       } catch (error) {
         const stale = getServerCacheValue<T>(cacheKey, { allowStale: true });
-        if (stale) return { payload: stale, fromCache: true };
+        if (stale) return { payload: stale, fromCache: true, cacheSource: "stale-cache" };
         throw error;
       }
     });
   }
 
-  private async fetchApi<T>(path: string, revalidate: number): Promise<T> {
+  private async fetchApi<T>(path: string, revalidate: number, mode: FetchCacheMode = "default"): Promise<T> {
     if (!this.apiKey) throw new Error("Football API key is not configured");
     const response = await fetch(`${API_FOOTBALL_BASE_URL}${path}`, {
-      cache: "force-cache",
+      cache: mode === "fresh" ? "no-store" : "force-cache",
       headers: { "x-apisports-key": this.apiKey },
-      next: { revalidate },
+      ...(mode === "fresh" ? {} : { next: { revalidate } }),
     });
     if (response.status === 429) {
       markQuotaExhausted();
@@ -461,6 +484,21 @@ export class FootballApiService {
     }
     return payload;
   }
+}
+
+function getPayloadCacheTtlSeconds(payload: unknown, defaultTtlSeconds: number): number {
+  const response = (payload as { response?: unknown })?.response;
+  if (Array.isArray(response) && response.length === 0) return Math.min(defaultTtlSeconds, 60);
+  return defaultTtlSeconds;
+}
+
+function redactApiUrl(path: string): string {
+  return `${API_FOOTBALL_BASE_URL}${path}`;
+}
+
+function getAggregateCacheSource(fresh: boolean, fromCache: boolean): FootballApiFixturesDiagnostics["cacheSource"] {
+  if (fresh) return "fresh-api-request";
+  return fromCache ? "mixed-cache" : "next-cache-or-origin";
 }
 
 function normalizeApiFootballFixture(

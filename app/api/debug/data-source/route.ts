@@ -11,8 +11,10 @@ function parseDateParam(value: string | null): Date | undefined {
 export async function GET(request: NextRequest) {
   const date = parseDateParam(request.nextUrl.searchParams.get("date"));
   const timezone = request.nextUrl.searchParams.get("timezone") ?? undefined;
-  const { matches, metadata } = await getMatchesByDateWithSource(date, timezone);
-  const apiQueryDiagnostics = getMatchdayDataMode() === "demo" || !process.env.FOOTBALL_API_KEY ? [] : await new FootballApiService().getFixtureQueryDiagnostics({ date, timezone });
+  const fresh = request.nextUrl.searchParams.get("fresh") === "1";
+  const { loadMatchesForDate } = await import("@/data/services/match-data-pipeline");
+  const { matches, metadata } = fresh ? await loadMatchesForDate({ date, timezone, fresh }) : await getMatchesByDateWithSource(date, timezone);
+  const apiQueryDiagnostics = getMatchdayDataMode() === "demo" || !process.env.FOOTBALL_API_KEY ? [] : await new FootballApiService().getFixtureQueryDiagnostics({ date, timezone, fresh });
 
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json({
@@ -25,6 +27,10 @@ export async function GET(request: NextRequest) {
       selectedDate: metadata.selectedDate,
       timezone: metadata.timezone,
       queriedApiDateKeys: metadata.queriedApiDateKeys,
+      requestedApiUrls: metadata.requestedApiUrls,
+      fromCache: metadata.fromCache,
+      responseFresh: metadata.responseFresh,
+      cacheSource: metadata.cacheSource,
       rawFixtureCount: metadata.rawFixtureCount,
       normalizedFixtureCount: metadata.normalizedFixtureCount,
       featuredFixtureCount: metadata.featuredFixtureCount,
@@ -47,7 +53,10 @@ export async function GET(request: NextRequest) {
     selectedDate: metadata.selectedDate,
     timezone: metadata.timezone,
     queriedApiDateKeys: metadata.queriedApiDateKeys,
+    requestedApiUrls: metadata.requestedApiUrls,
     fromCache: metadata.fromCache,
+    responseFresh: metadata.responseFresh,
+    cacheSource: metadata.cacheSource,
     rawFixtureCount: metadata.rawFixtureCount,
     normalizedFixtureCount: metadata.normalizedFixtureCount,
     featuredFixtureCount: metadata.featuredFixtureCount,
