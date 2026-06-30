@@ -5,7 +5,7 @@ import { formatMatchDate } from "@/data/mock/matches";
 import { formatDateKey } from "@/lib/match-date";
 import { getMatchdayDataMode } from "@/data/services/data-mode";
 import { getOrSetInFlight, getServerCacheValue, setServerCacheValue } from "@/data/services/server-cache";
-import type { Match, MatchDetails, MatchStatus, Team } from "@/types/match";
+import type { ApiFootballFixtureDebugSample, Match, MatchDetails, MatchStatus, Team } from "@/types/match";
 import type { MatchEvent } from "@/types/match-event";
 import type { MatchStatistic } from "@/types/match-statistic";
 import type { MatchLineup } from "@/types/lineup";
@@ -159,11 +159,13 @@ export type FootballApiFixturesDiagnostics = {
   fromCache: boolean;
   rawFixtureCount: number;
   normalizedFixtureCount: number;
+  queriedApiDateKeys: string[];
+  fixtureSamples: ApiFootballFixtureDebugSample[];
 };
 
 export class FootballApiService {
   private lastFixturesFromCache = false;
-  private lastFixturesDiagnostics: FootballApiFixturesDiagnostics = { apiAttempted: false, quotaLimited: false, fromCache: false, rawFixtureCount: 0, normalizedFixtureCount: 0 };
+  private lastFixturesDiagnostics: FootballApiFixturesDiagnostics = { apiAttempted: false, quotaLimited: false, fromCache: false, rawFixtureCount: 0, normalizedFixtureCount: 0, queriedApiDateKeys: [], fixtureSamples: [] };
 
   constructor(private readonly apiKey = process.env.FOOTBALL_API_KEY) {}
 
@@ -182,7 +184,7 @@ export class FootballApiService {
     const revalidate = getFixtureRevalidateSeconds(query.date ?? new Date());
     const mode = getMatchdayDataMode();
     this.lastFixturesFromCache = false;
-    this.lastFixturesDiagnostics = { apiAttempted: true, quotaLimited: isApiFootballQuotaExhausted(), fromCache: false, rawFixtureCount: 0, normalizedFixtureCount: 0 };
+    this.lastFixturesDiagnostics = { apiAttempted: true, quotaLimited: isApiFootballQuotaExhausted(), fromCache: false, rawFixtureCount: 0, normalizedFixtureCount: 0, queriedApiDateKeys: apiDateKeys, fixtureSamples: [] };
     logRequestDiagnostics({
       mode,
       hasApiKey: Boolean(this.apiKey),
@@ -229,7 +231,9 @@ export class FootballApiService {
       quotaLimited: isApiFootballQuotaExhausted(),
       fromCache: this.lastFixturesFromCache,
       rawFixtureCount: rawFixtures.length,
-      normalizedFixtureCount: selectedMatches.length,
+      normalizedFixtureCount: rawMatches.length,
+      queriedApiDateKeys: apiDateKeys,
+      fixtureSamples: buildFixtureDebugSamples(rawFixtures, { selectedDateKey: date, timezone: query.timezone }).slice(0, 20),
     };
     return this.withStandingsContexts(selectedMatches);
   }
@@ -642,6 +646,37 @@ function getFixtureExclusionReason(fixture: ApiFootballFixture): string {
   if (aliasMatches.length === 0) return "league name is not a featured competition alias";
   if (isExplicitWorldCupLeagueName(leagueName) && !hasNationalTeams(fixture)) return "World Cup name matched but teams are not verified national teams";
   return "league name matched an alias but country did not match expected featured country";
+}
+
+function buildFixtureDebugSamples(
+  fixtures: ApiFootballFixture[],
+  options: FixtureSelectionOptions,
+): ApiFootballFixtureDebugSample[] {
+  return fixtures.map((fixture) => {
+    const startsAt = fixture.fixture?.date ? new Date(fixture.fixture.date) : undefined;
+    const normalizedCompetition = normalizeCompetition(fixture);
+    const isFeatured = Boolean(normalizedCompetition);
+    const localDate = startsAt && !Number.isNaN(startsAt.getTime()) ? formatDateKey(startsAt, options.timezone) : undefined;
+    const exclusionReasons = [
+      !isFeatured ? getFixtureExclusionReason(fixture) : undefined,
+      localDate && localDate !== options.selectedDateKey ? `local date ${localDate} did not match selected date ${options.selectedDateKey}` : undefined,
+    ].filter((reason): reason is string => Boolean(reason));
+
+    return {
+      fixtureId: fixture.fixture?.id,
+      kickoffDate: fixture.fixture?.date,
+      localDate,
+      leagueId: fixture.league?.id,
+      leagueName: fixture.league?.name,
+      leagueCountry: fixture.league?.country,
+      round: fixture.league?.round,
+      homeTeam: fixture.teams?.home?.name,
+      awayTeam: fixture.teams?.away?.name,
+      normalizedCompetition,
+      isFeatured,
+      ...(exclusionReasons.length > 0 ? { exclusionReason: exclusionReasons.join("; ") } : {}),
+    };
+  });
 }
 
 function normalizeTeam(team: ApiFootballTeam | undefined): Team | undefined {

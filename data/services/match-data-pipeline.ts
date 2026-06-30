@@ -66,6 +66,22 @@ function buildVisibleFixtureMetadata(matches: Match[]) {
   }));
 }
 
+function getEmptyApiFallbackReason(details: {
+  rawFixtureCount: number;
+  normalizedFixtureCount: number;
+  localFixtureCount: number;
+  featuredFixtureCount: number;
+  quotaLimited: boolean;
+  apiStatus?: number;
+}) {
+  if (details.quotaLimited) return "API quota limited, showing demo fallback";
+  if (details.apiStatus && details.apiStatus >= 400) return "API request failed, showing demo fallback";
+  if (details.rawFixtureCount === 0) return "API returned zero fixtures, showing demo fallback";
+  if (details.normalizedFixtureCount === 0 || details.localFixtureCount === 0) return "API returned fixtures but none matched selected local date, showing demo fallback";
+  if (details.featuredFixtureCount === 0) return "API returned fixtures but none were featured, showing demo fallback";
+  return "API returned fixtures but none were visible, showing demo fallback";
+}
+
 export async function loadMatchesForDate(query: PipelineQuery = {}): Promise<MatchDataPipelineResult> {
   const requestedDataMode = getMatchdayDataMode();
   const selectedDate = formatMatchDate(query.date ?? new Date());
@@ -90,11 +106,18 @@ export async function loadMatchesForDate(query: PipelineQuery = {}): Promise<Mat
     const fromCache = api.didLastFixturesUseCache();
 
     if (visibleApiMatches.length > 0) {
-      return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: visibleApiMatches, source: fromCache ? "cached-api-football" : "api-football", rawFixtureCount: diagnostics?.rawFixtureCount ?? apiMatches.length, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, fromCache });
+      return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: visibleApiMatches, source: fromCache ? "cached-api-football" : "api-football", rawFixtureCount: diagnostics?.rawFixtureCount ?? apiMatches.length, normalizedFixtureCount: diagnostics?.normalizedFixtureCount, queriedApiDateKeys: diagnostics?.queriedApiDateKeys, apiFixtureSamples: diagnostics?.fixtureSamples, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, fromCache });
     }
 
-    const fallbackReason = "API-Football returned no visible matches for the selected date, showing demo fallback";
-    return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: demoMatches, source: "api-unavailable-fallback", rawFixtureCount: diagnostics?.rawFixtureCount ?? 0, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, fallbackReason });
+    const fallbackReason = getEmptyApiFallbackReason({
+      rawFixtureCount: diagnostics?.rawFixtureCount ?? 0,
+      normalizedFixtureCount: diagnostics?.normalizedFixtureCount ?? 0,
+      localFixtureCount: apiMatches.length,
+      featuredFixtureCount: apiMatches.filter(isFeaturedCompetitionMatch).length,
+      quotaLimited: diagnostics?.quotaLimited ?? false,
+      apiStatus: diagnostics?.apiStatus,
+    });
+    return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: demoMatches, source: "api-unavailable-fallback", rawFixtureCount: diagnostics?.rawFixtureCount ?? 0, normalizedFixtureCount: diagnostics?.normalizedFixtureCount, queriedApiDateKeys: diagnostics?.queriedApiDateKeys, apiFixtureSamples: diagnostics?.fixtureSamples, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, fallbackReason });
   } catch (error) {
     const safeError = classifyApiError(error);
     if (process.env.NODE_ENV !== "production") console.warn("[matchday data pipeline]", { selectedDate, timezone, requestedDataMode, apiKeyPresent, ...safeError });
@@ -110,6 +133,9 @@ function buildResult(input: {
   matches: Match[];
   source: MatchListDataSource;
   rawFixtureCount: number;
+  normalizedFixtureCount?: number;
+  queriedApiDateKeys?: string[];
+  apiFixtureSamples?: MatchDataStatusMetadata["apiFixtureSamples"];
   apiAttempted: boolean;
   apiStatus?: number;
   quotaLimited?: boolean;
@@ -123,6 +149,7 @@ function buildResult(input: {
     resolvedDataSource: input.source,
     sourceLabel: sourceLabel(input.source),
     usedFallback,
+    fallbackUsed: usedFallback,
     fallbackReason: input.fallbackReason,
     apiKeyPresent: input.apiKeyPresent,
     apiAttempted: input.apiAttempted,
@@ -132,10 +159,12 @@ function buildResult(input: {
     selectedDate: input.selectedDate,
     timezone: input.timezone,
     rawFixtureCount: input.rawFixtureCount,
-    normalizedFixtureCount: input.matches.length,
+    normalizedFixtureCount: input.normalizedFixtureCount ?? input.matches.length,
     featuredFixtureCount,
     finalVisibleCount: input.matches.length,
     sidebarCompetitionCount: buildSidebarCompetitionCount(input.matches),
+    queriedApiDateKeys: input.queriedApiDateKeys ?? [],
+    apiFixtureSamples: input.apiFixtureSamples,
     visibleFixtures: buildVisibleFixtureMetadata(input.matches),
   };
   return { matches: input.matches, source: input.source, metadata };
