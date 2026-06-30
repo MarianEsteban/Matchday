@@ -53,6 +53,9 @@ export type MatchDataStatusMetadata = {
   apiStatus?: number;
   quotaLimited: boolean;
   fromCache: boolean;
+  requestedApiUrls: string[];
+  responseFresh: boolean;
+  cacheSource: "fresh-api-request" | "next-cache-or-origin" | "internal-server-cache" | "stale-cache" | "mixed-cache" | "demo-fallback";
   selectedDate: string;
   timezone: string;
   rawFixtureCount: number;
@@ -87,6 +90,9 @@ export type ApiFootballQueryDiagnostic = {
   apiStatus?: number;
   responseCount: number;
   samples: ApiFootballFixtureDebugSample[];
+  requestedUrl: string;
+  fromCache: boolean;
+  cacheSource: "fresh-api-request" | "next-cache-or-origin" | "internal-server-cache" | "stale-cache";
 };
 
 export type MatchFixtureDebugMetadata = {

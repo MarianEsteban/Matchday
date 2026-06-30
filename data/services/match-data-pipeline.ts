@@ -16,6 +16,7 @@ export type MatchDataPipelineResult = {
 type PipelineQuery = {
   date?: Date;
   timezone?: string;
+  fresh?: boolean;
 };
 
 type SafeApiError = {
@@ -108,7 +109,7 @@ export async function loadMatchesForDate(query: PipelineQuery = {}): Promise<Mat
     const fromCache = api.didLastFixturesUseCache();
 
     if (visibleApiMatches.length > 0) {
-      return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: visibleApiMatches, source: fromCache ? "cached-api-football" : "api-football", rawFixtureCount: diagnostics?.rawFixtureCount ?? apiMatches.length, normalizedFixtureCount: diagnostics?.normalizedFixtureCount, queriedApiDateKeys: diagnostics?.queriedApiDateKeys, apiFixtureSamples: diagnostics?.fixtureSamples, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, fromCache, fallbackReason: diagnostics?.usedLeagueSpecificFixtures ? "Using league-specific API fixtures" : undefined });
+      return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: visibleApiMatches, source: fromCache ? "cached-api-football" : "api-football", rawFixtureCount: diagnostics?.rawFixtureCount ?? apiMatches.length, normalizedFixtureCount: diagnostics?.normalizedFixtureCount, queriedApiDateKeys: diagnostics?.queriedApiDateKeys, apiFixtureSamples: diagnostics?.fixtureSamples, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, fromCache, requestedApiUrls: diagnostics?.requestedApiUrls, responseFresh: diagnostics?.responseFresh, cacheSource: diagnostics?.cacheSource, fallbackReason: diagnostics?.usedLeagueSpecificFixtures ? "Using league-specific API fixtures" : undefined });
     }
 
     const fallbackReason = getEmptyApiFallbackReason({
@@ -120,7 +121,7 @@ export async function loadMatchesForDate(query: PipelineQuery = {}): Promise<Mat
       apiStatus: diagnostics?.apiStatus,
       usedLeagueSpecificFixtures: diagnostics?.usedLeagueSpecificFixtures,
     });
-    return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: demoMatches, source: "api-unavailable-fallback", rawFixtureCount: diagnostics?.rawFixtureCount ?? 0, normalizedFixtureCount: diagnostics?.normalizedFixtureCount, queriedApiDateKeys: diagnostics?.queriedApiDateKeys, apiFixtureSamples: diagnostics?.fixtureSamples, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, fallbackReason });
+    return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: demoMatches, source: "api-unavailable-fallback", rawFixtureCount: diagnostics?.rawFixtureCount ?? 0, normalizedFixtureCount: diagnostics?.normalizedFixtureCount, queriedApiDateKeys: diagnostics?.queriedApiDateKeys, apiFixtureSamples: diagnostics?.fixtureSamples, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, requestedApiUrls: diagnostics?.requestedApiUrls, responseFresh: diagnostics?.responseFresh, cacheSource: diagnostics?.cacheSource, fallbackReason });
   } catch (error) {
     const safeError = classifyApiError(error);
     if (process.env.NODE_ENV !== "production") console.warn("[matchday data pipeline]", { selectedDate, timezone, requestedDataMode, apiKeyPresent, ...safeError });
@@ -144,6 +145,9 @@ function buildResult(input: {
   apiStatus?: number;
   quotaLimited?: boolean;
   fromCache?: boolean;
+  requestedApiUrls?: string[];
+  responseFresh?: boolean;
+  cacheSource?: MatchDataStatusMetadata["cacheSource"];
   fallbackReason?: string;
 }): MatchDataPipelineResult {
   const featuredFixtureCount = input.matches.filter(isFeaturedCompetitionMatch).length;
@@ -160,6 +164,9 @@ function buildResult(input: {
     apiStatus: input.apiStatus,
     quotaLimited: Boolean(input.quotaLimited),
     fromCache: Boolean(input.fromCache),
+    requestedApiUrls: input.requestedApiUrls ?? [],
+    responseFresh: Boolean(input.responseFresh),
+    cacheSource: input.cacheSource ?? (input.source === "demo" ? "demo-fallback" : input.fromCache ? "internal-server-cache" : "next-cache-or-origin"),
     selectedDate: input.selectedDate,
     timezone: input.timezone,
     rawFixtureCount: input.rawFixtureCount,
