@@ -39,6 +39,26 @@ export type Match = {
   };
 };
 
+export type MatchDataStatusMetadata = {
+  requestedDataMode: "api" | "demo" | "auto";
+  resolvedDataSource: MatchListDataSource;
+  sourceLabel: string;
+  usedFallback: boolean;
+  fallbackReason?: string;
+  apiKeyPresent: boolean;
+  apiAttempted: boolean;
+  apiStatus?: number;
+  quotaLimited: boolean;
+  fromCache: boolean;
+  selectedDate: string;
+  timezone: string;
+  rawFixtureCount: number;
+  normalizedFixtureCount: number;
+  featuredFixtureCount: number;
+  finalVisibleCount: number;
+  sidebarCompetitionCount: number;
+};
+
 export type MatchDetails = {
   match: Match;
   events: import("@/types/match-event").MatchEvent[];

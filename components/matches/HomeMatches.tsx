@@ -6,20 +6,22 @@ import { MatchTicker } from "@/components/ticker/MatchTicker";
 import { PreferenceControls, Trans } from "@/components/ui/AppPreferences";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import { getMatchesForSelectedLocalDate } from "@/lib/match-date";
-import type { Match, MatchListDataSource } from "@/types/match";
+import type { Match, MatchDataStatusMetadata, MatchListDataSource } from "@/types/match";
 
 type HomeMatchesProps = {
   initialMatches: Match[];
   initialDataSource: MatchListDataSource;
+  initialMetadata: MatchDataStatusMetadata;
   initialSelectedDateKey: string;
 };
 
-export function HomeMatches({ initialMatches, initialDataSource, initialSelectedDateKey }: HomeMatchesProps) {
+export function HomeMatches({ initialMatches, initialDataSource, initialMetadata, initialSelectedDateKey }: HomeMatchesProps) {
   const [selectedDate, setSelectedDate] = useState(initialSelectedDateKey);
   const [matches, setMatches] = useState(initialMatches);
   const [dataSource, setDataSource] = useState(initialDataSource);
+  const [metadata, setMetadata] = useState(initialMetadata);
   const [isLoading, setIsLoading] = useState(false);
-  const loadedDatesRef = useRef(new Map([[initialSelectedDateKey, { matches: initialMatches, source: initialDataSource }]]));
+  const loadedDatesRef = useRef(new Map([[initialSelectedDateKey, { matches: initialMatches, source: initialDataSource, metadata: initialMetadata }]]));
 
   useEffect(() => {
     let isCurrentRequest = true;
@@ -27,6 +29,7 @@ export function HomeMatches({ initialMatches, initialDataSource, initialSelected
     if (cachedDate) {
       setMatches(cachedDate.matches);
       setDataSource(cachedDate.source);
+      setMetadata(cachedDate.metadata);
       return;
     }
 
@@ -37,12 +40,13 @@ export function HomeMatches({ initialMatches, initialDataSource, initialSelected
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const response = await fetch(`/api/matches?date=${selectedDate}&timezone=${encodeURIComponent(timezone)}`);
         if (!response.ok) throw new Error(`Match request failed: ${response.status}`);
-        const result = await response.json() as { matches: Match[]; source: MatchListDataSource };
+        const result = await response.json() as { matches: Match[]; source: MatchListDataSource; metadata: MatchDataStatusMetadata };
 
         if (isCurrentRequest) {
           loadedDatesRef.current.set(selectedDate, result);
           setMatches(result.matches);
           setDataSource(result.source);
+          setMetadata(result.metadata);
         }
       } catch (error) {
         console.error("Unable to load matches for selected date.", error);
@@ -50,6 +54,7 @@ export function HomeMatches({ initialMatches, initialDataSource, initialSelected
           const fallback = loadedDatesRef.current.get(initialSelectedDateKey);
           setMatches(fallback?.matches ?? []);
           setDataSource(fallback?.source ?? initialDataSource);
+          setMetadata(fallback?.metadata ?? initialMetadata);
         }
       } finally {
         if (isCurrentRequest) setIsLoading(false);
@@ -61,7 +66,7 @@ export function HomeMatches({ initialMatches, initialDataSource, initialSelected
     return () => {
       isCurrentRequest = false;
     };
-  }, [initialDataSource, initialSelectedDateKey, selectedDate]);
+  }, [initialDataSource, initialMetadata, initialSelectedDateKey, selectedDate]);
 
   const visibleMatches = useMemo(() => {
     const viewerTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -90,6 +95,7 @@ export function HomeMatches({ initialMatches, initialDataSource, initialSelected
           <MatchList
             matches={visibleMatches}
             dataSource={dataSource}
+            metadata={metadata}
             selectedDate={selectedDate}
             isLoading={isLoading}
             onSelectDate={setSelectedDate}

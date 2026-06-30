@@ -152,13 +152,27 @@ export type FootballApiFixturesQuery = {
   timezone?: string;
 };
 
+export type FootballApiFixturesDiagnostics = {
+  apiAttempted: boolean;
+  apiStatus?: number;
+  quotaLimited: boolean;
+  fromCache: boolean;
+  rawFixtureCount: number;
+  normalizedFixtureCount: number;
+};
+
 export class FootballApiService {
   private lastFixturesFromCache = false;
+  private lastFixturesDiagnostics: FootballApiFixturesDiagnostics = { apiAttempted: false, quotaLimited: false, fromCache: false, rawFixtureCount: 0, normalizedFixtureCount: 0 };
 
   constructor(private readonly apiKey = process.env.FOOTBALL_API_KEY) {}
 
   didLastFixturesUseCache() {
     return this.lastFixturesFromCache;
+  }
+
+  getLastFixturesDiagnostics() {
+    return this.lastFixturesDiagnostics;
   }
 
   async getFixtures(query: FootballApiFixturesQuery = {}): Promise<Match[]> {
@@ -168,6 +182,7 @@ export class FootballApiService {
     const revalidate = getFixtureRevalidateSeconds(query.date ?? new Date());
     const mode = getMatchdayDataMode();
     this.lastFixturesFromCache = false;
+    this.lastFixturesDiagnostics = { apiAttempted: true, quotaLimited: isApiFootballQuotaExhausted(), fromCache: false, rawFixtureCount: 0, normalizedFixtureCount: 0 };
     logRequestDiagnostics({
       mode,
       hasApiKey: Boolean(this.apiKey),
@@ -209,6 +224,13 @@ export class FootballApiService {
     });
 
     const selectedMatches = selectApiMatchesForDate(curatedMatches, rawMatches, { selectedDateKey: date, timezone: query.timezone });
+    this.lastFixturesDiagnostics = {
+      ...this.lastFixturesDiagnostics,
+      quotaLimited: isApiFootballQuotaExhausted(),
+      fromCache: this.lastFixturesFromCache,
+      rawFixtureCount: rawFixtures.length,
+      normalizedFixtureCount: selectedMatches.length,
+    };
     return this.withStandingsContexts(selectedMatches);
   }
 
@@ -357,15 +379,18 @@ export class FootballApiService {
     });
     if (response.status === 429) {
       markQuotaExhausted();
+      this.lastFixturesDiagnostics = { ...this.lastFixturesDiagnostics, apiStatus: response.status, quotaLimited: true };
       logApiStatusDiagnostics(response.status, true);
       console.warn("API-Football quota/rate limit reached. Serving cache or demo fallback for this runtime session.");
       throw new ApiFootballQuotaError("API-Football quota/rate limit reached");
     }
+    this.lastFixturesDiagnostics = { ...this.lastFixturesDiagnostics, apiStatus: response.status };
     logApiStatusDiagnostics(response.status, false);
     if (!response.ok) throw new ApiFootballRequestError(`Football API returned ${response.status}`, response.status);
     const payload = await response.json() as T;
     if (hasQuotaErrorPayload(payload)) {
       markQuotaExhausted();
+      this.lastFixturesDiagnostics = { ...this.lastFixturesDiagnostics, apiStatus: response.status, quotaLimited: true };
       logApiStatusDiagnostics(response.status, true);
       console.warn("API-Football quota/rate limit payload detected. Serving cache or demo fallback for this runtime session.");
       throw new ApiFootballQuotaError("API-Football quota/rate limit payload detected");
