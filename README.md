@@ -52,8 +52,9 @@ MatchDay is a football match center web app designed to present match informatio
 3. Optional: configure the data mode and real fixtures provider. MatchDay reads `MATCHDAY_DATA_MODE` on the server and defaults to `auto`.
 
    - `MATCHDAY_DATA_MODE=demo`: always use demo/mock data and never call API-Football. Use this while working on UI/design to avoid consuming daily requests.
-   - `MATCHDAY_DATA_MODE=auto`: use API-Football when `FOOTBALL_API_KEY` exists, then fall back to cached API data or demo data on missing keys, request failures, or quota/rate-limit responses.
-   - `MATCHDAY_DATA_MODE=api`: prefer API-Football when `FOOTBALL_API_KEY` exists, while still falling back gracefully if the provider fails.
+   - `MATCHDAY_DATA_MODE=auto`: use API-Football when `FOOTBALL_API_KEY` exists, then show real API data or cached API data. Empty/error API responses stay visible as API empty/error states instead of silently becoming demo data.
+   - `MATCHDAY_DATA_MODE=api`: require API-Football behavior and show API empty/error states if the provider fails or returns no visible fixtures.
+   - `MATCHDAY_ALLOW_DEMO_FALLBACK=true`: explicitly opt into demo fallback outside `demo` mode for local debugging; fallback responses are labeled as demo fallback.
 
    Do not prefix server variables with `NEXT_PUBLIC_`, do not commit real keys, and keep local secrets in `.env.local` (already ignored by Git).
 
@@ -119,7 +120,8 @@ After changing either variable, redeploy the project so the server runtime reads
 ### API-Football troubleshooting
 
 - Use `MATCHDAY_DATA_MODE=demo` for UI work without API calls. Demo mode never calls API-Football.
-- Use `MATCHDAY_DATA_MODE=auto` when you want real API data with safe fallback to cached API-Football data or demo data.
+- Use `MATCHDAY_DATA_MODE=auto` when you want real API data with safe fallback to cached API-Football data; zero/error API responses are reported honestly instead of showing demo matches.
+- Set `MATCHDAY_ALLOW_DEMO_FALLBACK=true` only when you explicitly want demo fallback outside `demo` mode for local debugging.
 - Keep `FOOTBALL_API_KEY` server-only. Do not use `NEXT_PUBLIC_` and do not commit real keys.
 - After changing `.env.local`, restart `npm run dev` so the server reads the updated variables.
 - After changing Vercel environment variables, redeploy the project.
