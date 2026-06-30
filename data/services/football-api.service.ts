@@ -124,9 +124,9 @@ function getFixtureRevalidateSeconds(date: Date): number {
   fixtureDate.setHours(0, 0, 0, 0);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  if (fixtureDate.getTime() === today.getTime()) return 600;
-  if (fixtureDate.getTime() > today.getTime()) return 3_600;
-  return 86_400;
+  if (fixtureDate.getTime() === today.getTime()) return 60;
+  if (fixtureDate.getTime() > today.getTime()) return 60;
+  return 600;
 }
 
 function getDetailRevalidateSeconds(match?: Match): number {
@@ -207,7 +207,7 @@ export class FootballApiService {
   async getFixtures(query: FootballApiFixturesQuery = {}): Promise<Match[]> {
     const date = formatMatchDate(query.date ?? new Date());
     const timezone = query.timezone ? `&timezone=${encodeURIComponent(query.timezone)}` : "";
-    const apiDateKeys = getApiDateKeysForSelectedDate(date, query.timezone);
+    const apiDateKeys = getApiDateKeysForSelectedDate(date);
     const revalidate = getFixtureRevalidateSeconds(query.date ?? new Date());
     const cacheMode: FetchCacheMode = query.fresh ? "fresh" : "default";
     const mode = getMatchdayDataMode();
@@ -285,7 +285,7 @@ export class FootballApiService {
     if (!this.apiKey) return [];
     const date = formatMatchDate(query.date ?? new Date());
     const timezone = query.timezone ? `&timezone=${encodeURIComponent(query.timezone)}` : "";
-    const dateKeys = getApiDateKeysForSelectedDate(date, query.timezone);
+    const dateKeys = getApiDateKeysForSelectedDate(date);
     const worldCupSeason = supportedCompetitionById.get(1)?.currentSeason ?? 2026;
     const definitions = dateKeys.flatMap((dateKey) => [
       { label: `/fixtures?date=${dateKey}`, path: `/fixtures?date=${dateKey}${timezone}` },
@@ -460,9 +460,8 @@ export class FootballApiService {
   private async fetchApi<T>(path: string, revalidate: number, mode: FetchCacheMode = "default"): Promise<T> {
     if (!this.apiKey) throw new Error("Football API key is not configured");
     const response = await fetch(`${API_FOOTBALL_BASE_URL}${path}`, {
-      cache: mode === "fresh" ? "no-store" : "force-cache",
       headers: { "x-apisports-key": this.apiKey },
-      ...(mode === "fresh" ? {} : { next: { revalidate } }),
+      ...(mode === "fresh" ? { cache: "no-store" as const } : { next: { revalidate } }),
     });
     if (response.status === 429) {
       markQuotaExhausted();
@@ -690,10 +689,9 @@ function getApiStatusFromError(error: unknown): number | undefined {
   return typeof error === "object" && error !== null && "status" in error && typeof error.status === "number" ? error.status : undefined;
 }
 
-function getApiDateKeysForSelectedDate(selectedDateKey: string, timezone?: string): string[] {
+function getApiDateKeysForSelectedDate(selectedDateKey: string): string[] {
   const selectedDate = new Date(`${selectedDateKey}T00:00:00Z`);
-  const offsets = timezone ? [-1, 0, 1] : [0];
-  return offsets.map((daysToShift) => {
+  return [-1, 0, 1].map((daysToShift) => {
     const date = new Date(selectedDate);
     date.setUTCDate(date.getUTCDate() + daysToShift);
     return formatMatchDate(date);
