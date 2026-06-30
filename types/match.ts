@@ -1,6 +1,6 @@
 export type MatchStatus = "scheduled" | "live" | "finished";
 
-export type MatchListDataSource = "api-football" | "cached-api-football" | "demo" | "api-unavailable-fallback" | "quota-limited-fallback";
+export type MatchListDataSource = "api-football" | "cached-api-football" | "api-empty" | "api-error" | "demo" | "demo-fallback" | "api-unavailable-fallback" | "quota-limited-fallback";
 
 export type Team = {
   id: string;
@@ -56,6 +56,14 @@ export type MatchDataStatusMetadata = {
   requestedApiUrls: string[];
   responseFresh: boolean;
   cacheSource: "fresh-api-request" | "next-cache-or-origin" | "internal-server-cache" | "stale-cache" | "mixed-cache" | "demo-fallback";
+  displayedFixtureSource: MatchListDataSource;
+  displayedFixtureCount: number;
+  realApiFixtureCount: number;
+  visibleApiFixtureCount: number;
+  demoFixtureCount: number;
+  fallbackAllowed: boolean;
+  clientReplacedInitialData?: boolean;
+  clientPreservedInitialData?: boolean;
   selectedDate: string;
   timezone: string;
   rawFixtureCount: number;

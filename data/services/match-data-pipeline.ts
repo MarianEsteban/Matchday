@@ -29,6 +29,9 @@ function sourceLabel(source: MatchListDataSource) {
   switch (source) {
     case "api-football": return "API-Football";
     case "cached-api-football": return "Cached API-Football";
+    case "api-empty": return "API-Football empty";
+    case "api-error": return "API-Football error";
+    case "demo-fallback": return "Demo fallback (explicitly enabled)";
     case "quota-limited-fallback": return "Demo fallback (API-Football quota limited)";
     case "api-unavailable-fallback": return "Demo fallback (API-Football unavailable)";
     default: return "Demo data";
@@ -42,10 +45,10 @@ function getApiStatus(error: unknown): number | undefined {
 function classifyApiError(error: unknown): SafeApiError {
   const apiStatus = getApiStatus(error);
   const quotaLimited = isApiFootballQuotaError(error) || isApiFootballQuotaExhausted() || apiStatus === 429;
-  if (quotaLimited) return { apiStatus, quotaLimited: true, fallbackReason: "API-Football quota limited, showing cached/demo fallback" };
-  if (apiStatus === 401 || apiStatus === 403) return { apiStatus, quotaLimited: false, fallbackReason: "API-Football unauthorized or invalid key, showing demo fallback" };
-  if (apiStatus) return { apiStatus, quotaLimited: false, fallbackReason: `API-Football returned HTTP ${apiStatus}, showing demo fallback` };
-  return { quotaLimited: false, fallbackReason: "API-Football request failed, showing demo fallback" };
+  if (quotaLimited) return { apiStatus, quotaLimited: true, fallbackReason: "API-Football quota limited; no demo fallback was applied" };
+  if (apiStatus === 401 || apiStatus === 403) return { apiStatus, quotaLimited: false, fallbackReason: "API-Football unauthorized or invalid key; no demo fallback was applied" };
+  if (apiStatus) return { apiStatus, quotaLimited: false, fallbackReason: `API-Football returned HTTP ${apiStatus}; no demo fallback was applied` };
+  return { quotaLimited: false, fallbackReason: "API-Football request failed; no demo fallback was applied" };
 }
 
 function buildSidebarCompetitionCount(matches: Match[]) {
@@ -76,13 +79,13 @@ function getEmptyApiFallbackReason(details: {
   apiStatus?: number;
   usedLeagueSpecificFixtures?: boolean;
 }) {
-  if (details.quotaLimited) return "API quota limited, showing demo fallback";
-  if (details.apiStatus && details.apiStatus >= 400) return "API request failed, showing demo fallback";
+  if (details.quotaLimited) return "API quota limited; no demo fallback was applied";
+  if (details.apiStatus && details.apiStatus >= 400) return "API request failed; no demo fallback was applied";
   if (details.usedLeagueSpecificFixtures) return "Using league-specific API fixtures";
   if (details.rawFixtureCount === 0) return "API date endpoint returned zero fixtures; featured league-specific queries also returned zero fixtures";
-  if (details.normalizedFixtureCount === 0 || details.localFixtureCount === 0) return "API returned fixtures but none matched selected local date, showing demo fallback";
-  if (details.featuredFixtureCount === 0) return "API returned fixtures but none were featured, showing demo fallback";
-  return "API returned fixtures but none were visible, showing demo fallback";
+  if (details.normalizedFixtureCount === 0 || details.localFixtureCount === 0) return "API returned fixtures but none matched selected local date; no demo fallback was applied";
+  if (details.featuredFixtureCount === 0) return "API returned fixtures but none were featured; no demo fallback was applied";
+  return "API returned fixtures but none were visible; no demo fallback was applied";
 }
 
 export async function loadMatchesForDate(query: PipelineQuery = {}): Promise<MatchDataPipelineResult> {
@@ -91,14 +94,18 @@ export async function loadMatchesForDate(query: PipelineQuery = {}): Promise<Mat
   const timezone = query.timezone ?? "UTC";
   const apiKeyPresent = Boolean(process.env.FOOTBALL_API_KEY);
   const demoMatches = getMatchesForSelectedLocalDate(createMockMatches(query.date), selectedDate, query.timezone);
+  const fallbackAllowed = process.env.MATCHDAY_ALLOW_DEMO_FALLBACK === "1" || process.env.MATCHDAY_ALLOW_DEMO_FALLBACK?.toLowerCase() === "true";
 
   if (requestedDataMode === "demo") {
-    return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: demoMatches, source: "demo", rawFixtureCount: demoMatches.length, apiAttempted: false, fallbackReason: "MATCHDAY_DATA_MODE=demo, API-Football was not called" });
+    return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: demoMatches, source: "demo", rawFixtureCount: demoMatches.length, apiAttempted: false, demoFixtureCount: demoMatches.length, fallbackAllowed, fallbackReason: "MATCHDAY_DATA_MODE=demo, API-Football was not called" });
   }
 
   if (!apiKeyPresent) {
-    const source: MatchListDataSource = requestedDataMode === "api" ? "api-unavailable-fallback" : "demo";
-    return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: demoMatches, source, rawFixtureCount: demoMatches.length, apiAttempted: false, fallbackReason: "API-Football key missing, showing demo fallback" });
+    if (fallbackAllowed) {
+      return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: demoMatches, source: "demo-fallback", rawFixtureCount: 0, apiAttempted: false, demoFixtureCount: demoMatches.length, fallbackAllowed, fallbackReason: "API-Football key missing; explicit demo fallback is enabled" });
+    }
+
+    return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: [], source: "api-error", rawFixtureCount: 0, apiAttempted: false, demoFixtureCount: demoMatches.length, fallbackAllowed, fallbackReason: "API-Football key missing; no demo fallback was applied" });
   }
 
   const api = new FootballApiService();
@@ -109,7 +116,7 @@ export async function loadMatchesForDate(query: PipelineQuery = {}): Promise<Mat
     const fromCache = api.didLastFixturesUseCache();
 
     if (visibleApiMatches.length > 0) {
-      return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: visibleApiMatches, source: fromCache ? "cached-api-football" : "api-football", rawFixtureCount: diagnostics?.rawFixtureCount ?? apiMatches.length, normalizedFixtureCount: diagnostics?.normalizedFixtureCount, queriedApiDateKeys: diagnostics?.queriedApiDateKeys, apiFixtureSamples: diagnostics?.fixtureSamples, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, fromCache, requestedApiUrls: diagnostics?.requestedApiUrls, responseFresh: diagnostics?.responseFresh, cacheSource: diagnostics?.cacheSource, fallbackReason: diagnostics?.usedLeagueSpecificFixtures ? "Using league-specific API fixtures" : undefined });
+      return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: visibleApiMatches, source: fromCache ? "cached-api-football" : "api-football", rawFixtureCount: diagnostics?.rawFixtureCount ?? apiMatches.length, normalizedFixtureCount: diagnostics?.normalizedFixtureCount, queriedApiDateKeys: diagnostics?.queriedApiDateKeys, apiFixtureSamples: diagnostics?.fixtureSamples, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, fromCache, requestedApiUrls: diagnostics?.requestedApiUrls, responseFresh: diagnostics?.responseFresh, cacheSource: diagnostics?.cacheSource, fallbackReason: diagnostics?.usedLeagueSpecificFixtures ? "Using league-specific API fixtures" : undefined, realApiFixtureCount: diagnostics?.normalizedFixtureCount ?? apiMatches.length, visibleApiFixtureCount: visibleApiMatches.length, demoFixtureCount: demoMatches.length, fallbackAllowed });
     }
 
     const fallbackReason = getEmptyApiFallbackReason({
@@ -121,11 +128,13 @@ export async function loadMatchesForDate(query: PipelineQuery = {}): Promise<Mat
       apiStatus: diagnostics?.apiStatus,
       usedLeagueSpecificFixtures: diagnostics?.usedLeagueSpecificFixtures,
     });
-    return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: demoMatches, source: "api-unavailable-fallback", rawFixtureCount: diagnostics?.rawFixtureCount ?? 0, normalizedFixtureCount: diagnostics?.normalizedFixtureCount, queriedApiDateKeys: diagnostics?.queriedApiDateKeys, apiFixtureSamples: diagnostics?.fixtureSamples, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, requestedApiUrls: diagnostics?.requestedApiUrls, responseFresh: diagnostics?.responseFresh, cacheSource: diagnostics?.cacheSource, fallbackReason });
+    if (fallbackAllowed) return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: demoMatches, source: "demo-fallback", rawFixtureCount: diagnostics?.rawFixtureCount ?? 0, normalizedFixtureCount: diagnostics?.normalizedFixtureCount, queriedApiDateKeys: diagnostics?.queriedApiDateKeys, apiFixtureSamples: diagnostics?.fixtureSamples, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, requestedApiUrls: diagnostics?.requestedApiUrls, responseFresh: diagnostics?.responseFresh, cacheSource: diagnostics?.cacheSource, fallbackReason, realApiFixtureCount: diagnostics?.normalizedFixtureCount ?? apiMatches.length, visibleApiFixtureCount: visibleApiMatches.length, demoFixtureCount: demoMatches.length, fallbackAllowed });
+    return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: [], source: "api-empty", rawFixtureCount: diagnostics?.rawFixtureCount ?? 0, normalizedFixtureCount: diagnostics?.normalizedFixtureCount, queriedApiDateKeys: diagnostics?.queriedApiDateKeys, apiFixtureSamples: diagnostics?.fixtureSamples, apiAttempted: true, apiStatus: diagnostics?.apiStatus, quotaLimited: diagnostics?.quotaLimited ?? false, requestedApiUrls: diagnostics?.requestedApiUrls, responseFresh: diagnostics?.responseFresh, cacheSource: diagnostics?.cacheSource, fallbackReason, realApiFixtureCount: diagnostics?.normalizedFixtureCount ?? apiMatches.length, visibleApiFixtureCount: visibleApiMatches.length, demoFixtureCount: demoMatches.length, fallbackAllowed });
   } catch (error) {
     const safeError = classifyApiError(error);
     if (process.env.NODE_ENV !== "production") console.warn("[matchday data pipeline]", { selectedDate, timezone, requestedDataMode, apiKeyPresent, ...safeError });
-    return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: demoMatches, source: safeError.quotaLimited ? "quota-limited-fallback" : "api-unavailable-fallback", rawFixtureCount: 0, apiAttempted: true, ...safeError });
+    if (fallbackAllowed) return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: demoMatches, source: "demo-fallback", rawFixtureCount: 0, apiAttempted: true, demoFixtureCount: demoMatches.length, fallbackAllowed, ...safeError });
+    return buildResult({ requestedDataMode, selectedDate, timezone, apiKeyPresent, matches: [], source: "api-error", rawFixtureCount: 0, apiAttempted: true, demoFixtureCount: demoMatches.length, fallbackAllowed, ...safeError });
   }
 }
 
@@ -149,9 +158,13 @@ function buildResult(input: {
   responseFresh?: boolean;
   cacheSource?: MatchDataStatusMetadata["cacheSource"];
   fallbackReason?: string;
+  realApiFixtureCount?: number;
+  visibleApiFixtureCount?: number;
+  demoFixtureCount?: number;
+  fallbackAllowed?: boolean;
 }): MatchDataPipelineResult {
   const featuredFixtureCount = input.matches.filter(isFeaturedCompetitionMatch).length;
-  const usedFallback = input.source === "api-unavailable-fallback" || input.source === "quota-limited-fallback" || (input.requestedDataMode === "auto" && input.source === "demo");
+  const usedFallback = input.source === "demo-fallback" || input.source === "api-unavailable-fallback" || input.source === "quota-limited-fallback" || (input.requestedDataMode === "auto" && input.source === "demo");
   const metadata: MatchDataStatusMetadata = {
     requestedDataMode: input.requestedDataMode,
     resolvedDataSource: input.source,
@@ -178,6 +191,12 @@ function buildResult(input: {
     apiFixtureSamples: input.apiFixtureSamples,
     apiQueryDiagnostics: input.apiQueryDiagnostics,
     visibleFixtures: buildVisibleFixtureMetadata(input.matches),
+    displayedFixtureSource: input.source,
+    displayedFixtureCount: input.matches.length,
+    realApiFixtureCount: input.realApiFixtureCount ?? (input.source === "api-football" || input.source === "cached-api-football" ? input.matches.length : 0),
+    visibleApiFixtureCount: input.visibleApiFixtureCount ?? (input.source === "api-football" || input.source === "cached-api-football" ? input.matches.length : 0),
+    demoFixtureCount: input.demoFixtureCount ?? (input.source === "demo" || input.source === "demo-fallback" ? input.matches.length : 0),
+    fallbackAllowed: Boolean(input.fallbackAllowed),
   };
   return { matches: input.matches, source: input.source, metadata };
 }

@@ -91,11 +91,13 @@ function DataSourceIndicator({ source, metadata }: { source: MatchListDataSource
     ? t("apiFootballData")
     : source === "cached-api-football"
       ? t("cachedApiFootballData")
-      : source === "quota-limited-fallback"
-        ? t("quotaFallbackData")
-        : source === "api-unavailable-fallback"
-          ? t("fallbackData")
-          : t("demoData");
+      : source === "api-empty"
+        ? t("apiEmptyData")
+        : source === "api-error"
+          ? t("apiErrorData")
+          : source === "demo-fallback" || source === "quota-limited-fallback" || source === "api-unavailable-fallback"
+            ? t("fallbackData")
+            : t("demoData");
 
   const title = [metadata.sourceLabel, metadata.fallbackReason, `Mode: ${metadata.requestedDataMode}`, `Date: ${metadata.selectedDate}`, `Timezone: ${metadata.timezone}`, `API key present: ${metadata.apiKeyPresent ? "yes" : "no"}`, `Raw: ${metadata.rawFixtureCount}`, `Visible: ${metadata.finalVisibleCount}`].filter(Boolean).join(" • ");
 
@@ -118,7 +120,15 @@ function DataSourceIndicator({ source, metadata }: { source: MatchListDataSource
   );
 }
 
-function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boolean): EmptyState {
+function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boolean, source: MatchListDataSource): EmptyState {
+  if (!hasMatchesForSelectedDate && (source === "api-empty" || source === "api-error")) {
+    return {
+      icon: "🧭",
+      titleKey: "apiEmptyTitle",
+      descriptionKey: "apiEmptyDescription",
+    };
+  }
+
   if (!hasMatchesForSelectedDate) {
     return {
       icon: "🗓️",
@@ -186,7 +196,7 @@ export function MatchList({ matches, dataSource, metadata, selectedDate, isLoadi
 
       return firstCompetition.name.localeCompare(secondCompetition.name);
     });
-  const emptyState = getEmptyState(activeFilter, selectedCompetitionMatches.length > 0);
+  const emptyState = getEmptyState(activeFilter, selectedCompetitionMatches.length > 0, dataSource);
 
   function toggleCompetition(competition: string) {
     setCollapsedCompetitions((currentCollapsedCompetitions) => ({

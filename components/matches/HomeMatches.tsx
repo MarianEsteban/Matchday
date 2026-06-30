@@ -23,6 +23,14 @@ export function HomeMatches({ initialMatches, initialDataSource, initialMetadata
   const [isLoading, setIsLoading] = useState(false);
   const loadedDatesRef = useRef(new Map([[initialSelectedDateKey, { matches: initialMatches, source: initialDataSource, metadata: initialMetadata }]]));
 
+  function isRealApiSource(source: MatchListDataSource) {
+    return source === "api-football" || source === "cached-api-football";
+  }
+
+  function isDemoLikeSource(source: MatchListDataSource) {
+    return source === "demo" || source === "demo-fallback" || source === "api-unavailable-fallback" || source === "quota-limited-fallback";
+  }
+
   useEffect(() => {
     let isCurrentRequest = true;
     const cachedDate = loadedDatesRef.current.get(selectedDate);
@@ -43,10 +51,40 @@ export function HomeMatches({ initialMatches, initialDataSource, initialMetadata
         const result = await response.json() as { matches: Match[]; source: MatchListDataSource; metadata: MatchDataStatusMetadata };
 
         if (isCurrentRequest) {
-          loadedDatesRef.current.set(selectedDate, result);
-          setMatches(result.matches);
-          setDataSource(result.source);
-          setMetadata(result.metadata);
+          const currentDateData = loadedDatesRef.current.get(selectedDate);
+          const shouldPreserveRealInitialData = Boolean(
+            currentDateData &&
+            isRealApiSource(currentDateData.source) &&
+            isDemoLikeSource(result.source) &&
+            result.metadata.requestedDataMode !== "demo",
+          );
+
+          if (shouldPreserveRealInitialData && currentDateData) {
+            const preservedMetadata = {
+              ...currentDateData.metadata,
+              fallbackReason: result.metadata.fallbackReason ?? "Client refresh returned demo/fallback data; keeping already-rendered API-Football matches.",
+              clientReplacedInitialData: false,
+              clientPreservedInitialData: true,
+            };
+            loadedDatesRef.current.set(selectedDate, { ...currentDateData, metadata: preservedMetadata });
+            setMatches(currentDateData.matches);
+            setDataSource(currentDateData.source);
+            setMetadata(preservedMetadata);
+            return;
+          }
+
+          const nextResult = {
+            ...result,
+            metadata: {
+              ...result.metadata,
+              clientReplacedInitialData: true,
+              clientPreservedInitialData: false,
+            },
+          };
+          loadedDatesRef.current.set(selectedDate, nextResult);
+          setMatches(nextResult.matches);
+          setDataSource(nextResult.source);
+          setMetadata(nextResult.metadata);
         }
       } catch (error) {
         console.error("Unable to load matches for selected date.", error);
@@ -73,10 +111,11 @@ export function HomeMatches({ initialMatches, initialDataSource, initialMetadata
     const browserDateMatches = getMatchesForSelectedLocalDate(matches, selectedDate, viewerTimeZone);
     const serverDateMatches = matches.filter((match) => match.date === selectedDate);
 
-    return browserDateMatches.length > 0 || serverDateMatches.length === 0
-      ? browserDateMatches
-      : serverDateMatches;
-  }, [matches, selectedDate]);
+    if (browserDateMatches.length > 0) return browserDateMatches;
+    if (serverDateMatches.length > 0) return serverDateMatches;
+    if (metadata.selectedDate === selectedDate) return matches;
+    return [];
+  }, [matches, metadata.selectedDate, selectedDate]);
 
   return (
     <>
