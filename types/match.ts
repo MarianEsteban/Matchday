@@ -46,6 +46,7 @@ export type MatchDataStatusMetadata = {
   resolvedDataSource: MatchListDataSource;
   sourceLabel: string;
   usedFallback: boolean;
+  fallbackUsed: boolean;
   fallbackReason?: string;
   apiKeyPresent: boolean;
   apiAttempted: boolean;
@@ -59,7 +60,24 @@ export type MatchDataStatusMetadata = {
   featuredFixtureCount: number;
   finalVisibleCount: number;
   sidebarCompetitionCount: number;
+  queriedApiDateKeys: string[];
+  apiFixtureSamples?: ApiFootballFixtureDebugSample[];
   visibleFixtures?: MatchFixtureDebugMetadata[];
+};
+
+export type ApiFootballFixtureDebugSample = {
+  fixtureId?: number;
+  kickoffDate?: string;
+  localDate?: string;
+  leagueId?: number;
+  leagueName?: string;
+  leagueCountry?: string;
+  round?: string;
+  homeTeam?: string;
+  awayTeam?: string;
+  normalizedCompetition?: string;
+  isFeatured: boolean;
+  exclusionReason?: string;
 };
 
 export type MatchFixtureDebugMetadata = {
