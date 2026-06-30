@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePreferences } from "@/components/ui/AppPreferences";
-import type { Match, MatchListDataSource } from "@/types/match";
+import type { Match, MatchDataStatusMetadata, MatchListDataSource } from "@/types/match";
 import { CompetitionSection } from "@/components/matches/CompetitionSection";
 import { CompetitionSidebar } from "@/components/matches/CompetitionSidebar";
 import { DateSelector } from "@/components/matches/DateSelector";
@@ -15,6 +15,7 @@ import { type TranslationKey } from "@/lib/i18n";
 type MatchListProps = {
   matches: Match[];
   dataSource: MatchListDataSource;
+  metadata: MatchDataStatusMetadata;
   selectedDate: string;
   isLoading: boolean;
   onSelectDate: (selectedDate: string) => void;
@@ -84,7 +85,7 @@ function filterMatches(matches: Match[], activeFilter: MatchFilter) {
   return matches.filter((match) => match.status === activeFilter);
 }
 
-function DataSourceIndicator({ source }: { source: MatchListDataSource }) {
+function DataSourceIndicator({ source, metadata }: { source: MatchListDataSource; metadata: MatchDataStatusMetadata }) {
   const { t } = usePreferences();
   const label = source === "api-football"
     ? t("apiFootballData")
@@ -96,17 +97,22 @@ function DataSourceIndicator({ source }: { source: MatchListDataSource }) {
           ? t("fallbackData")
           : t("demoData");
 
+  const title = [metadata.sourceLabel, metadata.fallbackReason, `Mode: ${metadata.requestedDataMode}`, `Date: ${metadata.selectedDate}`, `Timezone: ${metadata.timezone}`, `API key present: ${metadata.apiKeyPresent ? "yes" : "no"}`, `Raw: ${metadata.rawFixtureCount}`, `Visible: ${metadata.finalVisibleCount}`].filter(Boolean).join(" • ");
+
   return (
     <div className="flex justify-end">
       <span
         className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/55 px-2.5 py-1 text-[0.68rem] font-medium uppercase tracking-[0.16em] text-zinc-500 shadow-sm shadow-zinc-200/40 dark:border-zinc-800 dark:bg-zinc-900/45 dark:text-zinc-500 dark:shadow-black/10"
         aria-label={`${t("dataSource")}: ${label}`}
-        title={`${t("dataSource")}: ${label}`}
+        title={title}
       >
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/70" aria-hidden="true" />
         <span>{t("dataSource")}</span>
         <span className="text-zinc-300 dark:text-zinc-700" aria-hidden="true">·</span>
         <span className="text-zinc-600 dark:text-zinc-400">{label}</span>
+        {metadata.usedFallback && metadata.fallbackReason ? (
+          <span className="hidden max-w-72 truncate normal-case tracking-normal text-amber-700 dark:text-amber-300 sm:inline">{metadata.fallbackReason}</span>
+        ) : null}
       </span>
     </div>
   );
@@ -152,7 +158,7 @@ function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boo
   };
 }
 
-export function MatchList({ matches, dataSource, selectedDate, isLoading, onSelectDate }: MatchListProps) {
+export function MatchList({ matches, dataSource, metadata, selectedDate, isLoading, onSelectDate }: MatchListProps) {
   const { t } = usePreferences();
   const [activeFilter, setActiveFilter] = useState<MatchFilter>("all");
   const [collapsedCompetitions, setCollapsedCompetitions] = useState<Record<string, boolean>>({});
@@ -195,7 +201,7 @@ export function MatchList({ matches, dataSource, selectedDate, isLoading, onSele
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <MatchFilters activeFilter={activeFilter} onSelectFilter={setActiveFilter} />
-        <DataSourceIndicator source={dataSource} />
+        <DataSourceIndicator source={dataSource} metadata={metadata} />
       </div>
 
       {isLoading ? (

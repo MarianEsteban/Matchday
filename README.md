@@ -75,6 +75,47 @@ MatchDay is a football match center web app designed to present match informatio
    ```
 
 
+### Data source diagnostics
+
+MatchDay now uses one server-side data pipeline per selected date/timezone: mode resolution, API-Football loading, cache/stale fallback, demo fallback, fixture normalization, featured selection metadata, sidebar competition counts, and visible match counts are reported together. Match payloads include safe metadata such as requested mode, resolved source, fallback reason, API key presence as a boolean, API status when known, quota detection, cache usage, selected date/timezone, and fixture counts. Secrets are never returned.
+
+Development debug endpoint:
+
+```text
+/api/debug/data-source?date=YYYY-MM-DD&timezone=America/Argentina/Buenos_Aires
+```
+
+In development it returns safe diagnostics for the active data mode, API key presence, whether API-Football was attempted, API status, quota/rate-limit detection, fixture counts, sidebar competition count, resolved data source, and fallback reason. In production it returns only minimal safe source/fallback information.
+
+#### Local data checklist
+
+1. Update `.env.local` with one of:
+
+   ```bash
+   MATCHDAY_DATA_MODE=demo
+   # or
+   MATCHDAY_DATA_MODE=auto
+   FOOTBALL_API_KEY=your_api_key_here
+   # or
+   MATCHDAY_DATA_MODE=api
+   FOOTBALL_API_KEY=your_api_key_here
+   ```
+
+2. Restart `npm run dev` after every `.env.local` change.
+3. Open `/api/debug/data-source` and confirm `resolvedDataSource`, `apiFootballAttempted`, `apiKeyPresent`, and `fallbackReason`.
+4. Open the home page and confirm the source indicator says API-Football or cached API-Football when the provider succeeds, not demo.
+
+#### Vercel data checklist
+
+Set these server environment variables in Vercel:
+
+```bash
+MATCHDAY_DATA_MODE=auto
+FOOTBALL_API_KEY=your_api_key_here
+```
+
+After changing either variable, redeploy the project so the server runtime reads the new values. Then verify the home page source indicator says API-Football or cached API-Football when API-Football succeeds. If it shows demo fallback, check the fallback reason in the subtle source indicator and the production-safe debug endpoint response.
+
 ### API-Football troubleshooting
 
 - Use `MATCHDAY_DATA_MODE=demo` for UI work without API calls. Demo mode never calls API-Football.
