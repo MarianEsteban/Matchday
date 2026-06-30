@@ -3,10 +3,11 @@ export type FeaturedCompetitionDefinition = {
   name: string;
   country?: string;
   aliases: readonly string[];
+  currentSeason?: number;
 };
 
 export const featuredCompetitionDefinitions = [
-  { apiFootballLeagueId: 1, name: "FIFA World Cup", aliases: ["fifa world cup", "world cup"] },
+  { apiFootballLeagueId: 1, name: "FIFA World Cup", aliases: ["fifa world cup", "world cup"], currentSeason: 2026 },
   { apiFootballLeagueId: 2, name: "UEFA Champions League", aliases: ["uefa champions league", "champions league"] },
   { apiFootballLeagueId: 13, name: "Copa Libertadores", aliases: ["conmebol libertadores", "copa libertadores"] },
   { apiFootballLeagueId: 11, name: "Copa Sudamericana", aliases: ["conmebol sudamericana", "copa sudamericana"] },

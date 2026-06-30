@@ -19,6 +19,7 @@ type SupportedApiCompetition = {
   name: string;
   country?: string;
   aliases: readonly string[];
+  currentSeason?: number;
 };
 
 type FixtureSelectionOptions = {
@@ -31,6 +32,7 @@ export const supportedApiFootballCompetitions = featuredCompetitionDefinitions.m
   name: competition.name,
   country: "country" in competition ? competition.country : undefined,
   aliases: competition.aliases,
+  currentSeason: "currentSeason" in competition ? competition.currentSeason : undefined,
 })) satisfies SupportedApiCompetition[];
 
 const supportedCompetitionById = new Map<number, SupportedApiCompetition>(
@@ -55,6 +57,19 @@ type ApiFootballRecord = Record<string, unknown>;
 type ApiFootballFixturesResponse = {
   response?: ApiFootballFixture[];
   errors?: unknown;
+};
+
+type FeaturedFixtureQueryDefinition = {
+  label: string;
+  path: string;
+  dateKey?: string;
+};
+
+export type ApiFootballQueryDiagnostic = {
+  label: string;
+  apiStatus?: number;
+  responseCount: number;
+  samples: ApiFootballFixtureDebugSample[];
 };
 
 class ApiFootballQuotaError extends Error {
@@ -161,6 +176,8 @@ export type FootballApiFixturesDiagnostics = {
   normalizedFixtureCount: number;
   queriedApiDateKeys: string[];
   fixtureSamples: ApiFootballFixtureDebugSample[];
+  queryDiagnostics?: ApiFootballQueryDiagnostic[];
+  usedLeagueSpecificFixtures?: boolean;
 };
 
 export class FootballApiService {
@@ -194,16 +211,26 @@ export class FootballApiService {
       quotaLimited: isApiFootballQuotaExhausted(),
     });
 
-    const settledPayloads = await Promise.allSettled(apiDateKeys.map(async (apiDateKey) => {
-      const path = `/fixtures?date=${apiDateKey}${timezone}`;
-      const cacheKey = `api-football:${mode}:fixtures:${apiDateKey}:tz:${query.timezone ?? "UTC"}`;
-      const { payload, fromCache } = await this.fetchCachedApi<ApiFootballFixturesResponse>(path, revalidate, cacheKey);
-      if (fromCache) this.lastFixturesFromCache = true;
-      return { apiDateKey, fixtures: payload.response ?? [] };
-    }));
+    const featuredQueries = buildFeaturedFixtureQueries(apiDateKeys, query.timezone);
+    const settledPayloads = await Promise.allSettled([
+      ...apiDateKeys.map(async (apiDateKey) => {
+        const path = `/fixtures?date=${apiDateKey}${timezone}`;
+        const cacheKey = `api-football:${mode}:fixtures:${apiDateKey}:tz:${query.timezone ?? "UTC"}`;
+        const { payload, fromCache } = await this.fetchCachedApi<ApiFootballFixturesResponse>(path, revalidate, cacheKey);
+        if (fromCache) this.lastFixturesFromCache = true;
+        return { apiDateKey, fixtures: payload.response ?? [], source: "date" as const };
+      }),
+      ...featuredQueries.map(async (definition) => {
+        const { payload, fromCache } = await this.fetchCachedApi<ApiFootballFixturesResponse>(definition.path, revalidate, `api-football:${mode}:featured-fixtures:${definition.path}:tz:${query.timezone ?? "UTC"}`);
+        if (fromCache) this.lastFixturesFromCache = true;
+        return { apiDateKey: definition.dateKey ?? date, fixtures: payload.response ?? [], source: "featured" as const };
+      }),
+    ]);
     const payloads = settledPayloads.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
     const failedCount = settledPayloads.length - payloads.length;
     if (payloads.length === 0 && failedCount > 0) throw settledPayloads.find((result) => result.status === "rejected")?.reason ?? new Error("API-Football fixtures failed");
+    const dateFixtureCount = payloads.filter((payload) => payload.source === "date").flatMap((payload) => payload.fixtures).length;
+    const featuredFixtureCount = payloads.filter((payload) => payload.source === "featured").flatMap((payload) => payload.fixtures).length;
     const rawFixtures = dedupeApiFixtures(payloads.flatMap((payload) => payload.fixtures));
     const rawMatches = rawFixtures
       .map((fixture) => normalizeApiFootballFixture(fixture, { onlySupportedCompetitions: false, timezone: query.timezone }))
@@ -234,8 +261,41 @@ export class FootballApiService {
       normalizedFixtureCount: rawMatches.length,
       queriedApiDateKeys: apiDateKeys,
       fixtureSamples: buildFixtureDebugSamples(rawFixtures, { selectedDateKey: date, timezone: query.timezone }).slice(0, 20),
+      usedLeagueSpecificFixtures: dateFixtureCount === 0 && featuredFixtureCount > 0,
     };
     return this.withStandingsContexts(selectedMatches);
+  }
+
+
+  async getFixtureQueryDiagnostics(query: FootballApiFixturesQuery = {}): Promise<ApiFootballQueryDiagnostic[]> {
+    if (!this.apiKey) return [];
+    const date = formatMatchDate(query.date ?? new Date());
+    const timezone = query.timezone ? `&timezone=${encodeURIComponent(query.timezone)}` : "";
+    const dateKeys = getApiDateKeysForSelectedDate(date, query.timezone);
+    const worldCupSeason = supportedCompetitionById.get(1)?.currentSeason ?? 2026;
+    const definitions = dateKeys.flatMap((dateKey) => [
+      { label: `/fixtures?date=${dateKey}`, path: `/fixtures?date=${dateKey}${timezone}` },
+      { label: `/fixtures?date=${dateKey}&league=1&season=${worldCupSeason}`, path: `/fixtures?date=${dateKey}&league=1&season=${worldCupSeason}${timezone}` },
+      { label: `/fixtures?league=1&season=${worldCupSeason}&from=${dateKey}&to=${dateKey}`, path: `/fixtures?league=1&season=${worldCupSeason}&from=${dateKey}&to=${dateKey}${timezone}` },
+    ]).concat([{ label: `/fixtures?league=1&season=${worldCupSeason}`, path: `/fixtures?league=1&season=${worldCupSeason}${timezone}` }]);
+
+    const results = await Promise.allSettled(definitions.map(async (definition) => {
+      const { payload } = await this.fetchCachedApi<ApiFootballFixturesResponse>(definition.path, 600, `api-football:debug:${definition.path}:tz:${query.timezone ?? "UTC"}`);
+      const fixtures = payload.response ?? [];
+      return {
+        label: definition.label,
+        apiStatus: this.lastFixturesDiagnostics.apiStatus,
+        responseCount: fixtures.length,
+        samples: buildFixtureDebugSamples(fixtures, { selectedDateKey: date, timezone: query.timezone }).slice(0, 5),
+      };
+    }));
+
+    return results.map((result, index) => result.status === "fulfilled" ? result.value : {
+      label: definitions[index]?.label ?? "unknown",
+      apiStatus: getApiStatusFromError(result.reason),
+      responseCount: 0,
+      samples: [],
+    });
   }
 
   async getFixtureById(id: string): Promise<Match | undefined> {
@@ -576,6 +636,22 @@ function getMatchTime(match: Match): number {
   return Number.isNaN(time) ? 0 : time;
 }
 
+function buildFeaturedFixtureQueries(apiDateKeys: string[], timezone?: string): FeaturedFixtureQueryDefinition[] {
+  const timezoneQuery = timezone ? `&timezone=${encodeURIComponent(timezone)}` : "";
+  return supportedApiFootballCompetitions.flatMap((competition) => {
+    if (!competition.currentSeason) return [];
+    return apiDateKeys.map((dateKey) => ({
+      label: `${competition.name} ${competition.currentSeason} ${dateKey}`,
+      path: `/fixtures?league=${competition.id}&season=${competition.currentSeason}&from=${dateKey}&to=${dateKey}${timezoneQuery}`,
+      dateKey,
+    }));
+  });
+}
+
+function getApiStatusFromError(error: unknown): number | undefined {
+  return typeof error === "object" && error !== null && "status" in error && typeof error.status === "number" ? error.status : undefined;
+}
+
 function getApiDateKeysForSelectedDate(selectedDateKey: string, timezone?: string): string[] {
   const selectedDate = new Date(`${selectedDateKey}T00:00:00Z`);
   const offsets = timezone ? [-1, 0, 1] : [0];
@@ -669,6 +745,7 @@ function buildFixtureDebugSamples(
       leagueId: fixture.league?.id,
       leagueName: fixture.league?.name,
       leagueCountry: fixture.league?.country,
+      season: fixture.league?.season,
       round: fixture.league?.round,
       homeTeam: fixture.teams?.home?.name,
       awayTeam: fixture.teams?.away?.name,

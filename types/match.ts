@@ -62,6 +62,7 @@ export type MatchDataStatusMetadata = {
   sidebarCompetitionCount: number;
   queriedApiDateKeys: string[];
   apiFixtureSamples?: ApiFootballFixtureDebugSample[];
+  apiQueryDiagnostics?: ApiFootballQueryDiagnostic[];
   visibleFixtures?: MatchFixtureDebugMetadata[];
 };
 
@@ -72,12 +73,20 @@ export type ApiFootballFixtureDebugSample = {
   leagueId?: number;
   leagueName?: string;
   leagueCountry?: string;
+  season?: number;
   round?: string;
   homeTeam?: string;
   awayTeam?: string;
   normalizedCompetition?: string;
   isFeatured: boolean;
   exclusionReason?: string;
+};
+
+export type ApiFootballQueryDiagnostic = {
+  label: string;
+  apiStatus?: number;
+  responseCount: number;
+  samples: ApiFootballFixtureDebugSample[];
 };
 
 export type MatchFixtureDebugMetadata = {
