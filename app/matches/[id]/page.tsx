@@ -38,7 +38,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
 
   return (
     <main className="min-h-screen bg-[#f4f1e8] pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-zinc-950 dark:bg-zinc-950 dark:text-white">
-      <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6 lg:py-5">
+      <div className="mx-auto max-w-6xl px-3 py-3 sm:px-5 lg:py-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
             <BrandLockup href="/" compact />

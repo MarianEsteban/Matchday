@@ -96,13 +96,13 @@ function StatRow({ statistic, language }: { statistic: MatchStatistic; language:
   const awayPercentage = total > 0 ? (statistic.values.away / total) * 100 : 50;
 
   return (
-    <article className="rounded-2xl border border-stone-200 bg-white px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-950/60">
-      <div className="grid grid-cols-[3rem_minmax(0,1fr)_3rem] items-center gap-2">
-        <span className="text-sm font-black tabular-nums text-zinc-950 dark:text-zinc-50">{formatValue(statistic, statistic.values.home)}</span>
+    <article className="rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-950/60">
+      <div className="grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-2">
+        <span className="text-xs font-black tabular-nums text-zinc-950 dark:text-zinc-50">{formatValue(statistic, statistic.values.home)}</span>
         <span className="truncate text-center text-[0.72rem] font-bold uppercase tracking-wide text-zinc-700 dark:text-zinc-300">{translateStatisticLabel(statistic.label, language)}</span>
-        <span className="text-right text-sm font-black tabular-nums text-zinc-950 dark:text-zinc-50">{formatValue(statistic, statistic.values.away)}</span>
+        <span className="text-right text-xs font-black tabular-nums text-zinc-950 dark:text-zinc-50">{formatValue(statistic, statistic.values.away)}</span>
       </div>
-      <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-stone-200 dark:bg-zinc-800" aria-hidden="true">
+      <div className="mt-1.5 flex h-1 overflow-hidden rounded-full bg-stone-200 dark:bg-zinc-800" aria-hidden="true">
         <div className="bg-amber-400" style={{ width: `${homePercentage}%` }} />
         <div className="bg-sky-400" style={{ width: `${awayPercentage}%` }} />
       </div>
@@ -118,11 +118,11 @@ export function MatchStats({ match, statistics, dataSource = "demo" }: MatchStat
   const extraStatistics = sortedStatistics.filter((statistic) => !primaryStatistics.some((primary) => primary.id === statistic.id));
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-stone-300 bg-white/90 shadow-lg shadow-stone-300/25 dark:border-zinc-800 dark:bg-zinc-900/80 dark:shadow-black/20">
+    <section className="overflow-hidden rounded-lg border border-stone-300 bg-white/90 shadow-sm shadow-stone-300/20 dark:border-zinc-800 dark:bg-zinc-900/80 dark:shadow-black/20">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 bg-stone-50/80 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950/50 sm:px-5">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-700 dark:text-amber-200"><Trans k="statistics" /></p>
-          <h2 className="mt-1 text-lg font-black text-zinc-900 dark:text-zinc-100"><Trans k="matchComparison" /></h2>
+          <h2 className="mt-0.5 text-base font-bold text-zinc-900 dark:text-zinc-100"><Trans k="matchComparison" /></h2>
         </div>
         <span className="rounded-full border border-stone-300 bg-white px-3 py-1 text-xs font-semibold text-stone-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
           {dataSource === "api-football" || dataSource === "cached-api-football" ? <Trans k="apiFootballData" /> : <Trans k="demoData" />}
@@ -130,21 +130,21 @@ export function MatchStats({ match, statistics, dataSource = "demo" }: MatchStat
       </div>
 
       {sortedStatistics.length > 0 ? (
-        <div className="p-4 sm:p-5">
-          <div className="mb-3 grid grid-cols-[4.25rem_minmax(0,1fr)_4.25rem] items-center gap-3 text-[0.68rem] font-black uppercase tracking-[0.16em] text-stone-500 dark:text-zinc-500">
+        <div className="mx-auto max-w-3xl p-3 sm:p-4">
+          <div className="mb-2 grid grid-cols-[4rem_minmax(0,1fr)_4rem] items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.16em] text-stone-500 dark:text-zinc-500">
             <span className="truncate text-left">{translateTeamName(match.homeTeam.name, language)}</span>
             <span className="text-center"><Trans k="detail" /></span>
             <span className="truncate text-right">{translateTeamName(match.awayTeam.name, language)}</span>
           </div>
 
-          <div className="grid gap-2">
+          <div className="grid gap-1.5">
             {primaryStatistics.map((statistic) => <StatRow key={statistic.id} statistic={statistic} language={language} />)}
           </div>
 
           {extraStatistics.length ? (
-            <details className="mt-3 rounded-2xl border border-stone-200 bg-stone-50/70 dark:border-zinc-800 dark:bg-zinc-950/40">
-              <summary className="cursor-pointer px-3 py-2 text-xs font-black uppercase tracking-[0.16em] text-stone-500 marker:text-amber-600 dark:text-zinc-500"><Trans k="moreStats" /></summary>
-              <div className="grid gap-2 border-t border-stone-200 p-2 dark:border-zinc-800">
+            <details className="mt-2 rounded-lg border border-stone-200 bg-stone-50/70 dark:border-zinc-800 dark:bg-zinc-950/40">
+              <summary className="cursor-pointer px-3 py-1.5 text-xs font-black uppercase tracking-[0.16em] text-stone-500 marker:text-amber-600 dark:text-zinc-500"><Trans k="moreStats" /></summary>
+              <div className="grid gap-1.5 border-t border-stone-200 p-2 dark:border-zinc-800">
                 {extraStatistics.map((statistic) => <StatRow key={statistic.id} statistic={statistic} language={language} />)}
               </div>
             </details>

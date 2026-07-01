@@ -75,7 +75,7 @@ export function MatchCenterTabs(details: MatchCenterTabsProps) {
   const highlightedTeamIds = [details.match.homeTeam.id, details.match.awayTeam.id];
 
   return (
-    <div className="mt-4">
+    <div className="mt-3">
       <nav className="overflow-x-auto rounded-lg border border-stone-300 bg-white p-0 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/90 dark:shadow-black/30" aria-label={t("matchSections")} role="tablist">
         <div className="flex min-w-max">
           {tabs.map((tab) => {
@@ -96,7 +96,7 @@ export function MatchCenterTabs(details: MatchCenterTabsProps) {
         </div>
       </nav>
 
-      <div className="mt-4 pb-12">
+      <div className="mt-3 pb-8">
         {activeTab === "details" ? <DetailsPanel details={details} /> : null}
         {activeTab === "lineups" ? <MatchLineups lineup={details.lineup} match={details.match} dataSource={details.source} /> : null}
         {activeTab === "statistics" ? <MatchStats statistics={details.statistics} match={details.match} dataSource={details.source} /> : null}
