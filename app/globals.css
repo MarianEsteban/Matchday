@@ -78,3 +78,40 @@ body {
   background: #f4f1e8;
   color: #18181b;
 }
+
+@keyframes empty-state-ball-drift {
+  0%, 100% {
+    transform: translate(0, -50%) scale(1);
+  }
+
+  50% {
+    transform: translate(8.5rem, -50%) scale(0.92);
+  }
+}
+
+@keyframes empty-state-copy-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.empty-state-glow {
+  animation: empty-state-ball-drift 4.8s ease-in-out infinite;
+}
+
+.empty-state-copy {
+  animation: empty-state-copy-in 420ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .empty-state-glow,
+  .empty-state-copy {
+    animation: none;
+  }
+}

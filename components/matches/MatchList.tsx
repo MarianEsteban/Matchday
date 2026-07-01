@@ -22,9 +22,9 @@ type MatchListProps = {
 };
 
 type EmptyState = {
-  icon: string;
   titleKey: TranslationKey;
   descriptionKey: TranslationKey;
+  helperKey?: TranslationKey;
 };
 
 function groupMatchesByCompetition(matches: Match[]) {
@@ -121,23 +121,22 @@ function DataSourceIndicator({ source, metadata }: { source: MatchListDataSource
 function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boolean, source: MatchListDataSource): EmptyState {
   if (!hasMatchesForSelectedDate && (source === "api-empty" || source === "api-error")) {
     return {
-      icon: "🧭",
       titleKey: "apiEmptyTitle",
       descriptionKey: "apiEmptyDescription",
+      helperKey: "apiEmptyHelper",
     };
   }
 
   if (!hasMatchesForSelectedDate) {
     return {
-      icon: "🗓️",
       titleKey: "noMatchesDateTitle",
       descriptionKey: "noMatchesDateDescription",
+      helperKey: "noMatchesDateHelper",
     };
   }
 
   if (activeFilter === "live") {
     return {
-      icon: "🔕",
       titleKey: "noLiveTitle",
       descriptionKey: "noLiveDescription",
     };
@@ -145,7 +144,6 @@ function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boo
 
   if (activeFilter === "scheduled") {
     return {
-      icon: "⏳",
       titleKey: "noUpcomingTitle",
       descriptionKey: "noUpcomingDescription",
     };
@@ -153,14 +151,12 @@ function getEmptyState(activeFilter: MatchFilter, hasMatchesForSelectedDate: boo
 
   if (activeFilter === "finished") {
     return {
-      icon: "🏁",
       titleKey: "noFinishedTitle",
       descriptionKey: "noFinishedDescription",
     };
   }
 
   return {
-    icon: "⚽",
     titleKey: "noMatchesTitle",
     descriptionKey: "noMatchesDescription",
   };
@@ -227,7 +223,7 @@ export function MatchList({ matches, dataSource, metadata, selectedDate, isLoadi
         {isLoading ? (
           <MatchListSkeleton />
         ) : visibleMatches.length === 0 ? (
-          <EmptyMatchState icon={emptyState.icon} title={t(emptyState.titleKey)} description={t(emptyState.descriptionKey)} />
+          <EmptyMatchState title={t(emptyState.titleKey)} description={t(emptyState.descriptionKey)} helper={emptyState.helperKey ? t(emptyState.helperKey) : undefined} />
         ) : (
           <div className="space-y-3">
             {competitionGroups.map(({ name: competition, matches: competitionMatches }) => (
