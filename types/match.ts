@@ -26,6 +26,11 @@ export type Match = {
     home: number;
     away: number;
   };
+  penalties?: {
+    home: number;
+    away: number;
+  };
+  importance?: "featured" | "standard";
   apiFootball?: {
     fixtureId: number;
     leagueId?: number;

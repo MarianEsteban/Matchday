@@ -51,7 +51,7 @@ function shortPlayerName(name: string) {
 
 function PlayerChip({ player }: { player: LineupPlayer }) {
   return (
-    <span className="flex min-w-0 max-w-[5.7rem] items-center gap-1 rounded-full border border-white/20 bg-zinc-950/72 px-1.5 py-0.5 text-[0.58rem] font-extrabold leading-5 text-white shadow-sm ring-1 ring-black/10 backdrop-blur sm:max-w-[6.6rem] sm:px-2 sm:text-[0.63rem]">
+    <span className="flex min-w-0 max-w-[4.85rem] items-center gap-1 rounded-full border border-white/20 bg-zinc-950/72 px-1.5 py-0.5 text-[0.55rem] font-extrabold leading-5 text-white shadow-sm ring-1 ring-black/10 backdrop-blur sm:max-w-[6.6rem] sm:px-2 sm:text-[0.63rem]">
       <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-300 text-[0.52rem] font-black text-zinc-950 sm:h-[1.125rem] sm:w-[1.125rem]">{player.number}</span>
       <span className="min-w-0 truncate" title={player.name}>{shortPlayerName(player.name)}</span>
     </span>
@@ -62,13 +62,13 @@ function PitchView({ lineup }: { lineup: TeamLineup }) {
   const rows = chunkOutfieldPlayers(lineup.startingEleven, lineup.formation);
 
   return (
-    <div className="relative overflow-hidden rounded-[1.35rem] border border-emerald-700/25 bg-[linear-gradient(90deg,rgba(255,255,255,0.045)_50%,transparent_50%),linear-gradient(180deg,#177245,#115c36)] bg-[length:38px_38px,auto] px-3 py-4 shadow-inner shadow-black/30 sm:px-4">
+    <div className="relative overflow-hidden rounded-[1.35rem] border border-emerald-700/25 bg-[linear-gradient(90deg,rgba(255,255,255,0.045)_50%,transparent_50%),linear-gradient(180deg,#177245,#115c36)] bg-[length:38px_38px,auto] px-2 py-4 shadow-inner shadow-black/30 sm:px-4">
       <div className="pointer-events-none absolute inset-3 rounded-2xl border border-white/25" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20" />
       <div className="pointer-events-none absolute inset-x-3 top-1/2 border-t border-white/15" />
       <div className="relative grid min-h-[18rem] content-between gap-3 py-3 sm:min-h-[20rem] sm:gap-4">
         {rows.map((row, index) => (
-          <div key={`${lineup.team}-${index}`} className="grid grid-flow-col justify-center gap-1.5 sm:gap-2" style={{ gridAutoColumns: "minmax(0, max-content)" }}>
+          <div key={`${lineup.team}-${index}`} className="grid grid-flow-col justify-center gap-1 sm:gap-2" style={{ gridAutoColumns: "minmax(0, max-content)" }}>
             {row.map((player) => <PlayerChip key={player.id} player={player} />)}
           </div>
         ))}
