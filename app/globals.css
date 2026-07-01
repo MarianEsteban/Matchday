@@ -75,8 +75,6 @@ body {
 }
 
 :root[data-theme="light"] body {
-  background:
-    radial-gradient(circle at top left, rgba(251, 191, 36, 0.2), transparent 32rem),
-    linear-gradient(180deg, #fffaf0 0%, #f1efe7 100%);
+  background: #f4f1e8;
   color: #18181b;
 }
