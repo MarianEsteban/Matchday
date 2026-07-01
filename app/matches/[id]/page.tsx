@@ -34,9 +34,10 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   const { match } = details;
   const round = match.apiFootball?.round;
   const scoreText = match.score ? `${match.score.home} - ${match.score.away}` : "vs";
+  const penaltiesText = match.penalties ? `Pen ${match.penalties.home} - ${match.penalties.away}` : null;
 
   return (
-    <main className="min-h-screen bg-[#fbf7ee] pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-zinc-950 dark:bg-zinc-950 dark:text-white">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.10),transparent_28rem),linear-gradient(180deg,#fbfaf5,#f0eee7)] pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-zinc-950 dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_26rem),linear-gradient(180deg,#09090b,#0a0a0a)] dark:text-white">
       <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 lg:py-8">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 lg:mb-5">
           <div className="flex flex-wrap items-center gap-3">
@@ -77,6 +78,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
 
             <div className="min-w-[5.5rem] rounded-2xl border border-stone-200 bg-zinc-950 px-3 py-2 text-center text-3xl font-black tracking-tight text-white shadow-inner dark:border-zinc-700 dark:bg-white dark:text-zinc-950 sm:min-w-[7rem] sm:px-5 sm:text-4xl">
               {match.status === "scheduled" && !match.score ? <span className="text-2xl sm:text-3xl">{match.kickoffTime}</span> : scoreText}
+              {penaltiesText ? <span className="mt-1 block text-[0.65rem] font-black uppercase tracking-[0.16em] text-amber-300 dark:text-amber-700">{penaltiesText}</span> : null}
             </div>
 
             <div className="flex min-w-0 flex-col-reverse items-center gap-2 text-center sm:flex-row sm:justify-end sm:text-right">

@@ -104,21 +104,35 @@ export function createMockMatches(date: Date = new Date()): Match[] {
     },
   });
 
+  const friendlyMatch = (match: Omit<Match, "apiFootball">, leagueId: number): Match => ({
+    ...match,
+    apiFootball: {
+      fixtureId: Math.abs([...match.id].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) % 1_000_000_000, 11)),
+      leagueId,
+      leagueName: match.competition,
+      leagueCountry: "International",
+      season: Number(matchDate.slice(0, 4)),
+      round: match.stage,
+    },
+  });
+
   return [
-    worldCupMatch({ id: `argentina-algeria-${matchDate}`, homeTeam: teams.argentina, awayTeam: teams.algeria, kickoffTime: "13:00", venue: "MetLife Stadium", date: matchDate, status: "finished", score: { home: 2, away: 0 } }, "Group J"),
-    worldCupMatch({ id: `argentina-austria-${matchDate}`, homeTeam: teams.argentina, awayTeam: teams.austria, kickoffTime: "18:00", venue: "Arrowhead Stadium", date: matchDate, status: "live", score: { home: 1, away: 1 } }, "Group J"),
+    worldCupMatch({ id: `argentina-algeria-${matchDate}`, homeTeam: teams.argentina, awayTeam: teams.algeria, kickoffTime: "13:00", venue: "MetLife Stadium", date: matchDate, status: "finished", score: { home: 2, away: 0 }, importance: "featured" }, "Group J"),
+    worldCupMatch({ id: `argentina-austria-${matchDate}`, homeTeam: teams.argentina, awayTeam: teams.austria, kickoffTime: "18:00", venue: "Arrowhead Stadium", date: matchDate, status: "live", score: { home: 1, away: 1 }, importance: "featured" }, "Group J"),
     worldCupMatch({ id: `jordan-argentina-${matchDate}`, homeTeam: teams.jordan, awayTeam: teams.argentina, kickoffTime: "21:00", venue: "Hard Rock Stadium", date: matchDate, status: "scheduled" }, "Group J"),
-    worldCupMatch({ id: `mexico-south-africa-${matchDate}`, homeTeam: teams.mexico, awayTeam: teams.southAfrica, kickoffTime: "12:00", venue: "Estadio Azteca", date: matchDate, status: "finished", score: { home: 1, away: 1 } }, "Group A"),
+    worldCupMatch({ id: `mexico-south-africa-${matchDate}`, homeTeam: teams.mexico, awayTeam: teams.southAfrica, kickoffTime: "12:00", venue: "Estadio Azteca", date: matchDate, status: "finished", score: { home: 1, away: 1 }, penalties: { home: 4, away: 3 }, stage: "Round of 16" }, "Round of 16"),
     worldCupMatch({ id: `canada-qatar-${matchDate}`, homeTeam: teams.canada, awayTeam: teams.qatar, kickoffTime: "14:00", venue: "BMO Field", date: matchDate, status: "scheduled" }, "Group B"),
-    worldCupMatch({ id: `usa-morocco-${matchDate}`, homeTeam: teams.usa, awayTeam: teams.morocco, kickoffTime: "16:00", venue: "SoFi Stadium", date: matchDate, status: "live", score: { home: 0, away: 0 } }, "Group C"),
-    worldCupMatch({ id: `brazil-scotland-${matchDate}`, homeTeam: teams.brazil, awayTeam: teams.scotland, kickoffTime: "17:30", venue: "AT&T Stadium", date: matchDate, status: "scheduled" }, "Group D"),
+    worldCupMatch({ id: `usa-morocco-${matchDate}`, homeTeam: teams.usa, awayTeam: teams.morocco, kickoffTime: "16:00", venue: "SoFi Stadium", date: matchDate, status: "live", score: { home: 0, away: 0 }, importance: "featured" }, "Group C"),
+    worldCupMatch({ id: `brazil-scotland-${matchDate}`, homeTeam: teams.brazil, awayTeam: teams.scotland, kickoffTime: "17:30", venue: "AT&T Stadium", date: matchDate, status: "scheduled", importance: "featured" }, "Group D"),
     worldCupMatch({ id: `germany-japan-${matchDate}`, homeTeam: teams.germany, awayTeam: teams.japan, kickoffTime: "19:00", venue: "Lincoln Financial Field", date: matchDate, status: "finished", score: { home: 2, away: 2 } }, "Group E"),
     worldCupMatch({ id: `italy-senegal-${matchDate}`, homeTeam: teams.italy, awayTeam: teams.senegal, kickoffTime: "20:30", venue: "Lumen Field", date: matchDate, status: "scheduled" }, "Group F"),
     worldCupMatch({ id: `spain-norway-${matchDate}`, homeTeam: teams.spain, awayTeam: teams.norway, kickoffTime: "15:30", venue: "BC Place", date: matchDate, status: "finished", score: { home: 3, away: 1 } }, "Group G"),
-    worldCupMatch({ id: `france-korea-republic-${matchDate}`, homeTeam: teams.france, awayTeam: teams.koreaRepublic, kickoffTime: "22:00", venue: "Mercedes-Benz Stadium", date: matchDate, status: "scheduled" }, "Group H"),
-    worldCupMatch({ id: `england-ghana-${matchDate}`, homeTeam: teams.england, awayTeam: teams.ghana, kickoffTime: "11:00", venue: "Gillette Stadium", date: matchDate, status: "finished", score: { home: 2, away: 1 } }, "Group I"),
-    worldCupMatch({ id: `netherlands-chile-${matchDate}`, homeTeam: teams.netherlands, awayTeam: teams.chile, kickoffTime: "18:45", venue: "Levi's Stadium", date: matchDate, status: "live", score: { home: 1, away: 0 } }, "Group K"),
-    worldCupMatch({ id: `portugal-egypt-${matchDate}`, homeTeam: teams.portugal, awayTeam: teams.egypt, kickoffTime: "23:00", venue: "NRG Stadium", date: matchDate, status: "scheduled" }, "Group L"),
+    friendlyMatch({ id: `france-korea-republic-${matchDate}`, homeTeam: teams.france, awayTeam: teams.koreaRepublic, competition: "UEFA Nations League", stage: "League A · Matchday 4", kickoffTime: "22:00", venue: "Stade de France", date: matchDate, status: "scheduled", importance: "featured" }, 5),
+    friendlyMatch({ id: `england-ghana-${matchDate}`, homeTeam: teams.england, awayTeam: teams.ghana, competition: "International Friendly", stage: "Senior International", kickoffTime: "11:00", venue: "Wembley Stadium", date: matchDate, status: "finished", score: { home: 2, away: 1 } }, 10),
+    friendlyMatch({ id: `netherlands-chile-${matchDate}`, homeTeam: teams.netherlands, awayTeam: teams.chile, competition: "CONMEBOL-UEFA Cup", stage: "Final", kickoffTime: "18:45", venue: "Levi's Stadium", date: matchDate, status: "live", score: { home: 1, away: 0 }, importance: "featured" }, 20),
+    friendlyMatch({ id: `portugal-egypt-${matchDate}`, homeTeam: teams.portugal, awayTeam: teams.egypt, competition: "International Friendly", stage: "Senior International", kickoffTime: "23:00", venue: "NRG Stadium", date: matchDate, status: "scheduled" }, 10),
+    friendlyMatch({ id: `colombia-switzerland-${matchDate}`, homeTeam: teams.colombia, awayTeam: teams.switzerland, competition: "Women's Finalissima", stage: "Final", kickoffTime: "09:30", venue: "San Mamés", date: matchDate, status: "finished", score: { home: 0, away: 0 }, penalties: { home: 5, away: 4 } }, 30),
+    friendlyMatch({ id: `croatia-wales-${matchDate}`, homeTeam: teams.croatia, awayTeam: teams.wales, competition: "UEFA Nations League", stage: "League A · Matchday 4", kickoffTime: "15:00", venue: "Stadion Maksimir", date: matchDate, status: "scheduled" }, 5),
   ];
 }
 

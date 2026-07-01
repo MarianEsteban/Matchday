@@ -87,34 +87,32 @@ function filterMatches(matches: Match[], activeFilter: MatchFilter) {
 
 function DataSourceIndicator({ source, metadata }: { source: MatchListDataSource; metadata: MatchDataStatusMetadata }) {
   const { t } = usePreferences();
-  const label = source === "api-football"
-    ? t("apiFootballData")
-    : source === "cached-api-football"
-      ? t("cachedApiFootballData")
-      : source === "api-empty"
-        ? t("apiEmptyData")
-        : source === "api-error"
-          ? t("apiErrorData")
-          : source === "demo-fallback" || source === "quota-limited-fallback" || source === "api-unavailable-fallback"
-            ? t("fallbackData")
-            : t("demoData");
+  const isDemoMode = metadata.requestedDataMode === "demo" || source === "demo" || source === "demo-fallback";
+  const label = isDemoMode
+    ? t("demoData")
+    : source === "api-football"
+      ? t("apiFootballData")
+      : source === "cached-api-football"
+        ? t("cachedApiFootballData")
+        : source === "api-empty"
+          ? t("apiEmptyData")
+          : source === "api-error"
+            ? t("apiErrorData")
+            : t("fallbackData");
 
-  const title = [metadata.sourceLabel, metadata.fallbackReason, `Mode: ${metadata.requestedDataMode}`, `Date: ${metadata.selectedDate}`, `Timezone: ${metadata.timezone}`, `API key present: ${metadata.apiKeyPresent ? "yes" : "no"}`, `Raw: ${metadata.rawFixtureCount}`, `Visible: ${metadata.finalVisibleCount}`].filter(Boolean).join(" • ");
+  const title = isDemoMode
+    ? "Demo mode: curated local fixtures for UI polishing."
+    : [metadata.sourceLabel, metadata.fallbackReason, `Mode: ${metadata.requestedDataMode}`, `Date: ${metadata.selectedDate}`, `Timezone: ${metadata.timezone}`, `Raw: ${metadata.rawFixtureCount}`, `Visible: ${metadata.finalVisibleCount}`].filter(Boolean).join(" • ");
 
   return (
     <div className="flex justify-end">
       <span
-        className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/55 px-2.5 py-1 text-[0.68rem] font-medium uppercase tracking-[0.16em] text-zinc-500 shadow-sm shadow-zinc-200/40 dark:border-zinc-800 dark:bg-zinc-900/45 dark:text-zinc-500 dark:shadow-black/10"
+        className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/15 bg-emerald-50/80 px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.14em] text-emerald-800 shadow-sm shadow-emerald-100/40 dark:border-emerald-400/15 dark:bg-emerald-400/10 dark:text-emerald-200 dark:shadow-black/10"
         aria-label={`${t("dataSource")}: ${label}`}
         title={title}
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/70" aria-hidden="true" />
-        <span>{t("dataSource")}</span>
-        <span className="text-zinc-300 dark:text-zinc-700" aria-hidden="true">·</span>
-        <span className="text-zinc-600 dark:text-zinc-400">{label}</span>
-        {metadata.usedFallback && metadata.fallbackReason ? (
-          <span className="hidden max-w-72 truncate normal-case tracking-normal text-amber-700 dark:text-amber-300 sm:inline">{metadata.fallbackReason}</span>
-        ) : null}
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
+        <span>{label}</span>
       </span>
     </div>
   );

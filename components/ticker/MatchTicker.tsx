@@ -25,7 +25,7 @@ function TickerItem({ match }: { match: Match }) {
   const awayName = translateTeamName(match.awayTeam.name, language);
   const matchStatusText = match.status === "scheduled" ? <LocalizedKickoffTime date={match.date} kickoffTime={match.kickoffTime} kickoffAt={match.kickoffAt} /> : t("live");
   return (
-    <li className="mx-2 inline-flex min-w-max items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs text-zinc-100 shadow-sm shadow-black/10 sm:mx-3 sm:gap-2.5 sm:px-3">
+    <li className="mx-1.5 inline-flex min-w-max items-center gap-2 rounded-full border border-white/10 bg-white/[0.07] px-2.5 py-1 text-xs text-zinc-100 shadow-sm shadow-black/10 transition hover:border-emerald-300/25 hover:bg-white/[0.10] sm:mx-2 sm:gap-2.5 sm:px-3">
       <Image
         src={match.homeTeam.crestUrl}
         alt={`${homeName} flag`}
@@ -69,16 +69,16 @@ export function MatchTicker({ matches }: MatchTickerProps) {
     return null;
   }
 
-  const tickerItems = [...displayMatches, ...displayMatches];
+  const tickerItems = displayMatches.length > 4 ? [...displayMatches, ...displayMatches] : displayMatches;
 
   return (
-    <section className="border-b border-zinc-800 bg-zinc-950/96 py-1.5 text-white" aria-label={t("matchTicker")}>
+    <section className="border-b border-white/10 bg-zinc-950/95 py-2 text-white shadow-sm shadow-black/20" aria-label={t("matchTicker")}>
       <div className="mb-1 flex items-center gap-2 px-4 text-[0.62rem] font-black uppercase tracking-[0.18em] text-emerald-300 sm:px-6">
         <span className="h-2 w-2 rounded-full bg-emerald-400" />
         {t("matchTicker")}
       </div>
       <div className="ticker-mask overflow-hidden whitespace-nowrap" role="list" aria-label={t("todaysMatches")}>
-        <ul className="ticker-track inline-flex w-max animate-match-ticker hover:[animation-play-state:paused]">
+        <ul className={`${displayMatches.length > 4 ? "animate-match-ticker" : ""} ticker-track inline-flex w-max hover:[animation-play-state:paused]`}>
           {tickerItems.map((match, index) => (
             <TickerItem key={`${match.id}-${index}`} match={match} />
           ))}
