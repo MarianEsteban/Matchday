@@ -27,7 +27,7 @@ export function MatchFilters({ activeFilter, onSelectFilter }: MatchFiltersProps
 
   return (
     <div className="overflow-x-auto" aria-label={t("matchSections")}>
-      <div className="inline-flex min-w-max gap-1 rounded-full border border-stone-200 bg-white/75 p-1 shadow-sm shadow-stone-200/40 dark:border-zinc-800 dark:bg-zinc-900/70 dark:shadow-black/20">
+      <div className="inline-flex min-w-max gap-1 rounded-lg border border-stone-200 bg-white p-0.5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/70 dark:shadow-black/20">
         {filterOptions.map(({ labelKey, value }) => {
           const isActive = activeFilter === value;
 
@@ -36,7 +36,7 @@ export function MatchFilters({ activeFilter, onSelectFilter }: MatchFiltersProps
               key={value}
               type="button"
               onClick={() => onSelectFilter(value)}
-              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-black uppercase tracking-[0.08em] transition-colors sm:px-4 ${
+              className={`whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition-colors sm:px-4 ${
                 isActive
                   ? "bg-zinc-950 text-white shadow-sm dark:bg-white dark:text-zinc-950"
                   : "text-stone-500 hover:bg-stone-100 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"

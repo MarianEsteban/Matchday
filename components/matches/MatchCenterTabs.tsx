@@ -28,9 +28,9 @@ function DetailRow({ labelKey, children }: { labelKey: TranslationKey; children?
   if (!children) return null;
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-stone-50 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-950/55">
-      <dt className="text-[0.65rem] font-black uppercase tracking-[0.16em] text-stone-500 dark:text-zinc-500"><Trans k={labelKey} /></dt>
-      <dd className="mt-1 text-sm font-bold text-zinc-900 dark:text-zinc-100">{children}</dd>
+    <div className="border-b border-stone-200 px-1 py-2 dark:border-zinc-800 dark:bg-zinc-950/55">
+      <dt className="text-xs font-semibold text-stone-500 dark:text-zinc-500"><Trans k={labelKey} /></dt>
+      <dd className="mt-0.5 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{children}</dd>
     </div>
   );
 }
@@ -40,11 +40,11 @@ function DetailsPanel({ details }: { details: MatchDetails }) {
   const stage = match.apiFootball?.round;
 
   return (
-    <section className="rounded-3xl border border-stone-300 bg-white/92 p-4 shadow-sm shadow-stone-300/25 dark:border-zinc-800 dark:bg-zinc-900/80 dark:shadow-black/20 sm:p-5">
+    <section className="rounded-lg border border-stone-300 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80 dark:shadow-black/20 sm:p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-700 dark:text-amber-200"><Trans k="details" /></p>
-          <h2 className="mt-1 text-lg font-black text-zinc-950 dark:text-zinc-50"><Trans k="matchSummary" /></h2>
+          <p className="text-xs font-semibold text-stone-500 dark:text-zinc-400"><Trans k="details" /></p>
+          <h2 className="mt-0.5 text-base font-bold text-zinc-950 dark:text-zinc-50"><Trans k="matchSummary" /></h2>
         </div>
         <span className="rounded-full border border-stone-300 bg-white px-3 py-1 text-xs font-semibold text-stone-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
           {source === "api-football" || source === "cached-api-football" ? <Trans k="apiFootballData" /> : <Trans k="demoData" />}
@@ -76,8 +76,8 @@ export function MatchCenterTabs(details: MatchCenterTabsProps) {
 
   return (
     <div className="mt-4">
-      <nav className="overflow-x-auto rounded-2xl border border-stone-300 bg-white/90 p-1.5 shadow-lg shadow-stone-300/20 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90 dark:shadow-black/30" aria-label={t("matchSections")} role="tablist">
-        <div className="flex min-w-max gap-1.5">
+      <nav className="overflow-x-auto rounded-lg border border-stone-300 bg-white p-0 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/90 dark:shadow-black/30" aria-label={t("matchSections")} role="tablist">
+        <div className="flex min-w-max">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -87,7 +87,7 @@ export function MatchCenterTabs(details: MatchCenterTabsProps) {
                 role="tab"
                 onClick={() => setActiveTab(tab.id)}
                 aria-selected={isActive}
-                className={`rounded-full px-4 py-2 text-sm font-black transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${isActive ? "bg-zinc-950 text-white shadow-sm dark:bg-amber-300 dark:text-zinc-950" : "text-zinc-600 hover:bg-stone-100 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white"}`}
+                className={`border-b-2 px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${isActive ? "border-zinc-950 text-zinc-950 dark:border-white dark:text-white" : "border-transparent text-zinc-600 hover:bg-stone-50 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:text-white"}`}
               >
                 <Trans k={tab.labelKey} />
               </button>

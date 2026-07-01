@@ -107,7 +107,7 @@ function DataSourceIndicator({ source, metadata }: { source: MatchListDataSource
   return (
     <div className="flex justify-end">
       <span
-        className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/15 bg-emerald-50/80 px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.14em] text-emerald-800 shadow-sm shadow-emerald-100/40 dark:border-emerald-400/15 dark:bg-emerald-400/10 dark:text-emerald-200 dark:shadow-black/10"
+        className="inline-flex items-center gap-1.5 rounded border border-stone-200 bg-white px-2 py-1 text-[0.68rem] font-semibold text-stone-600 dark:border-emerald-400/15 dark:bg-emerald-400/10 dark:text-emerald-200 dark:shadow-black/10"
         aria-label={`${t("dataSource")}: ${label}`}
         title={title}
       >
@@ -204,7 +204,7 @@ export function MatchList({ matches, dataSource, metadata, selectedDate, isLoadi
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <DateSelector selectedDate={selectedDate} onSelectDate={onSelectDate} />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -218,7 +218,7 @@ export function MatchList({ matches, dataSource, metadata, selectedDate, isLoadi
         </div>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-[17rem_1fr] lg:gap-5">
+      <div className="grid gap-3 lg:grid-cols-[16rem_1fr] lg:gap-4">
         <CompetitionSidebar
           competitions={availableCompetitionsForDate}
           selectedCompetition={selectedCompetition}
@@ -229,7 +229,7 @@ export function MatchList({ matches, dataSource, metadata, selectedDate, isLoadi
         ) : visibleMatches.length === 0 ? (
           <EmptyMatchState icon={emptyState.icon} title={t(emptyState.titleKey)} description={t(emptyState.descriptionKey)} />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {competitionGroups.map(({ name: competition, matches: competitionMatches }) => (
               <CompetitionSection
                 key={competition}

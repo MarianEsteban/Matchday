@@ -48,7 +48,7 @@ export function CompetitionSidebar({ competitions, selectedCompetition, onSelect
       <div className="border-b border-stone-200 px-3 py-3 dark:border-zinc-800">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[0.62rem] font-black uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300">MatchDay</p>
+            <p className="text-xs font-semibold text-stone-500 dark:text-zinc-500">{t("browseCompetitions")}</p>
             <h2 className="text-base font-black text-zinc-950 dark:text-white">{t("competitions")}</h2>
           </div>
           <MatchCount count={competitions.filter((competition) => competition.matches.length > 0).length} isActive={false} />
@@ -70,7 +70,7 @@ export function CompetitionSidebar({ competitions, selectedCompetition, onSelect
             onSelectCompetition(null);
             setIsMobileOpen(false);
           }}
-          className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm font-black transition ${selectedCompetition === null ? "bg-zinc-950 text-white shadow-sm shadow-emerald-500/15 dark:bg-white dark:text-zinc-950" : "text-zinc-700 hover:bg-stone-100 dark:text-zinc-200 dark:hover:bg-zinc-800"}`}
+          className={`flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-sm font-semibold transition ${selectedCompetition === null ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950" : "text-zinc-700 hover:bg-stone-100 dark:text-zinc-200 dark:hover:bg-zinc-800"}`}
         >
           <span className="truncate">{t("featured")}</span>
           <MatchCount count={featuredCount} isActive={selectedCompetition === null} />
@@ -90,7 +90,7 @@ export function CompetitionSidebar({ competitions, selectedCompetition, onSelect
                       onSelectCompetition(competition.name);
                       setIsMobileOpen(false);
                     }}
-                    className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm transition ${isActive ? "bg-emerald-600 text-white shadow-sm shadow-emerald-500/20" : competition.matches.length > 0 ? "text-zinc-700 hover:bg-emerald-50 hover:text-zinc-950 dark:text-zinc-200 dark:hover:bg-emerald-500/10 dark:hover:text-white" : "text-stone-400 dark:text-zinc-600"}`}
+                    className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm transition ${isActive ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950" : competition.matches.length > 0 ? "text-zinc-700 hover:bg-emerald-50 hover:text-zinc-950 dark:text-zinc-200 dark:hover:bg-emerald-500/10 dark:hover:text-white" : "text-stone-400 dark:text-zinc-600"}`}
                     disabled={competition.matches.length === 0}
                   >
                     <span className="truncate font-semibold">{translateCompetitionName(competition.name, language)}</span>
@@ -107,7 +107,7 @@ export function CompetitionSidebar({ competitions, selectedCompetition, onSelect
 
   return (
     <>
-      <aside className="hidden self-start overflow-hidden rounded-2xl border border-stone-200 bg-white/88 shadow-lg shadow-stone-200/60 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/88 dark:shadow-black/25 lg:sticky lg:top-4 lg:block">
+      <aside className="hidden self-start overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950/88 dark:shadow-black/25 lg:sticky lg:top-4 lg:block">
         {content}
       </aside>
       <div className="lg:hidden">
@@ -115,10 +115,10 @@ export function CompetitionSidebar({ competitions, selectedCompetition, onSelect
           type="button"
           onClick={() => setIsMobileOpen((open) => !open)}
           aria-expanded={isMobileOpen}
-          className="flex w-full items-center justify-between rounded-2xl border border-stone-200 bg-white/88 px-4 py-3 text-left shadow-sm shadow-stone-200/50 transition hover:border-emerald-500/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-zinc-800 dark:bg-zinc-950/88 dark:shadow-black/20"
+          className="flex w-full items-center justify-between rounded-lg border border-stone-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-emerald-500/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-zinc-800 dark:bg-zinc-950/88 dark:shadow-black/20"
         >
           <span>
-            <span className="block text-[0.62rem] font-black uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300">{t("browseCompetitions")}</span>
+            <span className="block text-xs font-semibold text-stone-500 dark:text-zinc-500">{t("browseCompetitions")}</span>
             <span className="mt-0.5 block text-sm font-black text-zinc-950 dark:text-white">{selectedCompetition ? translateCompetitionName(selectedCompetition, language) : t("featured")}</span>
           </span>
           <span className="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-black text-stone-600 dark:bg-zinc-800 dark:text-zinc-300">{isMobileOpen ? "−" : "+"}</span>

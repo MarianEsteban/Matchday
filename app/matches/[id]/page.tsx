@@ -37,14 +37,14 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   const penaltiesText = match.penalties ? `Pen ${match.penalties.home} - ${match.penalties.away}` : null;
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.10),transparent_28rem),linear-gradient(180deg,#fbfaf5,#f0eee7)] pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-zinc-950 dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_26rem),linear-gradient(180deg,#09090b,#0a0a0a)] dark:text-white">
-      <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 lg:py-8">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 lg:mb-5">
+    <main className="min-h-screen bg-[#f4f1e8] pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-zinc-950 dark:bg-zinc-950 dark:text-white">
+      <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6 lg:py-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
             <BrandLockup href="/" compact />
             <Link
               href="/"
-              className="inline-flex rounded-full border border-stone-300 bg-white/80 px-4 py-2 text-sm font-semibold text-zinc-800 shadow-sm transition-colors hover:border-stone-500 hover:bg-white hover:text-zinc-950 dark:border-zinc-800 dark:bg-transparent dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-900 dark:hover:text-white"
+              className="inline-flex rounded-md border border-stone-300 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-stone-500 hover:bg-white hover:text-zinc-950 dark:border-zinc-800 dark:bg-transparent dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-900 dark:hover:text-white"
             >
               ← <Trans k="backToMatches" />
             </Link>
@@ -52,38 +52,38 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
           <PreferenceControls />
         </div>
 
-        <section className="overflow-hidden rounded-[1.75rem] border border-stone-300 bg-white/95 shadow-xl shadow-stone-300/25 dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/35">
-          <div className="border-b border-stone-200 bg-stone-50/80 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950/45 sm:px-5">
+        <section className="overflow-hidden rounded-lg border border-stone-300 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/35">
+          <div className="border-b border-stone-200 bg-stone-50 px-4 py-2.5 dark:border-zinc-800 dark:bg-zinc-950/45 sm:px-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="min-w-0">
-                <p className="truncate text-xs font-black uppercase tracking-[0.18em] text-amber-700 dark:text-amber-200">
+                <p className="truncate text-xs font-semibold text-stone-700 dark:text-zinc-300">
                   <TranslatedCompetitionName competition={match.competition} />{round ? <span className="text-stone-500 dark:text-zinc-500"> · {round}</span> : null}
                 </p>
                 <p className="mt-1 truncate text-xs font-semibold text-stone-600 dark:text-zinc-400">
                   <LocalizedKickoff date={match.date} kickoffTime={match.kickoffTime} kickoffAt={match.kickoffAt} />{match.venue ? <> · {match.venue}</> : null}
                 </p>
               </div>
-              <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wide ${statusBadgeStyles[match.status]}`}>
+              <span className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-semibold ${statusBadgeStyles[match.status]}`}>
                 {match.status === "live" ? <span className="mr-2 h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_3px_rgba(52,211,153,0.18)]" /> : null}
                 <TranslatedStatus status={match.status} />
               </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 py-5 sm:gap-5 sm:px-6 sm:py-6">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 py-4 sm:gap-4 sm:px-5 sm:py-5">
             <div className="flex min-w-0 flex-col items-center gap-2 text-center sm:flex-row sm:text-left">
-              <Image src={match.homeTeam.crestUrl} alt={`${match.homeTeam.name} crest`} width={56} height={56} className="h-12 w-12 shrink-0 drop-shadow-sm sm:h-14 sm:w-14" />
-              <p className="max-w-full truncate text-sm font-black text-zinc-950 dark:text-zinc-50 sm:text-lg"><TeamName name={match.homeTeam.name} /></p>
+              <Image src={match.homeTeam.crestUrl} alt={`${match.homeTeam.name} crest`} width={56} height={56} className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" />
+              <p className="max-w-full truncate text-sm font-bold text-zinc-950 dark:text-zinc-50 sm:text-base"><TeamName name={match.homeTeam.name} /></p>
             </div>
 
-            <div className="min-w-[5.5rem] rounded-2xl border border-stone-200 bg-zinc-950 px-3 py-2 text-center text-3xl font-black tracking-tight text-white shadow-inner dark:border-zinc-700 dark:bg-white dark:text-zinc-950 sm:min-w-[7rem] sm:px-5 sm:text-4xl">
+            <div className="min-w-[5.5rem] rounded-lg border border-stone-300 bg-white px-3 py-2 text-center text-2xl font-black tracking-tight text-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white sm:min-w-[6rem] sm:px-4 sm:text-3xl">
               {match.status === "scheduled" && !match.score ? <span className="text-2xl sm:text-3xl">{match.kickoffTime}</span> : scoreText}
-              {penaltiesText ? <span className="mt-1 block text-[0.65rem] font-black uppercase tracking-[0.16em] text-amber-300 dark:text-amber-700">{penaltiesText}</span> : null}
+              {penaltiesText ? <span className="mt-1 block text-[0.65rem] font-black uppercase tracking-[0.16em] text-stone-500 dark:text-zinc-400">{penaltiesText}</span> : null}
             </div>
 
             <div className="flex min-w-0 flex-col-reverse items-center gap-2 text-center sm:flex-row sm:justify-end sm:text-right">
-              <p className="max-w-full truncate text-sm font-black text-zinc-950 dark:text-zinc-50 sm:text-lg"><TeamName name={match.awayTeam.name} /></p>
-              <Image src={match.awayTeam.crestUrl} alt={`${match.awayTeam.name} crest`} width={56} height={56} className="h-12 w-12 shrink-0 drop-shadow-sm sm:h-14 sm:w-14" />
+              <p className="max-w-full truncate text-sm font-bold text-zinc-950 dark:text-zinc-50 sm:text-base"><TeamName name={match.awayTeam.name} /></p>
+              <Image src={match.awayTeam.crestUrl} alt={`${match.awayTeam.name} crest`} width={56} height={56} className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" />
             </div>
           </div>
         </section>
